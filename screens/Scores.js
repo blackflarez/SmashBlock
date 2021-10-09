@@ -7,43 +7,22 @@ import {
   TouchableOpacity,
   Pressable,
 } from 'react-native'
-import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
-import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
+import { IconButton } from '../components'
 
 const auth = Firebase.auth()
-
-const defaultData = {
-  name: '',
-  balance: 0,
-  strength: 1,
-  strengthPrice: 10,
-  automation: 0,
-  automationPrice: 5,
-  timeOffline: 0,
-}
-let userData = defaultData
-let flag = false
 
 export default function HomeScreen({ navigation }) {
   const [myText, setMyText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
 
-  const handleSignOut = async () => {
-    try {
-      await auth.signOut()
-      flag = false
-    } catch (error) {
-      console.log(error)
-    }
-  }
+  var scores = []
 
-  const handleScores = async () => {
+  const handleBack = async () => {
     try {
-      navigation.navigate('Scores')
-      flag = false
+      navigation.navigate('Home')
     } catch (error) {
       console.log(error)
     }
@@ -51,33 +30,31 @@ export default function HomeScreen({ navigation }) {
 
   async function init() {
     let data = await Firebase.database()
-      .ref(`users/${user.uid}`)
+      .ref(`users`)
       .get()
       .then((snapshot) => {
         if (snapshot.exists()) {
-          userData = snapshot.val().userData
-          console.log(userData)
-          setMyText(userData.balance)
+          snapshot.forEach(function (childNodes) {
+            scores.push(
+              childNodes.val().userData.balance +
+                ' - ' +
+                childNodes.val().userData.name +
+                '\n'
+            )
+          })
+          scores.sort(function (a, b) {
+            return b - a
+          })
+          setMyText(scores)
           setIsLoading(false)
         } else {
           console.log('No data available')
-          userData.name = user.uid
           setIsLoading(false)
         }
       })
   }
 
-  async function click() {
-    userData.balance += userData.strength
-    console.log(userData.balance)
-    setMyText(userData.balance)
-    await Firebase.database().ref(`users/${user.uid}`).set({ userData })
-  }
-
-  if (flag === false) {
-    init()
-    flag = true
-  }
+  init()
 
   if (isLoading) {
     return (
@@ -95,25 +72,10 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="dark-content" />
-      <View style={styles.row}>
-        <Text style={styles.title}>Welcome {user.email}!</Text>
-        <IconButton
-          name="linechart"
-          size={24}
-          color="#fff"
-          onPress={handleScores}
-        />
-        <IconButton
-          name="logout"
-          size={24}
-          color="#fff"
-          onPress={handleSignOut}
-        />
-      </View>
-      <Text style={styles.title}> Clicks: {myText}</Text>
-      <View style={styles.canvas}>
-        <Canvas click={click} />
-      </View>
+      <IconButton name="left" size={24} color="#fff" onPress={handleBack} />
+      <Text style={styles.title}>Leaderboard</Text>
+      <Text> </Text>
+      <Text style={styles.text}>{myText}</Text>
     </View>
   )
 }
