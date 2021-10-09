@@ -5,11 +5,11 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ActivityIndicator,
+  Pressable,
 } from 'react-native'
 import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
-
+import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 
 const auth = Firebase.auth()
@@ -54,10 +54,9 @@ export default function HomeScreen() {
       })
   }
 
-  async function onClick() {
+  async function click() {
     userData.balance += userData.strength
     setMyText(userData.balance)
-    console.log(userData)
     await Firebase.database().ref(user.uid).set({ userData })
   }
 
@@ -84,17 +83,18 @@ export default function HomeScreen() {
       <StatusBar style="dark-content" />
       <View style={styles.row}>
         <Text style={styles.title}>Welcome {user.email}!</Text>
-        <Text style={styles.title}> Clicks: {userData.balance}</Text>
+
+        <IconButton
+          name="logout"
+          size={24}
+          color="#fff"
+          onPress={handleSignOut}
+        />
       </View>
-      <TouchableOpacity onPress={onClick} style={styles.button}>
-        <Text style={styles.buttonText}>Click</Text>
-      </TouchableOpacity>
-      <IconButton
-        name="logout"
-        size={24}
-        color="#fff"
-        onPress={handleSignOut}
-      />
+      <Text style={styles.title}> Clicks: {userData.balance}</Text>
+      <View style={styles.canvas}>
+        <Canvas click={click} />
+      </View>
     </View>
   )
 }
@@ -134,5 +134,10 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
+  },
+  canvas: {
+    width: 250,
+    height: 400,
+    margin: 50,
   },
 })
