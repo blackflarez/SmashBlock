@@ -1,6 +1,5 @@
 import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
-
 import HomeScreen from '../screens/HomeScreen'
 import Scores from '../screens/Scores'
 
@@ -12,7 +11,7 @@ export default function HomeStack() {
       screenOptions={{
         headerShown: false,
         gestureEnabled: false,
-        animationEnabled: false,
+        animationEnabled: true,
       }}
     >
       <Stack.Screen name="Home" component={HomeScreen} />

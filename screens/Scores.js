@@ -28,47 +28,6 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
-  async function init() {
-    let data = await Firebase.database()
-      .ref(`users`)
-      .get()
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          snapshot.forEach(function (childNodes) {
-            scores.push(
-              childNodes.val().userData.balance +
-                ' - ' +
-                childNodes.val().userData.name +
-                '\n'
-            )
-          })
-          scores.sort(function (a, b) {
-            return b - a
-          })
-          setMyText(scores)
-          setIsLoading(false)
-        } else {
-          console.log('No data available')
-          setIsLoading(false)
-        }
-      })
-  }
-
-  init()
-
-  if (isLoading) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#000',
-        }}
-      ></View>
-    )
-  }
-
   return (
     <View style={styles.container}>
       <StatusBar style="dark-content" />

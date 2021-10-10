@@ -12,24 +12,22 @@ import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 
-const auth = Firebase.auth()
-
-const defaultData = {
-  name: '',
-  balance: 0,
-  strength: 1,
-  strengthPrice: 10,
-  automation: 0,
-  automationPrice: 5,
-  timeOffline: 0,
-}
-let userData = defaultData
 let flag = false
 
 export default function HomeScreen({ navigation }) {
+  const auth = Firebase.auth()
   const [myText, setMyText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
+  const [userData, setUserData] = useState({
+    name: '',
+    balance: 0,
+    strength: 1,
+    strengthPrice: 10,
+    automation: 0,
+    automationPrice: 5,
+    timeOffline: 0,
+  })
 
   const handleSignOut = async () => {
     try {
@@ -55,7 +53,7 @@ export default function HomeScreen({ navigation }) {
       .get()
       .then((snapshot) => {
         if (snapshot.exists()) {
-          userData = snapshot.val().userData
+          setUserData(snapshot.val().userData)
           console.log(userData)
           setMyText(userData.balance)
           setIsLoading(false)
