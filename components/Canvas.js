@@ -37,6 +37,7 @@ export default function Canvas(props) {
     deltaX = 0,
     deltaY = 0,
     scale = 0
+
   async function onContextCreate(gl) {
     function loadModel(url) {
       return new Promise((resolve) => {
@@ -68,8 +69,7 @@ export default function Canvas(props) {
         0.1,
         1000
       )
-      camera.position.z = 5
-      camera.position.x = 0
+      camera.position.z = 500
       camera.position.y = 2
       camera.rotation.x = -0.5
 
@@ -79,19 +79,22 @@ export default function Canvas(props) {
       })
 
       //lights
-      var light = new THREE.SpotLight(0xffffff, 2.5)
-      light.position.set(-45, 50, 50)
-      light.castShadow = true
+      const light = new THREE.SpotLight(0xffffff, 5)
+      light.position.set(0, 50, 30)
+      const light2 = new THREE.SpotLight(0xffffff, 5)
+      light2.position.set(0, -50, -30)
+      const light3 = new THREE.SpotLight(0xffffff, 5)
+      light3.position.set(25, 30, 50)
+      const light4 = new THREE.SpotLight(0xffffff, 5)
+      light4.position.set(-25, -30, -50)
       scene.add(light)
-
-      const ambientLight = new THREE.AmbientLight(0xffffff, 2)
-      scene.add(ambientLight)
+      scene.add(light2)
+      scene.add(light3)
+      scene.add(light4)
 
       //models
-      const uri = Asset.fromModule(require('../assets/models/colacan.glb')).uri
-      const tex = Asset.fromModule(
-        require('../assets/models/colacantexture.png')
-      ).uri
+      const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
+      const tex = Asset.fromModule(require('../assets/models/cube.png')).uri
 
       let model, texture
       let m1 = loadModel(uri).then((result) => {
@@ -109,6 +112,8 @@ export default function Canvas(props) {
         cube.traverse((o) => {
           if (o.isMesh) o.material.map = texture
         })
+        cube.rotation.x = 0.2
+        cube.rotation.y = 0.77
         scene.add(cube)
         animate()
       })
@@ -120,11 +125,11 @@ export default function Canvas(props) {
       cube.rotation.x += deltaY * 0.003
       cube.rotation.y += deltaX * 0.003
 
-      if (cube.rotation.x > 0.9) {
-        cube.rotation.x = 0.9
+      if (cube.rotation.x > 1.2) {
+        cube.rotation.x = 1.2
       }
-      if (cube.rotation.x < -1.5) {
-        cube.rotation.x = -1.5
+      if (cube.rotation.x < -0.1) {
+        cube.rotation.x = -0.1
       }
 
       if (deltaX > 0) {
@@ -163,16 +168,19 @@ export default function Canvas(props) {
     init()
   }
 
-  function pressIn() {
+  function longPress() {
     console.log('pressed in')
   }
 
-  function press() {
+  async function press() {
     console.log('pressed')
     props.click()
   }
 
+  function pressOut() {}
+
   let handlePan = (evt) => {
+    console.log('pan')
     let { nativeEvent } = evt
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
@@ -188,16 +196,16 @@ export default function Canvas(props) {
   return (
     <SafeAreaView style={styles.container}>
       <PinchGestureHandler onGestureEvent={handlePinch}>
-        <View style={styles.wrapper}>
-          <Pressable onLongPress={pressIn} onPress={press}>
-            <PanGestureHandler onGestureEvent={handlePan}>
+        <PanGestureHandler onGestureEvent={handlePan}>
+          <View style={styles.wrapper}>
+            <Pressable onLongPress={longPress} onPress={press}>
               <GLView
                 onContextCreate={onContextCreate}
                 style={styles.content}
               />
-            </PanGestureHandler>
-          </Pressable>
-        </View>
+            </Pressable>
+          </View>
+        </PanGestureHandler>
       </PinchGestureHandler>
     </SafeAreaView>
   )
@@ -207,10 +215,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: 'rgba(52, 52, 52, 0)',
     justifyContent: 'center',
     alignItems: 'center',
-    height: 123,
   },
   title: {
     color: '#ffffff',
@@ -225,11 +232,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 3 }],
+    transform: [{ scale: 1 }],
   },
   content: {
-    width: 100,
-    height: 180,
+    width: 500,
+    height: 500,
   },
   image: {
     flex: 1,

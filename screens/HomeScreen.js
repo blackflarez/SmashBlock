@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
   StyleSheet,
   Text,
@@ -16,7 +16,6 @@ let flag = false
 
 export default function HomeScreen({ navigation }) {
   const auth = Firebase.auth()
-  const [myText, setMyText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
   const [userData, setUserData] = useState({
@@ -47,34 +46,29 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
-  async function init() {
-    let data = await Firebase.database()
-      .ref(`users/${user.uid}`)
-      .get()
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          setUserData(snapshot.val().userData)
-          console.log(userData)
-          setMyText(userData.balance)
+  useEffect(() => {
+    async function init() {
+      await Firebase.database()
+        .ref(`users/${user.uid}`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            setUserData(snapshot.val().userData)
+          } else {
+            console.log('No data available')
+            userData.name = user.uid
+          }
           setIsLoading(false)
-        } else {
-          console.log('No data available')
-          userData.name = user.uid
-          setIsLoading(false)
-        }
-      })
-  }
+        })
+    }
+    console.log('cock')
+    init()
+  }, [userData])
 
   async function click() {
-    userData.balance += userData.strength
+    userData.balance += 1
     console.log(userData.balance)
-    setMyText(userData.balance)
     await Firebase.database().ref(`users/${user.uid}`).set({ userData })
-  }
-
-  if (flag === false) {
-    init()
-    flag = true
   }
 
   if (isLoading) {
@@ -108,7 +102,7 @@ export default function HomeScreen({ navigation }) {
           onPress={handleSignOut}
         />
       </View>
-      <Text style={styles.title}> Clicks: {myText}</Text>
+      <Text style={styles.title}> Clicks: {userData.balance}</Text>
       <View style={styles.canvas}>
         <Canvas click={click} />
       </View>
@@ -129,7 +123,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 500,
   },
   title: {
     fontSize: 24,
@@ -140,6 +134,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'normal',
     color: '#fff',
+    zIndex: 1,
   },
   button: {
     backgroundColor: '#000',
@@ -153,8 +148,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   canvas: {
-    width: 250,
-    height: 400,
-    margin: 50,
+    width: '100%',
+    height: '100%',
+    zIndex: -1,
+    position: 'absolute',
   },
 })
