@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState } from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import {
   StyleSheet,
   Text,
@@ -14,11 +14,8 @@ import { IconButton } from '../components'
 const auth = Firebase.auth()
 
 export default function HomeScreen({ navigation }) {
-  const [myText, setMyText] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
+  const [leaderboard, setLeaderboard] = useState([])
   const { user } = useContext(AuthenticatedUserContext)
-
-  var scores = []
 
   const handleBack = async () => {
     try {
@@ -28,13 +25,38 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
+  useEffect(() => {
+    async function init() {
+      await Firebase.database()
+        .ref(`users`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            var scores = []
+            snapshot.forEach(function (childNodes) {
+              scores.push(
+                childNodes.val().userData.balance +
+                  ' - ' +
+                  childNodes.val().userData.name +
+                  '\n'
+              )
+            })
+            setLeaderboard(scores)
+          } else {
+            console.log('No data available')
+          }
+        })
+    }
+    init()
+  }, [])
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark-content" />
       <IconButton name="left" size={24} color="#fff" onPress={handleBack} />
       <Text style={styles.title}>Leaderboard</Text>
       <Text> </Text>
-      <Text style={styles.text}>{myText}</Text>
+      <Text style={styles.text}>{leaderboard}</Text>
     </View>
   )
 }
