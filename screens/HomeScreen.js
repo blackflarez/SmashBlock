@@ -12,26 +12,21 @@ import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 
-let flag = false
-
 export default function HomeScreen({ navigation }) {
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
-  const [userData, setUserData] = useState({
-    name: '',
-    balance: 0,
-    strength: 1,
-    strengthPrice: 10,
-    automation: 0,
-    automationPrice: 5,
-    timeOffline: 0,
-  })
+  const [name, setName] = useState('')
+  const [balance, setBalance] = useState(0)
+  const [strength, setStrength] = useState(1)
+  const [strengthPrice, setStrengthPrice] = useState(10)
+  const [automation, setAutomation] = useState(0)
+  const [automationPrice, setAutomationPrice] = useState(5)
+  const [timeOffline, setTimeOffline] = useState(0)
 
   const handleSignOut = async () => {
     try {
       await auth.signOut()
-      flag = false
     } catch (error) {
       console.log(error)
     }
@@ -40,10 +35,18 @@ export default function HomeScreen({ navigation }) {
   const handleScores = async () => {
     try {
       navigation.navigate('Scores')
-      flag = false
     } catch (error) {
       console.log(error)
     }
+  }
+
+  async function setDatabase() {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/balance`)
+      .set(balance)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/strength`)
+      .set(strength)
   }
 
   useEffect(() => {
@@ -53,22 +56,31 @@ export default function HomeScreen({ navigation }) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            setUserData(snapshot.val().userData)
+            setBalance(snapshot.val().userData.balance)
+            setStrength(snapshot.val().userData.strength)
+            setStrengthPrice(snapshot.val().userData.strengthPrice)
+            setAutomation(snapshot.val().userData.automation)
+            setAutomationPrice(snapshot.val().userData.automationPrice)
+            setTimeOffline(snapshot.val().userData.timeOffline)
           } else {
             console.log('No data available')
-            userData.name = user.uid
+            setName(user.uid)
+            setDatabase()
           }
           setIsLoading(false)
         })
     }
-    console.log('cock')
     init()
-  }, [userData])
+  }, [])
 
-  async function click() {
-    userData.balance += 1
-    console.log(userData.balance)
-    await Firebase.database().ref(`users/${user.uid}`).set({ userData })
+  console.log('a' + strength)
+
+  async function updateBalance() {
+    setBalance(balance + strength)
+    console.log(balance)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/balance`)
+      .set(balance)
   }
 
   if (isLoading) {
@@ -102,9 +114,9 @@ export default function HomeScreen({ navigation }) {
           onPress={handleSignOut}
         />
       </View>
-      <Text style={styles.title}> Clicks: {userData.balance}</Text>
+      <Text style={styles.title}> Clicks: {balance}</Text>
       <View style={styles.canvas}>
-        <Canvas click={click} />
+        <Canvas click={updateBalance} />
       </View>
     </View>
   )
