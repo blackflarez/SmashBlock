@@ -28,18 +28,18 @@ if (!global.atob) {
   global.atob = decode
 }
 
-export default function Canvas(props) {
-  var cube,
-    floor,
-    world,
-    renderer,
-    scene,
-    camera,
-    speed,
-    deltaX = 0,
-    deltaY = 0,
-    scale = 0
+var deltaX = 0,
+  deltaY = 0,
+  scale = 0,
+  cube,
+  floor,
+  world,
+  renderer,
+  scene,
+  camera,
+  speed
 
+export default function Canvas(props) {
   async function onContextCreate(gl) {
     function loadModel(url) {
       return new Promise((resolve) => {
@@ -157,7 +157,7 @@ export default function Canvas(props) {
     }
 
     var rotationSpeed = 0.002
-    function animate() {
+    async function animate() {
       //rotate cube
       world.rotation.x += deltaY * 0.003
       world.rotation.y += deltaX * 0.003
@@ -216,17 +216,16 @@ export default function Canvas(props) {
 
   function pressOut() {}
 
-  let handlePan = (evt) => {
-    console.log('pan')
+  let handlePan = async (evt) => {
     let { nativeEvent } = evt
+    //console.log(nativeEvent)
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
+    console.log(deltaX)
   }
 
   let handlePinch = (evt) => {
     let { nativeEvent } = evt
-    console.log(nativeEvent)
-
     scale = nativeEvent.velocity
   }
 
