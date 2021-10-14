@@ -47,6 +47,9 @@ export default function HomeScreen({ navigation }) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/strength`)
       .set(strength)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/name`)
+      .set(user.uid)
   }
 
   useEffect(() => {
@@ -64,7 +67,6 @@ export default function HomeScreen({ navigation }) {
             setTimeOffline(snapshot.val().userData.timeOffline)
           } else {
             console.log('No data available')
-            setName(user.uid)
             setDatabase()
           }
           setIsLoading(false)
