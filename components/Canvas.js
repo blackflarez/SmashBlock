@@ -30,6 +30,8 @@ if (!global.atob) {
 
 export default function Canvas(props) {
   var cube,
+    floor,
+    world,
     renderer,
     scene,
     camera,
@@ -87,24 +89,41 @@ export default function Canvas(props) {
       light3.position.set(25, 30, 50)
       const light4 = new THREE.SpotLight(0xffffff, 5)
       light4.position.set(-25, -30, -50)
+      const light5 = new THREE.DirectionalLight(0xffffff, 10.0, 5000)
+      light5.castShadow = true
+
       scene.add(light)
       scene.add(light2)
       scene.add(light3)
       scene.add(light4)
+      scene.add(light5)
 
-      //models
+      //assets
       const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
       const tex = Asset.fromModule(require('../assets/models/cube.png')).uri
+      const floorTex = Asset.fromModule(
+        require('../assets/models/floor.png')
+      ).uri
 
-      let model, texture
+      //models
+      let model, texture, floorModel, floorTexture
+      world = new THREE.Group()
+
       let m1 = loadModel(uri).then((result) => {
         model = result.scene.children[0]
       })
       let t1 = loadTexture(tex).then((result) => {
         texture = result
       })
+      let m2 = loadModel(uri).then((result) => {
+        floorModel = result.scene.children[0]
+      })
+      let t2 = loadTexture(floorTex).then((result) => {
+        floorTexture = result
+      })
 
-      Promise.all([m1, t1]).then(() => {
+      Promise.all([m1, t1, m2, t2]).then(() => {
+        //cube
         cube = model
         texture.flipY = false
         texture.magFilter = THREE.NearestFilter
@@ -112,9 +131,27 @@ export default function Canvas(props) {
         cube.traverse((o) => {
           if (o.isMesh) o.material.map = texture
         })
-        cube.rotation.x = 0.2
-        cube.rotation.y = 0.77
-        scene.add(cube)
+
+        world.add(cube)
+
+        //floor
+        floor = floorModel
+        floorTexture.flipY = false
+        floorTexture.magFilter = THREE.NearestFilter
+        floorTexture.anisotropy = 16
+        floor.traverse((o) => {
+          if (o.isMesh) o.material.map = floorTexture
+        })
+        floor.rotation.x = Math.PI / 2
+        floor.position.y = -0.065
+
+        world.add(floor)
+
+        //world
+        world.rotation.x = 0.2
+        world.rotation.y = 0.77
+
+        scene.add(world)
         animate()
       })
     }
@@ -122,14 +159,14 @@ export default function Canvas(props) {
     var rotationSpeed = 0.002
     function animate() {
       //rotate cube
-      cube.rotation.x += deltaY * 0.003
-      cube.rotation.y += deltaX * 0.003
+      world.rotation.x += deltaY * 0.003
+      world.rotation.y += deltaX * 0.003
 
-      if (cube.rotation.x > 1.2) {
-        cube.rotation.x = 1.2
+      if (world.rotation.x > 1.2) {
+        world.rotation.x = 1.2
       }
-      if (cube.rotation.x < -0.1) {
-        cube.rotation.x = -0.1
+      if (world.rotation.x < -0.1) {
+        world.rotation.x = -0.1
       }
 
       if (deltaX > 0) {
@@ -235,8 +272,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1 }],
   },
   content: {
-    width: 500,
-    height: 500,
+    width: 700,
+    height: 700,
   },
   image: {
     flex: 1,
