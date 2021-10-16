@@ -4,7 +4,7 @@ import {
   Text,
   View,
   Pressable,
-  ImageBackground,
+  Dimensions,
   SafeAreaView,
 } from 'react-native'
 import Expo from 'expo'
@@ -37,7 +37,12 @@ var deltaX = 0,
   renderer,
   scene,
   camera,
-  speed
+  speed,
+  raycaster,
+  mouse,
+  width = Dimensions.get('window').width,
+  height = Dimensions.get('window').height,
+  panning = false
 
 export default function Canvas(props) {
   async function onContextCreate(gl) {
@@ -59,8 +64,10 @@ export default function Canvas(props) {
       //scene.background = new THREE.Color(0xffffff)
 
       //renderer
-      renderer = new Renderer({ gl })
+      renderer = new Renderer({ gl, depth: false })
+
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
+      //renderer.setPixelRatio(window.devicePixelRatio)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
 
@@ -71,9 +78,11 @@ export default function Canvas(props) {
         0.1,
         1000
       )
-      camera.position.z = 500
+      camera.position.z = 1
       camera.position.y = 2
       camera.rotation.x = -0.5
+      //camera.position.set(-0.5, 2, 1.0).multiplyScalar(20)
+      mouse = new THREE.Vector2()
 
       //materials
       const material = new THREE.MeshBasicMaterial({
@@ -156,14 +165,14 @@ export default function Canvas(props) {
       })
     }
 
-    var rotationSpeed = 0.002
     async function animate() {
       //rotate cube
-      world.rotation.x += deltaY * 0.003
-      world.rotation.y += deltaX * 0.003
+      var rotationSpeed = 0.001
+      world.rotation.x += deltaY * rotationSpeed
+      world.rotation.y += deltaX * rotationSpeed
 
-      if (world.rotation.x > 1.2) {
-        world.rotation.x = 1.2
+      if (world.rotation.x > 1.3) {
+        world.rotation.x = 1.3
       }
       if (world.rotation.x < -0.1) {
         world.rotation.x = -0.1
@@ -183,8 +192,8 @@ export default function Canvas(props) {
       }
 
       //scale cube
-      const minimum = 4
-      const maximum = 7
+      const minimum = 7
+      const maximum = 14
       const threshold = 0.5
 
       camera.position.z -= scale / 10
@@ -209,19 +218,41 @@ export default function Canvas(props) {
     console.log('pressed in')
   }
 
-  async function press() {
+  let raycast = async (evt) => {
+    let { nativeEvent } = evt
+    camera.updateProjectionMatrix()
+    mouse.x = (nativeEvent.pageX / width) * 2 - 1
+    mouse.y = -(nativeEvent.pageY / height) * 2 + 1
+    raycaster = new THREE.Raycaster()
+    scene.updateMatrixWorld()
+    raycaster.setFromCamera(mouse, camera)
+    var intersects = raycaster.intersectObjects(scene.children, true)
+    console.log(nativeEvent)
+    for (var i = 0; i < intersects.length; i++) {
+      console.log(intersects[i])
+    }
+  }
+
+  let handlePress = (evt) => {
+    let { nativeEvent } = evt
     console.log('pressed')
     props.click()
+    raycast(evt)
   }
 
   function pressOut() {}
 
   let handlePan = async (evt) => {
+    panning = true
     let { nativeEvent } = evt
     //console.log(nativeEvent)
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
-    console.log(deltaX)
+  }
+
+  let onPanOut = async (evt) => {
+    console.log('pan out')
+    panning = false
   }
 
   let handlePinch = (evt) => {
@@ -232,9 +263,12 @@ export default function Canvas(props) {
   return (
     <SafeAreaView style={styles.container}>
       <PinchGestureHandler onGestureEvent={handlePinch}>
-        <PanGestureHandler onGestureEvent={handlePan}>
+        <PanGestureHandler
+          onGestureEvent={handlePan}
+          onPanResponderRelease={onPanOut}
+        >
           <View style={styles.wrapper}>
-            <Pressable onLongPress={longPress} onPress={press}>
+            <Pressable onLongPress={longPress} onPress={handlePress}>
               <GLView
                 onContextCreate={onContextCreate}
                 style={styles.content}
@@ -271,8 +305,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1 }],
   },
   content: {
-    width: 700,
-    height: 700,
+    width: width,
+    height: height,
   },
   image: {
     flex: 1,
