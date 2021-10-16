@@ -75,11 +75,9 @@ export default function HomeScreen({ navigation }) {
     init()
   }, [])
 
-  console.log('a' + strength)
-
   async function updateBalance() {
     setBalance(balance + strength)
-    console.log(balance)
+    //console.log(balance)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/balance`)
       .set(balance)
