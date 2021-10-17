@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 500,
+    marginBottom: 650,
   },
   title: {
     fontSize: 24,
