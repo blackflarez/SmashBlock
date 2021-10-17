@@ -140,7 +140,7 @@ export default function Canvas(props) {
         cube.traverse((o) => {
           if (o.isMesh) o.material.map = texture
         })
-
+        cube.name = 'cube'
         world.add(cube)
 
         //floor
@@ -153,7 +153,7 @@ export default function Canvas(props) {
         })
         floor.rotation.x = Math.PI / 2
         floor.position.y = -0.065
-
+        floor.name = 'floor'
         world.add(floor)
 
         //world
@@ -227,16 +227,17 @@ export default function Canvas(props) {
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(scene.children, true)
-    console.log(nativeEvent)
     for (var i = 0; i < intersects.length; i++) {
-      console.log(intersects[i])
+      //console.log(intersects[i].object)
+      if (intersects[0].object.name === 'cube') {
+        props.click()
+      }
     }
   }
 
   let handlePress = (evt) => {
     let { nativeEvent } = evt
     console.log('pressed')
-    props.click()
     raycast(evt)
   }
 
