@@ -33,6 +33,7 @@ var deltaX = 0,
   scale = 0,
   cube,
   floor,
+  outerFloors = [],
   world,
   renderer,
   scene,
@@ -116,7 +117,10 @@ export default function Canvas(props) {
 
       //models
       let model, texture, floorModel, floorTexture
+      let floorModels = []
+      let ms = []
       world = new THREE.Group()
+      let floors = 9
 
       let m1 = loadModel(uri).then((result) => {
         model = result.scene.children[0]
@@ -124,14 +128,16 @@ export default function Canvas(props) {
       let t1 = loadTexture(tex).then((result) => {
         texture = result
       })
-      let m2 = loadModel(uri).then((result) => {
-        floorModel = result.scene.children[0]
-      })
       let t2 = loadTexture(floorTex).then((result) => {
         floorTexture = result
       })
+      for (let i = 0; i < floors; i++) {
+        ms[i] = loadModel(uri).then((result) => {
+          floorModels[i] = result.scene.children[0]
+        })
+      }
 
-      Promise.all([m1, t1, m2, t2]).then(() => {
+      Promise.all([m1, t1, t2, ms[7]]).then(() => {
         //cube
         cube = model
         texture.flipY = false
@@ -143,18 +149,47 @@ export default function Canvas(props) {
         cube.name = 'cube'
         world.add(cube)
 
-        //floor
-        floor = floorModel
-        floorTexture.flipY = false
-        floorTexture.magFilter = THREE.NearestFilter
-        floorTexture.anisotropy = 16
-        floor.traverse((o) => {
-          if (o.isMesh) o.material.map = floorTexture
-        })
-        floor.rotation.x = Math.PI / 2
-        floor.position.y = -0.065
-        floor.name = 'floor'
-        world.add(floor)
+        //outerFloors
+        const unit = 0.065
+        var x = unit
+        var z = unit
+        for (let i = 0; i < floors; i++) {
+          outerFloors[i] = floorModels[i]
+          floorTexture.flipY = false
+          floorTexture.magFilter = THREE.NearestFilter
+          floorTexture.anisotropy = 16
+          outerFloors[i].traverse((o) => {
+            if (o.isMesh) o.material.map = floorTexture
+          })
+
+          //console.log(i + 1)
+          console.log((i + 1) % 3)
+
+          if ((i + 1) % (floors / 3) === 1) {
+            x = -unit
+          }
+          if ((i + 1) % (floors / 3) === 2) {
+            x = 0
+          }
+          if ((i + 1) % (floors / 3) === 0) {
+            x = unit
+          }
+          if (i + 1 <= floors / 3) {
+            z = unit
+          }
+          if (i + 1 > (floors / 3) * 2) {
+            z = -unit
+          }
+          if (i + 1 > floors / 3 && i + 1 <= (floors / 3) * 2) {
+            z = 0
+          }
+
+          outerFloors[i].position.y = -0.065
+          outerFloors[i].position.x = x
+          outerFloors[i].position.z = z
+          outerFloors[i].name = `floor${i}`
+          world.add(outerFloors[i])
+        }
 
         //world
         world.rotation.x = 0.2
