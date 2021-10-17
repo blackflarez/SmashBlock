@@ -68,7 +68,6 @@ export default function Canvas(props) {
       renderer = new Renderer({ gl, depth: false })
 
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
-      //renderer.setPixelRatio(window.devicePixelRatio)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
 
@@ -91,15 +90,15 @@ export default function Canvas(props) {
       })
 
       //lights
-      const light = new THREE.SpotLight(0xffffff, 5)
-      light.position.set(0, 50, 30)
-      const light2 = new THREE.SpotLight(0xffffff, 5)
-      light2.position.set(0, -50, -30)
-      const light3 = new THREE.SpotLight(0xffffff, 5)
-      light3.position.set(25, 30, 50)
-      const light4 = new THREE.SpotLight(0xffffff, 5)
-      light4.position.set(-25, -30, -50)
-      const light5 = new THREE.DirectionalLight(0xffffff, 10.0, 5000)
+      const light = new THREE.SpotLight(0xffffff, 2)
+      light.position.set(0, 25, 30)
+      const light2 = new THREE.SpotLight(0xffffff, 2)
+      light2.position.set(0, -35, -30)
+      const light3 = new THREE.SpotLight(0xffffff, 2)
+      light3.position.set(25, 25, 50)
+      const light4 = new THREE.SpotLight(0xffffff, 2)
+      light4.position.set(-25, -35, -50)
+      const light5 = new THREE.DirectionalLight(0xffffff, 1)
       light5.castShadow = true
 
       scene.add(light)
@@ -227,7 +226,7 @@ export default function Canvas(props) {
       }
 
       //scale cube
-      const minimum = 7
+      const minimum = 10
       const maximum = 14
       const threshold = 0.5
 
@@ -338,11 +337,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 1 }],
+    transform: [{ scale: 4 }],
   },
   content: {
-    width: width,
-    height: height,
+    width: width / 4,
+    height: height / 4,
   },
   image: {
     flex: 1,
