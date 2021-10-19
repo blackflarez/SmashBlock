@@ -28,17 +28,14 @@ export default function HomeScreen({ navigation }) {
   useEffect(() => {
     async function init() {
       await Firebase.database()
-        .ref(`users`)
+        .ref(`scores`)
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
             var scores = []
             snapshot.forEach(function (childNodes) {
               scores.push(
-                childNodes.val().userData.balance +
-                  ' - ' +
-                  childNodes.val().userData.name +
-                  '\n'
+                childNodes.val().score + ' - ' + childNodes.val().name + '\n'
               )
             })
             setLeaderboard(scores)

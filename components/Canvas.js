@@ -119,7 +119,8 @@ export default function Canvas(props) {
       let floorModels = []
       let ms = []
       world = new THREE.Group()
-      let floors = 9
+      let sizes = [1, 9, 25, 49, 81]
+      let floors = sizes[1]
 
       let m1 = loadModel(uri).then((result) => {
         model = result.scene.children[0]
@@ -152,7 +153,33 @@ export default function Canvas(props) {
         const unit = 0.065
         var x = unit
         var z = unit
+        let length = Math.sqrt(floors)
+        let map = []
+
+        function addCell(x, y) {
+          map.push([x * unit, y * unit])
+        }
+
+        function createMap(rowCount, columnCount) {
+          for (
+            let x = -Math.floor(length / 2);
+            x < rowCount - Math.floor(length / 2);
+            x++
+          ) {
+            for (
+              let y = -Math.floor(length / 2);
+              y < columnCount - Math.floor(length / 2);
+              y++
+            ) {
+              addCell(x, y)
+            }
+          }
+        }
+
+        createMap(length, length)
+
         for (let i = 0; i < floors; i++) {
+          console.log(map[i])
           outerFloors[i] = floorModels[i]
           floorTexture.flipY = false
           floorTexture.magFilter = THREE.NearestFilter
@@ -161,27 +188,8 @@ export default function Canvas(props) {
             if (o.isMesh) o.material.map = floorTexture
           })
 
-          //console.log(i + 1)
-          console.log((i + 1) % 3)
-
-          if ((i + 1) % (floors / 3) === 1) {
-            x = -unit
-          }
-          if ((i + 1) % (floors / 3) === 2) {
-            x = 0
-          }
-          if ((i + 1) % (floors / 3) === 0) {
-            x = unit
-          }
-          if (i + 1 <= floors / 3) {
-            z = unit
-          }
-          if (i + 1 > (floors / 3) * 2) {
-            z = -unit
-          }
-          if (i + 1 > floors / 3 && i + 1 <= (floors / 3) * 2) {
-            z = 0
-          }
+          x = map[i].slice(0, 1)
+          z = map[i].slice(1)
 
           outerFloors[i].position.y = -0.065
           outerFloors[i].position.x = x
@@ -320,7 +328,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: 'rgba(52, 52, 52, 0)',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -337,11 +345,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 4 }],
+    transform: [{ scale: 2 }],
   },
   content: {
-    width: width / 4,
-    height: height / 4,
+    width: width / 2,
+    height: height / 2,
   },
   image: {
     flex: 1,
