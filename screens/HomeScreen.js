@@ -81,6 +81,8 @@ export default function HomeScreen({ navigation }) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/balance`)
       .set(balance)
+    await Firebase.database().ref(`scores/${user.uid}/score`).set(balance)
+    await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
   }
 
   if (isLoading) {
