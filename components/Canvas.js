@@ -154,7 +154,7 @@ export default function Canvas(props) {
           o.material.metalness = 0
         })
         cube.name = 'cube'
-        cube.receiveShadow = true
+        //cube.receiveShadow = true
         cube.castShadow = true
         world.add(cube)
 
