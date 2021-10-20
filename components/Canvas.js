@@ -70,6 +70,7 @@ export default function Canvas(props) {
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
+      renderer.shadowMap.enabled = true
 
       //camera
       camera = new THREE.PerspectiveCamera(
@@ -98,14 +99,19 @@ export default function Canvas(props) {
       light3.position.set(25, 25, 50)
       const light4 = new THREE.SpotLight(0xffffff, 2)
       light4.position.set(-25, -35, -50)
-      const light5 = new THREE.DirectionalLight(0xffffff, 1)
+      const light5 = new THREE.DirectionalLight(0xffffff, 2)
+      light5.position.set(-100, 120, 300)
+      light5.shadow.mapSize.set(4096, 4096)
       light5.castShadow = true
 
-      scene.add(light)
-      scene.add(light2)
-      scene.add(light3)
-      scene.add(light4)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+
+      //scene.add(light)
+      //scene.add(light2)
+      //scene.add(light3)
+      //scene.add(light4)
       scene.add(light5)
+      scene.add(ambientLight)
 
       //assets
       const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
@@ -145,8 +151,11 @@ export default function Canvas(props) {
         texture.anisotropy = 16
         cube.traverse((o) => {
           if (o.isMesh) o.material.map = texture
+          o.material.metalness = 0
         })
         cube.name = 'cube'
+        cube.receiveShadow = true
+        cube.castShadow = true
         world.add(cube)
 
         //outerFloors
@@ -186,6 +195,7 @@ export default function Canvas(props) {
           floorTexture.anisotropy = 16
           outerFloors[i].traverse((o) => {
             if (o.isMesh) o.material.map = floorTexture
+            o.material.metalness = 0
           })
 
           x = map[i].slice(0, 1)
@@ -195,6 +205,8 @@ export default function Canvas(props) {
           outerFloors[i].position.x = x
           outerFloors[i].position.z = z
           outerFloors[i].name = `floor${i}`
+          outerFloors[i].receiveShadow = true
+          outerFloors[i].castShadow = false
           world.add(outerFloors[i])
         }
 
