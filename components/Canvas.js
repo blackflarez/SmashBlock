@@ -62,6 +62,7 @@ export default function Canvas(props) {
     async function init() {
       //scene
       scene = new THREE.Scene()
+      world = new THREE.Group()
       //scene.background = new THREE.Color(0xffffff)
 
       //renderer
@@ -91,27 +92,15 @@ export default function Canvas(props) {
       })
 
       //lights
-      const light = new THREE.SpotLight(0xffffff, 2)
-      light.position.set(0, 25, 30)
-      const light2 = new THREE.SpotLight(0xffffff, 2)
-      light2.position.set(0, -35, -30)
-      const light3 = new THREE.SpotLight(0xffffff, 2)
-      light3.position.set(25, 25, 50)
-      const light4 = new THREE.SpotLight(0xffffff, 2)
-      light4.position.set(-25, -35, -50)
       const light5 = new THREE.DirectionalLight(0xffffff, 2)
       light5.position.set(-100, 120, 300)
-      light5.shadow.mapSize.set(4096, 4096)
+      light5.shadow.mapSize.set(8192, 8192)
       light5.castShadow = true
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 1)
 
-      //scene.add(light)
-      //scene.add(light2)
-      //scene.add(light3)
-      //scene.add(light4)
-      scene.add(light5)
-      scene.add(ambientLight)
+      world.add(light5)
+      world.add(ambientLight)
 
       //assets
       const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
@@ -124,9 +113,11 @@ export default function Canvas(props) {
       let model, texture, floorModel, floorTexture
       let floorModels = []
       let ms = []
-      world = new THREE.Group()
+
       let sizes = [1, 9, 25, 49, 81]
-      let floors = sizes[1]
+      let levels = 3
+      let floors = sizes[2]
+      let area = levels * floors
 
       let m1 = loadModel(uri).then((result) => {
         model = result.scene.children[0]
@@ -137,13 +128,13 @@ export default function Canvas(props) {
       let t2 = loadTexture(floorTex).then((result) => {
         floorTexture = result
       })
-      for (let i = 0; i < floors; i++) {
+      for (let i = 0; i < area; i++) {
         ms[i] = loadModel(uri).then((result) => {
           floorModels[i] = result.scene.children[0]
         })
       }
 
-      Promise.all([m1, t1, t2, ms[7]]).then(() => {
+      Promise.all([m1, t1, t2, ms[area]]).then(() => {
         //cube
         cube = model
         texture.flipY = false
@@ -162,11 +153,12 @@ export default function Canvas(props) {
         const unit = 0.065
         var x = unit
         var z = unit
+        var y = unit
         let length = Math.sqrt(floors)
         let map = []
 
-        function addCell(x, y) {
-          map.push([x * unit, y * unit])
+        function addCell(x, z) {
+          map.push([x * unit, z * unit])
         }
 
         function createMap(rowCount, columnCount) {
@@ -176,38 +168,44 @@ export default function Canvas(props) {
             x++
           ) {
             for (
-              let y = -Math.floor(length / 2);
-              y < columnCount - Math.floor(length / 2);
-              y++
+              let z = -Math.floor(length / 2);
+              z < columnCount - Math.floor(length / 2);
+              z++
             ) {
-              addCell(x, y)
+              addCell(x, z)
             }
           }
         }
 
         createMap(length, length)
+        console.log(floorModels)
+        let l = 0
+        for (let level = -levels; level < 0; level++) {
+          for (let i = 0; i < floors; i++) {
+            let lev = i + l * floors
+            outerFloors[lev] = floorModels[lev]
+            floorTexture.flipY = false
+            floorTexture.magFilter = THREE.NearestFilter
+            floorTexture.anisotropy = 16
+            outerFloors[lev].traverse((o) => {
+              if (o.isMesh) o.material.map = floorTexture
+              o.material.metalness = 0
+            })
 
-        for (let i = 0; i < floors; i++) {
-          console.log(map[i])
-          outerFloors[i] = floorModels[i]
-          floorTexture.flipY = false
-          floorTexture.magFilter = THREE.NearestFilter
-          floorTexture.anisotropy = 16
-          outerFloors[i].traverse((o) => {
-            if (o.isMesh) o.material.map = floorTexture
-            o.material.metalness = 0
-          })
+            x = map[i].slice(0, 1)
+            z = map[i].slice(1)
+            y = level * unit
+            console.log(y)
 
-          x = map[i].slice(0, 1)
-          z = map[i].slice(1)
-
-          outerFloors[i].position.y = -0.065
-          outerFloors[i].position.x = x
-          outerFloors[i].position.z = z
-          outerFloors[i].name = `floor${i}`
-          outerFloors[i].receiveShadow = true
-          outerFloors[i].castShadow = false
-          world.add(outerFloors[i])
+            outerFloors[lev].position.y = y
+            outerFloors[lev].position.x = x
+            outerFloors[lev].position.z = z
+            outerFloors[lev].name = `floor${i}`
+            outerFloors[lev].receiveShadow = true
+            outerFloors[lev].castShadow = false
+            world.add(outerFloors[lev])
+          }
+          l++
         }
 
         //world
