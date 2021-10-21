@@ -6,6 +6,7 @@ import {
   Pressable,
   Dimensions,
   SafeAreaView,
+  Platform,
 } from 'react-native'
 import Expo from 'expo'
 import * as THREE from 'three'
@@ -16,6 +17,8 @@ import {
   PanGestureHandler,
   PinchGestureHandler,
 } from 'react-native-gesture-handler'
+import * as TWEEN from '@tweenjs/tween.js'
+import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
@@ -32,7 +35,6 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
-  floor,
   outerFloors = [],
   world,
   renderer,
@@ -43,7 +45,11 @@ var deltaX = 0,
   mouse,
   width = Dimensions.get('window').width,
   height = Dimensions.get('window').height,
-  panning = false
+  panning = false,
+  longPressing = false,
+  longPressingOut = false,
+  hovering = [],
+  unit = 0.065
 
 export default function Canvas(props) {
   async function onContextCreate(gl) {
@@ -83,7 +89,7 @@ export default function Canvas(props) {
       camera.position.z = 1
       camera.position.y = 2
       camera.rotation.x = -0.5
-      //camera.position.set(-0.5, 2, 1.0).multiplyScalar(20)
+
       mouse = new THREE.Vector2()
 
       //materials
@@ -92,8 +98,8 @@ export default function Canvas(props) {
       })
 
       //lights
-      const light5 = new THREE.DirectionalLight(0xffffff, 2)
-      light5.position.set(-100, 120, 300)
+      const light5 = new THREE.DirectionalLight(0xffffff, 1.5)
+      light5.position.set(-100, 150, 150)
       light5.shadow.mapSize.set(8192, 8192)
       light5.castShadow = true
 
@@ -145,12 +151,10 @@ export default function Canvas(props) {
           o.material.metalness = 0
         })
         cube.name = 'cube'
-        //cube.receiveShadow = true
         cube.castShadow = true
         world.add(cube)
 
-        //outerFloors
-        const unit = 0.065
+        //Floors
         var x = unit
         var z = unit
         var y = unit
@@ -178,7 +182,6 @@ export default function Canvas(props) {
         }
 
         createMap(length, length)
-        console.log(floorModels)
         let l = 0
         for (let level = -levels; level < 0; level++) {
           for (let i = 0; i < floors; i++) {
@@ -195,12 +198,11 @@ export default function Canvas(props) {
             x = map[i].slice(0, 1)
             z = map[i].slice(1)
             y = level * unit
-            console.log(y)
 
             outerFloors[lev].position.y = y
             outerFloors[lev].position.x = x
             outerFloors[lev].position.z = z
-            outerFloors[lev].name = `floor${i}`
+            outerFloors[lev].name = `floor`
             outerFloors[lev].receiveShadow = true
             outerFloors[lev].castShadow = false
             world.add(outerFloors[lev])
@@ -211,14 +213,13 @@ export default function Canvas(props) {
         //world
         world.rotation.x = 0.2
         world.rotation.y = 0.77
-
         scene.add(world)
         animate()
       })
     }
 
     async function animate() {
-      //rotate cube
+      //Rotate cube
       var rotationSpeed = 0.001
       world.rotation.x += deltaY * rotationSpeed
       world.rotation.y += deltaX * rotationSpeed
@@ -243,7 +244,7 @@ export default function Canvas(props) {
         deltaY += 1
       }
 
-      //scale cube
+      //Scale cube
       const minimum = 10
       const maximum = 14
       const threshold = 0.5
@@ -257,17 +258,14 @@ export default function Canvas(props) {
         camera.position.z = maximum
       }
 
-      camera.lookAt(cube.position)
+      TWEEN.update()
+      camera.lookAt(0, 0, 0)
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
       gl.endFrameEXP()
     }
 
     init()
-  }
-
-  function longPress() {
-    console.log('pressed in')
   }
 
   let raycast = async (evt) => {
@@ -279,26 +277,163 @@ export default function Canvas(props) {
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(scene.children, true)
+
     for (var i = 0; i < intersects.length; i++) {
-      //console.log(intersects[i].object)
-      if (intersects[0].object.name === 'cube') {
-        props.click()
+      //Placing cube
+      if (
+        intersects[0].object.name === 'floor' &&
+        intersects[0].object.position.y === -unit &&
+        hovering.length !== 0
+      ) {
+        const place = new TWEEN.Tween(hovering[0].position)
+          .to(
+            {
+              x: intersects[0].object.position.x,
+              y: intersects[0].object.position.y + unit,
+              z: intersects[0].object.position.z,
+            },
+            300
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Exponential.Out)
+
+        place.start()
+        hovering = []
+      }
+      //Cancel placing cube
+      if (
+        hovering.length !== 0 &&
+        intersects[0].object.name !== 'floor' &&
+        !longPressing &&
+        !longPressingOut
+      ) {
+        const place = new TWEEN.Tween(hovering[0].position)
+          .to(
+            {
+              x: hovering[0].position.x,
+              y: hovering[0].position.y - unit,
+              z: hovering[0].position.z,
+            },
+            300
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Exponential.Out)
+
+        place.start()
+        hovering = []
+      }
+
+      function haptics(style) {
+        if (Platform.OS !== 'web') {
+          Haptics.impactAsync(style)
+        }
+      }
+
+      if (intersects[0].object.name === 'cube' && hovering.length === 0) {
+        //Picking up cube
+        if (longPressing) {
+          haptics(Haptics.ImpactFeedbackStyle.Light)
+          const rise = new TWEEN.Tween(cube.position)
+            .to(
+              {
+                x: intersects[0].object.position.x,
+                y: intersects[0].object.position.y + unit,
+                z: intersects[0].object.position.z,
+              },
+              100
+            )
+            .yoyo(true)
+            .easing(TWEEN.Easing.Exponential.In)
+
+          const inflate = new TWEEN.Tween(cube.scale)
+            .to(
+              {
+                x: 0.037,
+                y: 0.032,
+                z: 0.037,
+              },
+              100
+            )
+            .yoyo(true)
+            .easing(TWEEN.Easing.Elastic.Out)
+
+          const deflate = new TWEEN.Tween(cube.scale)
+            .to(
+              {
+                x: 0.032499998807907104,
+                y: 0.032499998807907104,
+                z: 0.032499998807907104,
+              },
+              25
+            )
+            .yoyo(true)
+
+          inflate.chain(deflate)
+          inflate.start()
+
+          rise.start()
+          hovering.push(intersects[0].object)
+        }
+        //Clicking cube
+        else if (hovering.length === 0) {
+          const inflate = new TWEEN.Tween(cube.scale)
+            .to(
+              {
+                x: 0.037,
+                y: 0.032,
+                z: 0.037,
+              },
+              100
+            )
+            .yoyo(true)
+            .easing(TWEEN.Easing.Elastic.Out)
+
+          const deflate = new TWEEN.Tween(cube.scale)
+            .to(
+              {
+                x: 0.032499998807907104,
+                y: 0.032499998807907104,
+                z: 0.032499998807907104,
+              },
+              25
+            )
+            .yoyo(true)
+
+          inflate.chain(deflate)
+          inflate.start()
+
+          props.click()
+        }
       }
     }
   }
 
-  let handlePress = (evt) => {
-    let { nativeEvent } = evt
-    console.log('pressed')
+  let handleLongPress = (evt) => {
+    longPressing = true
     raycast(evt)
+    console.log('LongPress')
   }
 
-  function pressOut() {}
+  let handlePress = (evt) => {
+    let { nativeEvent } = evt
+    raycast(evt)
+    console.log('Press')
+  }
+
+  let handlePressOut = (evt) => {
+    if (longPressing) {
+      console.log('LongPressOut')
+      longPressing = false
+      //longPressingOut = true
+      //raycast(evt)
+    } else {
+      console.log('PressOut')
+    }
+  }
 
   let handlePan = async (evt) => {
     panning = true
     let { nativeEvent } = evt
-    //console.log(nativeEvent)
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
   }
@@ -321,7 +456,11 @@ export default function Canvas(props) {
           onPanResponderRelease={onPanOut}
         >
           <View style={styles.wrapper}>
-            <Pressable onLongPress={longPress} onPress={handlePress}>
+            <Pressable
+              onLongPress={handleLongPress}
+              onPressOut={handlePressOut}
+              onPress={handlePress}
+            >
               <GLView
                 onContextCreate={onContextCreate}
                 style={styles.content}
