@@ -37,6 +37,7 @@ var deltaX = 0,
   scale = 0,
   cube,
   sky,
+  floors,
   outerFloors = [],
   world,
   renderer,
@@ -124,7 +125,7 @@ export default function Canvas(props) {
 
       let sizes = [1, 9, 25, 49, 81, 121, 169, 225, 289]
       let levels = 3
-      let floors = sizes[4]
+      floors = sizes[2]
       let area = levels * floors
 
       let m1 = loadModel(uri).then((result) => {
@@ -245,8 +246,8 @@ export default function Canvas(props) {
       if (world.rotation.x > 1.3) {
         world.rotation.x = 1.3
       }
-      if (world.rotation.x < -0.1) {
-        world.rotation.x = -0.1
+      if (world.rotation.x < -0) {
+        world.rotation.x = 0
       }
 
       if (deltaX > 0) {
@@ -264,10 +265,22 @@ export default function Canvas(props) {
 
       //Scale cube
       const minimum = 10
-      const maximum = 18
+      const maximum = floors
       const threshold = 0.5
-
-      camera.position.z -= scale / 10
+      console.log(scale)
+      camera.position.z -= scale / 15
+      if (scale > 0) {
+        scale -= 0.1
+      }
+      if (scale < 0) {
+        scale += 0.1
+      }
+      if (scale > 0) {
+        scale -= 0.1
+      }
+      if (scale < 0) {
+        scale += 0.1
+      }
 
       if (camera.position.z < minimum) {
         camera.position.z = minimum
