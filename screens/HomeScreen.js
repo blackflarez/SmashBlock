@@ -75,7 +75,8 @@ export default function HomeScreen({ navigation }) {
     init()
   }, [])
 
-  async function updateBalance() {
+  async function updateBalance(url) {
+    console.log(url)
     setBalance(balance + strength)
     //console.log(balance)
     await Firebase.database()
