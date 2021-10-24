@@ -22,6 +22,7 @@ import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
+import { MeshBasicMaterial } from 'three'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -35,6 +36,7 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  sky,
   outerFloors = [],
   world,
   renderer,
@@ -116,31 +118,37 @@ export default function Canvas(props) {
       ).uri
 
       //models
-      let model, texture, floorModel, floorTexture
+      let model, texture, skyModel, floorTexture
       let floorModels = []
       let ms = []
 
-      let sizes = [1, 9, 25, 49, 81]
+      let sizes = [1, 9, 25, 49, 81, 121, 169, 225, 289]
       let levels = 3
-      let floors = sizes[2]
+      let floors = sizes[4]
       let area = levels * floors
 
       let m1 = loadModel(uri).then((result) => {
         model = result.scene.children[0]
       })
+
+      let m2 = loadModel(uri).then((result) => {
+        skyModel = result.scene.children[0]
+      })
+
       let t1 = loadTexture(tex).then((result) => {
         texture = result
       })
       let t2 = loadTexture(floorTex).then((result) => {
         floorTexture = result
       })
+
       for (let i = 0; i < area; i++) {
         ms[i] = loadModel(uri).then((result) => {
           floorModels[i] = result.scene.children[0]
         })
       }
 
-      Promise.all([m1, t1, t2, ms[area]]).then(() => {
+      Promise.all([m1, t1, t2, m2, ms[area]]).then(() => {
         //cube
         cube = model
         texture.flipY = false
@@ -153,6 +161,16 @@ export default function Canvas(props) {
         cube.name = 'cube'
         cube.castShadow = true
         world.add(cube)
+
+        //Skybox
+        sky = skyModel
+        sky.name = 'sky'
+        sky.material = new THREE.MeshBasicMaterial({ color: 0x78a7f1 })
+        sky.material.side = THREE.BackSide
+        sky.scale.x = 600
+        sky.scale.z = 600
+        sky.scale.y = 600
+        scene.add(sky)
 
         //Floors
         var x = unit
@@ -246,7 +264,7 @@ export default function Canvas(props) {
 
       //Scale cube
       const minimum = 10
-      const maximum = 14
+      const maximum = 18
       const threshold = 0.5
 
       camera.position.z -= scale / 10
@@ -494,11 +512,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 2 }],
+    transform: [{ scale: 3 }],
   },
   content: {
-    width: width / 2,
-    height: height / 2,
+    width: width / 3,
+    height: height / 3,
   },
   image: {
     flex: 1,
