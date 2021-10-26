@@ -267,7 +267,6 @@ export default function Canvas(props) {
       const minimum = 10
       const maximum = floors
       const threshold = 0.5
-      console.log(scale)
       camera.position.z -= scale / 15
       if (scale > 0) {
         scale -= 0.1
@@ -299,6 +298,86 @@ export default function Canvas(props) {
     init()
   }
 
+  function animate(type, target, reference) {
+    const place = new TWEEN.Tween(target.position)
+      .to(
+        {
+          x: reference.position.x,
+          y: reference.position.y + unit,
+          z: reference.position.z,
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.Out)
+
+    const cancel = new TWEEN.Tween(target.position)
+      .to(
+        {
+          x: reference.position.x,
+          y: reference.position.y - unit,
+          z: reference.position.z,
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.Out)
+
+    const inflate = new TWEEN.Tween(target.scale)
+      .to(
+        {
+          x: 0.037,
+          y: 0.032,
+          z: 0.037,
+        },
+        100
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Elastic.Out)
+
+    const deflate = new TWEEN.Tween(target.scale)
+      .to(
+        {
+          x: 0.032499998807907104,
+          y: 0.032499998807907104,
+          z: 0.032499998807907104,
+        },
+        25
+      )
+      .yoyo(true)
+
+    const rise = new TWEEN.Tween(target.position)
+      .to(
+        {
+          x: reference.position.x,
+          y: reference.position.y + unit,
+          z: reference.position.z,
+        },
+        100
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.In)
+
+    if (type === 'place') {
+      place.start()
+    } else if (type === 'cancel') {
+      cancel.start()
+    } else if (type === 'rise') {
+      inflate.chain(deflate)
+      inflate.start()
+      rise.start()
+    } else if (type === 'click') {
+      inflate.chain(deflate)
+      inflate.start()
+    }
+  }
+
+  function haptics(style) {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(style)
+    }
+  }
+
   let raycast = async (evt) => {
     let { nativeEvent } = evt
     camera.updateProjectionMatrix()
@@ -316,19 +395,7 @@ export default function Canvas(props) {
         intersects[0].object.position.y === -unit &&
         hovering.length !== 0
       ) {
-        const place = new TWEEN.Tween(hovering[0].position)
-          .to(
-            {
-              x: intersects[0].object.position.x,
-              y: intersects[0].object.position.y + unit,
-              z: intersects[0].object.position.z,
-            },
-            300
-          )
-          .yoyo(true)
-          .easing(TWEEN.Easing.Exponential.Out)
-
-        place.start()
+        animate('place', hovering[0], intersects[0].object)
         hovering = []
       }
       //Cancel placing cube
@@ -338,101 +405,20 @@ export default function Canvas(props) {
         !longPressing &&
         !longPressingOut
       ) {
-        const place = new TWEEN.Tween(hovering[0].position)
-          .to(
-            {
-              x: hovering[0].position.x,
-              y: hovering[0].position.y - unit,
-              z: hovering[0].position.z,
-            },
-            300
-          )
-          .yoyo(true)
-          .easing(TWEEN.Easing.Exponential.Out)
-
-        place.start()
+        animate('cancel', hovering[0], hovering[0])
         hovering = []
-      }
-
-      function haptics(style) {
-        if (Platform.OS !== 'web') {
-          Haptics.impactAsync(style)
-        }
       }
 
       if (intersects[0].object.name === 'cube' && hovering.length === 0) {
         //Picking up cube
         if (longPressing) {
           haptics(Haptics.ImpactFeedbackStyle.Light)
-          const rise = new TWEEN.Tween(cube.position)
-            .to(
-              {
-                x: intersects[0].object.position.x,
-                y: intersects[0].object.position.y + unit,
-                z: intersects[0].object.position.z,
-              },
-              100
-            )
-            .yoyo(true)
-            .easing(TWEEN.Easing.Exponential.In)
-
-          const inflate = new TWEEN.Tween(cube.scale)
-            .to(
-              {
-                x: 0.037,
-                y: 0.032,
-                z: 0.037,
-              },
-              100
-            )
-            .yoyo(true)
-            .easing(TWEEN.Easing.Elastic.Out)
-
-          const deflate = new TWEEN.Tween(cube.scale)
-            .to(
-              {
-                x: 0.032499998807907104,
-                y: 0.032499998807907104,
-                z: 0.032499998807907104,
-              },
-              25
-            )
-            .yoyo(true)
-
-          inflate.chain(deflate)
-          inflate.start()
-
-          rise.start()
+          animate('rise', intersects[0].object, intersects[0].object)
           hovering.push(intersects[0].object)
         }
         //Clicking cube
         else if (hovering.length === 0) {
-          const inflate = new TWEEN.Tween(cube.scale)
-            .to(
-              {
-                x: 0.037,
-                y: 0.032,
-                z: 0.037,
-              },
-              100
-            )
-            .yoyo(true)
-            .easing(TWEEN.Easing.Elastic.Out)
-
-          const deflate = new TWEEN.Tween(cube.scale)
-            .to(
-              {
-                x: 0.032499998807907104,
-                y: 0.032499998807907104,
-                z: 0.032499998807907104,
-              },
-              25
-            )
-            .yoyo(true)
-
-          inflate.chain(deflate)
-          inflate.start()
-
+          animate('click', intersects[0].object, intersects[0].object)
           props.click()
         }
       }
