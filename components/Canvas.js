@@ -52,7 +52,8 @@ var deltaX = 0,
   longPressing = false,
   longPressingOut = false,
   hovering = [],
-  unit = 0.065
+  unit = 0.065,
+  count = 0
 
 export default function Canvas(props) {
   async function onContextCreate(gl) {
@@ -90,8 +91,7 @@ export default function Canvas(props) {
         1000
       )
       camera.position.z = 1
-      camera.position.y = 2
-      camera.rotation.x = -0.5
+      camera.position.y = 3.5
 
       mouse = new THREE.Vector2()
 
@@ -101,8 +101,8 @@ export default function Canvas(props) {
       })
 
       //lights
-      const light5 = new THREE.DirectionalLight(0xffffff, 1.5)
-      light5.position.set(-100, 150, 150)
+      const light5 = new THREE.DirectionalLight(0xffffff, 1)
+      light5.position.set(-100, 200, 150)
       light5.shadow.mapSize.set(8192, 8192)
       light5.castShadow = true
 
@@ -123,9 +123,9 @@ export default function Canvas(props) {
       let floorModels = []
       let ms = []
 
-      let sizes = [1, 9, 25, 49, 81, 121, 169, 225, 289]
+      let sizes = [0, 1, 9, 25, 49, 81, 121, 169, 225, 289]
       let levels = 3
-      floors = sizes[2]
+      floors = sizes[0]
       let area = levels * floors
 
       let m1 = loadModel(uri).then((result) => {
@@ -152,13 +152,8 @@ export default function Canvas(props) {
       Promise.all([m1, t1, t2, m2, ms[area]]).then(() => {
         //cube
         cube = model
-        texture.flipY = false
-        texture.magFilter = THREE.NearestFilter
-        texture.anisotropy = 16
-        cube.traverse((o) => {
-          if (o.isMesh) o.material.map = texture
-          o.material.metalness = 0
-        })
+        cube.material = new THREE.MeshLambertMaterial({ color: 0x65524d })
+        cube.material.metalness = 0
         cube.name = 'cube'
         cube.castShadow = true
         world.add(cube)
@@ -166,7 +161,7 @@ export default function Canvas(props) {
         //Skybox
         sky = skyModel
         sky.name = 'sky'
-        sky.material = new THREE.MeshBasicMaterial({ color: 0x78a7f1 })
+        sky.material = new THREE.MeshBasicMaterial({ color: 0xede7d9 })
         sky.material.side = THREE.BackSide
         sky.scale.x = 600
         sky.scale.z = 600
@@ -209,11 +204,11 @@ export default function Canvas(props) {
             floorTexture.flipY = false
             floorTexture.magFilter = THREE.NearestFilter
             floorTexture.anisotropy = 16
-            outerFloors[lev].traverse((o) => {
-              if (o.isMesh) o.material.map = floorTexture
-              o.material.metalness = 0
+            outerFloors[lev].material = new THREE.MeshStandardMaterial({
+              color: 0xede7d9,
             })
-
+            outerFloors[lev].material.metalness = 0
+            outerFloors[lev].material.roughness = 1
             x = map[i].slice(0, 1)
             z = map[i].slice(1)
             y = level * unit
@@ -222,7 +217,10 @@ export default function Canvas(props) {
             outerFloors[lev].position.x = x
             outerFloors[lev].position.z = z
             outerFloors[lev].name = `floor`
-            outerFloors[lev].receiveShadow = true
+            if (level === -1) {
+              outerFloors[lev].receiveShadow = true
+            }
+
             outerFloors[lev].castShadow = false
             world.add(outerFloors[lev])
           }
@@ -230,7 +228,6 @@ export default function Canvas(props) {
         }
 
         //world
-        world.rotation.x = 0.2
         world.rotation.y = 0.77
         scene.add(world)
         animate()
@@ -264,8 +261,8 @@ export default function Canvas(props) {
       }
 
       //Scale cube
-      const minimum = 10
-      const maximum = floors
+      const minimum = 7
+      const maximum = 15 + floors
       const threshold = 0.5
       camera.position.z -= scale / 15
       if (scale > 0) {
@@ -298,7 +295,7 @@ export default function Canvas(props) {
     init()
   }
 
-  function animate(type, target, reference) {
+  function animation(type, target, reference) {
     const place = new TWEEN.Tween(target.position)
       .to(
         {
@@ -326,9 +323,9 @@ export default function Canvas(props) {
     const inflate = new TWEEN.Tween(target.scale)
       .to(
         {
-          x: 0.037,
-          y: 0.032,
-          z: 0.037,
+          x: 0.036,
+          y: 0.035,
+          z: 0.036,
         },
         100
       )
@@ -342,7 +339,7 @@ export default function Canvas(props) {
           y: 0.032499998807907104,
           z: 0.032499998807907104,
         },
-        25
+        40
       )
       .yoyo(true)
 
@@ -358,6 +355,18 @@ export default function Canvas(props) {
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.In)
 
+    const destroy = new TWEEN.Tween(target.scale)
+      .to(
+        {
+          x: 0,
+          y: 0,
+          z: 0,
+        },
+        1
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.Out)
+
     if (type === 'place') {
       place.start()
     } else if (type === 'cancel') {
@@ -369,6 +378,9 @@ export default function Canvas(props) {
     } else if (type === 'click') {
       inflate.chain(deflate)
       inflate.start()
+    } else if (type === 'destroy') {
+      destroy.chain(deflate)
+      destroy.start()
     }
   }
 
@@ -395,7 +407,7 @@ export default function Canvas(props) {
         intersects[0].object.position.y === -unit &&
         hovering.length !== 0
       ) {
-        animate('place', hovering[0], intersects[0].object)
+        animation('place', hovering[0], intersects[0].object)
         hovering = []
       }
       //Cancel placing cube
@@ -405,7 +417,7 @@ export default function Canvas(props) {
         !longPressing &&
         !longPressingOut
       ) {
-        animate('cancel', hovering[0], hovering[0])
+        animation('cancel', hovering[0], hovering[0])
         hovering = []
       }
 
@@ -413,13 +425,25 @@ export default function Canvas(props) {
         //Picking up cube
         if (longPressing) {
           haptics(Haptics.ImpactFeedbackStyle.Light)
-          animate('rise', intersects[0].object, intersects[0].object)
+          animation('rise', intersects[0].object, intersects[0].object)
           hovering.push(intersects[0].object)
         }
         //Clicking cube
         else if (hovering.length === 0) {
-          animate('click', intersects[0].object, intersects[0].object)
-          props.click()
+          if (count == 10) {
+            animation('destroy', intersects[0].object, intersects[0].object)
+            haptics(Haptics.ImpactFeedbackStyle.Heavy)
+            intersects[0].object.material = new THREE.MeshLambertMaterial({
+              color: Math.random() * 0xffffff,
+            })
+            count = 0
+          } else {
+            //haptics(Haptics.ImpactFeedbackStyle.Light)
+            animation('click', intersects[0].object, intersects[0].object)
+            count++
+          }
+
+          props.click('balance')
         }
       }
     }
@@ -511,11 +535,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 3 }],
+    transform: [{ scale: 2 }],
   },
   content: {
-    width: width / 3,
-    height: height / 3,
+    width: width / 2,
+    height: height / 2,
   },
   image: {
     flex: 1,
