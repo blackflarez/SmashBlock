@@ -75,15 +75,17 @@ export default function HomeScreen({ navigation }) {
     init()
   }, [])
 
-  async function updateBalance(url) {
-    console.log(url)
+  async function updateBalance(type) {
+    console.log(type)
     setBalance(balance + strength)
     //console.log(balance)
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/balance`)
+      .ref(`users/${user.uid}/userData/${type}`)
       .set(balance)
-    await Firebase.database().ref(`scores/${user.uid}/score`).set(balance)
-    await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
+    if (type === 'balance') {
+      await Firebase.database().ref(`scores/${user.uid}/score`).set(balance)
+      await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
+    }
   }
 
   if (isLoading) {
