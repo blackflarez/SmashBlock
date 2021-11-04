@@ -8,11 +8,16 @@ import {
   SafeAreaView,
   Platform,
 } from 'react-native'
-import Expo from 'expo'
+import Expo, { AR } from 'expo'
 import * as THREE from 'three'
-import ExpoTHREE, { Renderer, TextureLoader } from 'expo-three'
+import ExpoTHREE, {
+  Renderer,
+  TextureLoader,
+  createARBackgroundTexture,
+} from 'expo-three'
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
 import * as React from 'react'
+import { useState, forwardRef, useImperativeHandle } from 'react'
 import {
   PanGestureHandler,
   PinchGestureHandler,
@@ -22,7 +27,6 @@ import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
-import { MeshBasicMaterial } from 'three'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -53,9 +57,23 @@ var deltaX = 0,
   longPressingOut = false,
   hovering = [],
   unit = 0.065,
-  count = 0
+  currentBlock = {
+    name: 'stone',
+    health: 5,
+    colour: 'grey',
+  }
 
-export default function Canvas(props) {
+function Canvas(props, ref) {
+  useImperativeHandle(
+    ref,
+    () => ({
+      setFromOutside(block) {
+        currentBlock = Object.create(block)
+      },
+    }),
+    []
+  )
+
   async function onContextCreate(gl) {
     function loadModel(url) {
       return new Promise((resolve) => {
@@ -73,16 +91,13 @@ export default function Canvas(props) {
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
-      //scene.background = new THREE.Color(0xffffff)
 
       //renderer
       renderer = new Renderer({ gl, depth: false })
-
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
       renderer.shadowMap.enabled = true
-
       //camera
       camera = new THREE.PerspectiveCamera(
         2,
@@ -152,7 +167,7 @@ export default function Canvas(props) {
       Promise.all([m1, t1, t2, m2, ms[area]]).then(() => {
         //cube
         cube = model
-        cube.material = new THREE.MeshLambertMaterial({ color: 0x65524d })
+        cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
         cube.material.metalness = 0
         cube.name = 'cube'
         cube.castShadow = true
@@ -226,6 +241,8 @@ export default function Canvas(props) {
           }
           l++
         }
+
+        //Particles
 
         //world
         world.rotation.y = 0.77
@@ -400,51 +417,50 @@ export default function Canvas(props) {
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(scene.children, true)
 
-    for (var i = 0; i < intersects.length; i++) {
-      //Placing cube
-      if (
-        intersects[0].object.name === 'floor' &&
-        intersects[0].object.position.y === -unit &&
-        hovering.length !== 0
-      ) {
-        animation('place', hovering[0], intersects[0].object)
-        hovering = []
-      }
-      //Cancel placing cube
-      if (
-        hovering.length !== 0 &&
-        intersects[0].object.name !== 'floor' &&
-        !longPressing &&
-        !longPressingOut
-      ) {
-        animation('cancel', hovering[0], hovering[0])
-        hovering = []
-      }
+    //Placing cube
+    if (
+      intersects[0].object.name === 'floor' &&
+      intersects[0].object.position.y === -unit &&
+      hovering.length !== 0
+    ) {
+      animation('place', hovering[0], intersects[0].object)
+      hovering = []
+    }
+    //Cancel placing cube
+    if (
+      hovering.length !== 0 &&
+      intersects[0].object.name !== 'floor' &&
+      !longPressing &&
+      !longPressingOut
+    ) {
+      animation('cancel', hovering[0], hovering[0])
+      hovering = []
+    }
 
-      if (intersects[0].object.name === 'cube' && hovering.length === 0) {
-        //Picking up cube
-        if (longPressing) {
-          haptics(Haptics.ImpactFeedbackStyle.Light)
-          animation('rise', intersects[0].object, intersects[0].object)
-          hovering.push(intersects[0].object)
+    if (intersects[0].object.name === 'cube' && hovering.length === 0) {
+      //Picking up cube
+      if (longPressing) {
+        haptics(Haptics.ImpactFeedbackStyle.Light)
+        animation('rise', intersects[0].object, intersects[0].object)
+        hovering.push(intersects[0].object)
+      }
+      //Clicking cube
+      if (!longPressing) {
+        if (currentBlock.health <= 0) {
+          props.generate()
+          animation('destroy', intersects[0].object, intersects[0].object)
+          haptics(Haptics.ImpactFeedbackStyle.Heavy)
+          intersects[0].object.material = new THREE.MeshLambertMaterial({
+            color: currentBlock.colour,
+          })
+        } else {
+          //haptics(Haptics.ImpactFeedbackStyle.Light)
+          animation('click', intersects[0].object, intersects[0].object)
+          currentBlock.health -= 1
+          props.click(currentBlock.name)
         }
-        //Clicking cube
-        else if (hovering.length === 0) {
-          if (count == 10) {
-            animation('destroy', intersects[0].object, intersects[0].object)
-            haptics(Haptics.ImpactFeedbackStyle.Heavy)
-            intersects[0].object.material = new THREE.MeshLambertMaterial({
-              color: Math.random() * 0xffffff,
-            })
-            count = 0
-          } else {
-            //haptics(Haptics.ImpactFeedbackStyle.Light)
-            animation('click', intersects[0].object, intersects[0].object)
-            count++
-          }
 
-          props.click('balance')
-        }
+        //console.log(currentBlock)
       }
     }
   }
@@ -458,7 +474,7 @@ export default function Canvas(props) {
   let handlePress = (evt) => {
     let { nativeEvent } = evt
     raycast(evt)
-    console.log('Press')
+    //console.log('Press')
   }
 
   let handlePressOut = (evt) => {
@@ -468,7 +484,7 @@ export default function Canvas(props) {
       //longPressingOut = true
       //raycast(evt)
     } else {
-      console.log('PressOut')
+      //console.log('PressOut')
     }
   }
 
@@ -513,6 +529,8 @@ export default function Canvas(props) {
     </SafeAreaView>
   )
 }
+
+export default forwardRef(Canvas)
 
 const styles = StyleSheet.create({
   container: {

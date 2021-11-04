@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState, useEffect } from 'react'
+import React, { useContext, useState, useEffect, useRef } from 'react'
 import {
   StyleSheet,
   Text,
@@ -12,12 +12,23 @@ import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 
+const blocks = [
+  {
+    name: 'gold',
+    health: 10,
+    colour: 'darkgoldenrod',
+  },
+  { name: 'stone', health: 5, colour: 'grey' },
+]
+
 export default function HomeScreen({ navigation }) {
+  const canvas = useRef()
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
-  const [balance, setBalance] = useState(0)
+  const [gold, setGold] = useState(0)
+  const [stone, setStone] = useState(0)
   const [strength, setStrength] = useState(1)
   const [strengthPrice, setStrengthPrice] = useState(10)
   const [automation, setAutomation] = useState(0)
@@ -41,9 +52,7 @@ export default function HomeScreen({ navigation }) {
   }
 
   async function setDatabase() {
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/balance`)
-      .set(balance)
+    await Firebase.database().ref(`users/${user.uid}/userData/gold`).set(gold)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/strength`)
       .set(strength)
@@ -59,7 +68,8 @@ export default function HomeScreen({ navigation }) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            setBalance(snapshot.val().userData.balance)
+            setGold(snapshot.val().userData.gold)
+            setStone(snapshot.val().userData.stone)
             setStrength(snapshot.val().userData.strength)
             setStrengthPrice(snapshot.val().userData.strengthPrice)
             setAutomation(snapshot.val().userData.automation)
@@ -77,15 +87,24 @@ export default function HomeScreen({ navigation }) {
 
   async function updateBalance(type) {
     console.log(type)
-    setBalance(balance + strength)
-    //console.log(balance)
+
     await Firebase.database()
       .ref(`users/${user.uid}/userData/${type}`)
-      .set(balance)
-    if (type === 'balance') {
-      await Firebase.database().ref(`scores/${user.uid}/score`).set(balance)
+      .set(eval(type))
+    if (type === 'gold') {
+      setGold(gold + strength)
+      await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
       await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
     }
+    if (type === 'stone') {
+      setStone(stone + strength)
+    }
+  }
+
+  async function generateBlock() {
+    canvas.current.setFromOutside(
+      blocks[Math.floor(Math.random() * blocks.length)]
+    )
   }
 
   if (isLoading) {
@@ -119,9 +138,10 @@ export default function HomeScreen({ navigation }) {
           onPress={handleSignOut}
         />
       </View>
-      <Text style={styles.title}> Clicks: {balance}</Text>
+      <Text style={styles.title}> Gold: {gold}</Text>
+      <Text style={styles.title}> Stone: {stone}</Text>
       <View style={styles.canvas}>
-        <Canvas click={updateBalance} />
+        <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
       </View>
     </View>
   )
