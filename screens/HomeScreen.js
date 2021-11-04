@@ -85,21 +85,17 @@ export default function HomeScreen({ navigation }) {
     init()
   }, [])
 
-  async function updateBalance(type, isBonus) {
-    let bonus = 0
-    if (isBonus) {
-      bonus = strength
-    }
+  async function updateBalance(type) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/${type}`)
       .set(eval(type))
     if (type === 'gold') {
-      setGold(gold + strength + bonus)
+      setGold(gold + strength)
       await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
       await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
     }
     if (type === 'stone') {
-      setStone(stone + strength + bonus)
+      setStone(stone + strength)
     }
   }
 
@@ -126,17 +122,17 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="dark-content" />
       <View style={styles.row}>
-        <Text style={styles.title}>Welcome {user.email}!</Text>
+        <Text style={styles.title}>{user.email} </Text>
         <IconButton
           name="linechart"
           size={24}
-          color="#fff"
+          color="#000"
           onPress={handleScores}
         />
         <IconButton
           name="logout"
           size={24}
-          color="#fff"
+          color="#000"
           onPress={handleSignOut}
         />
       </View>
@@ -152,7 +148,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -165,23 +161,23 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000',
   },
   text: {
     fontSize: 16,
     fontWeight: 'normal',
-    color: '#fff',
+    color: '#000',
     zIndex: 1,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     padding: 30,
-    borderColor: '#fff',
+    borderColor: '#000',
     borderWidth: 1,
     margin: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
   },
   canvas: {

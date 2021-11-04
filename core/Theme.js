@@ -4,9 +4,9 @@ export const theme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    text: '#fff',
-    primary: '#fff',
-    secondary: '#fff',
-    error: '#fff',
+    text: '#000',
+    primary: '#000',
+    secondary: '#000',
+    error: '#000',
   },
 }

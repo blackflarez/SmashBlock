@@ -50,7 +50,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="dark-content" />
-      <IconButton name="left" size={24} color="#fff" onPress={handleBack} />
+      <IconButton name="left" size={24} color="#000" onPress={handleBack} />
       <Text style={styles.title}>Leaderboard</Text>
       <Text> </Text>
       <Text style={styles.text}>{leaderboard}</Text>
@@ -61,7 +61,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     paddingTop: 50,
     paddingHorizontal: 12,
     justifyContent: 'center',
@@ -76,22 +76,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000',
   },
   text: {
     fontSize: 16,
     fontWeight: 'normal',
-    color: '#fff',
+    color: '#000',
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     padding: 30,
-    borderColor: '#fff',
+    borderColor: '#000',
     borderWidth: 1,
     margin: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
   },
   canvas: {
