@@ -21,6 +21,7 @@ import { useState, forwardRef, useImperativeHandle } from 'react'
 import {
   PanGestureHandler,
   PinchGestureHandler,
+  State,
 } from 'react-native-gesture-handler'
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
@@ -61,7 +62,8 @@ var deltaX = 0,
     name: 'stone',
     health: 5,
     colour: 'grey',
-  }
+  },
+  rotationSpeed = 0.001
 
 function Canvas(props, ref) {
   useImperativeHandle(
@@ -245,7 +247,7 @@ function Canvas(props, ref) {
         //Particles
 
         //world
-        world.rotation.y = 0.77
+        world.rotation.y = 0.78
         scene.add(world)
         animate()
       })
@@ -253,15 +255,17 @@ function Canvas(props, ref) {
 
     async function animate() {
       //Rotate cube
-      var rotationSpeed = 0.001
-      world.rotation.x += deltaY * rotationSpeed
-      world.rotation.y += deltaX * rotationSpeed
-
-      if (world.rotation.x > 1.3) {
-        world.rotation.x = 1.3
+      if (panning) {
+        console.log(panning)
+        world.rotation.x += deltaY * rotationSpeed
+        world.rotation.y += deltaX * rotationSpeed
       }
-      if (world.rotation.x < -0) {
-        world.rotation.x = 0
+
+      if (world.rotation.x > 1.15) {
+        world.rotation.x = 1.15
+      }
+      if (world.rotation.x < -1.95) {
+        world.rotation.x = -1.95
       }
 
       if (deltaX > 0) {
@@ -278,7 +282,7 @@ function Canvas(props, ref) {
       }
 
       //Scale cube
-      const minimum = 7
+      const minimum = 8
       const maximum = 15 + floors
       const threshold = 0.5
       camera.position.z -= scale / 15
@@ -384,6 +388,18 @@ function Canvas(props, ref) {
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.Out)
 
+    const returnRotation = new TWEEN.Tween(target.rotation)
+      .to(
+        {
+          x: 0,
+          y: 0.78,
+          z: 0,
+        },
+        500
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Elastic.Out)
+
     if (type === 'place') {
       place.start()
     } else if (type === 'cancel') {
@@ -398,6 +414,8 @@ function Canvas(props, ref) {
     } else if (type === 'destroy') {
       destroy.chain(deflate)
       destroy.start()
+    } else if (type === 'returnRotation') {
+      returnRotation.start()
     }
   }
 
@@ -441,12 +459,15 @@ function Canvas(props, ref) {
       //Picking up cube
       if (longPressing) {
         haptics(Haptics.ImpactFeedbackStyle.Light)
-        animation('rise', intersects[0].object, intersects[0].object)
-        hovering.push(intersects[0].object)
+        //animation('rise', intersects[0].object, intersects[0].object)
+        //hovering.push(intersects[0].object)
+        animation('click', intersects[0].object, intersects[0].object)
+        panning = true
       }
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
+          props.click(currentBlock.name, true)
           props.generate()
           animation('destroy', intersects[0].object, intersects[0].object)
           haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -457,7 +478,7 @@ function Canvas(props, ref) {
           //haptics(Haptics.ImpactFeedbackStyle.Light)
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1
-          props.click(currentBlock.name)
+          props.click(currentBlock.name, false)
         }
 
         //console.log(currentBlock)
@@ -467,6 +488,7 @@ function Canvas(props, ref) {
 
   let handleLongPress = (evt) => {
     longPressing = true
+
     raycast(evt)
     console.log('LongPress')
   }
@@ -480,16 +502,12 @@ function Canvas(props, ref) {
   let handlePressOut = (evt) => {
     if (longPressing) {
       console.log('LongPressOut')
-      longPressing = false
-      //longPressingOut = true
-      //raycast(evt)
     } else {
       //console.log('PressOut')
     }
   }
 
   let handlePan = async (evt) => {
-    panning = true
     let { nativeEvent } = evt
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
@@ -497,7 +515,14 @@ function Canvas(props, ref) {
 
   let onPanOut = async (evt) => {
     console.log('pan out')
-    panning = false
+    let { nativeEvent } = evt
+
+    if (nativeEvent.state === State.END) {
+      panning = false
+      longPressing = false
+      longPressingOut = true
+      animation('returnRotation', world, world)
+    }
   }
 
   let handlePinch = (evt) => {
@@ -510,7 +535,7 @@ function Canvas(props, ref) {
       <PinchGestureHandler onGestureEvent={handlePinch}>
         <PanGestureHandler
           onGestureEvent={handlePan}
-          onPanResponderRelease={onPanOut}
+          onHandlerStateChange={onPanOut}
         >
           <View style={styles.wrapper}>
             <Pressable
