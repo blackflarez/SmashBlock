@@ -119,7 +119,7 @@ function Canvas(props, ref) {
 
       //lights
       const light5 = new THREE.DirectionalLight(0xffffff, 1)
-      light5.position.set(-100, 200, 150)
+      light5.position.set(-100, 150, -150)
       light5.shadow.mapSize.set(8192, 8192)
       light5.castShadow = true
 
@@ -141,8 +141,8 @@ function Canvas(props, ref) {
       let ms = []
 
       let sizes = [0, 1, 9, 25, 49, 81, 121, 169, 225, 289]
-      let levels = 3
-      floors = sizes[0]
+      let levels = 1
+      floors = sizes[7]
       let area = levels * floors
 
       let m1 = loadModel(uri).then((result) => {
@@ -178,7 +178,7 @@ function Canvas(props, ref) {
         //Skybox
         sky = skyModel
         sky.name = 'sky'
-        sky.material = new THREE.MeshBasicMaterial({ color: 0xede7d9 })
+        sky.material = new THREE.MeshBasicMaterial({ color: 0xffffff })
         sky.material.side = THREE.BackSide
         sky.scale.x = 600
         sky.scale.z = 600
@@ -222,7 +222,7 @@ function Canvas(props, ref) {
             floorTexture.magFilter = THREE.NearestFilter
             floorTexture.anisotropy = 16
             outerFloors[lev].material = new THREE.MeshStandardMaterial({
-              color: 0xede7d9,
+              color: 0xeeeeee,
             })
             outerFloors[lev].material.metalness = 0
             outerFloors[lev].material.roughness = 1
@@ -467,10 +467,10 @@ function Canvas(props, ref) {
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
-          props.click(currentBlock.name, true)
+          props.click(currentBlock.name)
           props.generate()
           animation('destroy', intersects[0].object, intersects[0].object)
-          haptics(Haptics.ImpactFeedbackStyle.Heavy)
+          haptics(Haptics.ImpactFeedbackStyle.Light)
           intersects[0].object.material = new THREE.MeshLambertMaterial({
             color: currentBlock.colour,
           })
@@ -478,7 +478,6 @@ function Canvas(props, ref) {
           //haptics(Haptics.ImpactFeedbackStyle.Light)
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1
-          props.click(currentBlock.name, false)
         }
 
         //console.log(currentBlock)
@@ -561,20 +560,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
-    color: '#ffffff',
+    color: '#000',
     fontSize: 24,
     justifyContent: 'center',
     zIndex: 1,
     borderWidth: 0,
-    borderColor: '#ffffff',
+    borderColor: '#000',
     padding: 10,
     marginTop: 350,
-    backgroundColor: '#000000',
+    backgroundColor: '#fff',
   },
   wrapper: {
     alignItems: 'center',

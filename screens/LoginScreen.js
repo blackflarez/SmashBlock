@@ -39,7 +39,7 @@ export default function LoginScreen({ navigation }) {
       contentContainerStyle={{
         flexGrow: 1,
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#fff',
         paddingTop: 50,
         paddingHorizontal: 12,
         justifyContent: 'center',
@@ -56,6 +56,8 @@ export default function LoginScreen({ navigation }) {
         containerStyle={{
           backgroundColor: '#fff',
           marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#000',
         }}
         leftIcon="email"
         placeholder="Enter email"
@@ -73,6 +75,8 @@ export default function LoginScreen({ navigation }) {
         containerStyle={{
           backgroundColor: '#fff',
           marginBottom: 20,
+          borderWidth: 1,
+          borderColor: '#000',
         }}
         leftIcon="lock"
         placeholder="Enter password"
@@ -105,29 +109,29 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#fff',
+    color: '#000',
     alignSelf: 'center',
     paddingBottom: 24,
     margin: 10,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     padding: 10,
-    borderColor: '#fff',
+    borderColor: '#000',
     borderWidth: 1,
     margin: 10,
   },
   subButton: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     padding: 10,
     margin: 10,
   },
   subButtonText: {
-    color: '#fff',
+    color: '#000',
     textDecorationLine: 'underline',
   },
   buttonText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
   },
 })
