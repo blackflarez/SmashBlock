@@ -85,19 +85,21 @@ export default function HomeScreen({ navigation }) {
     init()
   }, [])
 
-  async function updateBalance(type) {
-    console.log(type)
-
+  async function updateBalance(type, isBonus) {
+    let bonus = 0
+    if (isBonus) {
+      bonus = strength
+    }
     await Firebase.database()
       .ref(`users/${user.uid}/userData/${type}`)
       .set(eval(type))
     if (type === 'gold') {
-      setGold(gold + strength)
+      setGold(gold + strength + bonus)
       await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
       await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
     }
     if (type === 'stone') {
-      setStone(stone + strength)
+      setStone(stone + strength + bonus)
     }
   }
 
