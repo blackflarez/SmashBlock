@@ -17,7 +17,7 @@ import ExpoTHREE, {
 } from 'expo-three'
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
 import * as React from 'react'
-import { useState, forwardRef, useImperativeHandle } from 'react'
+import { useState, forwardRef, useImperativeHandle, useCallback } from 'react'
 import {
   PanGestureHandler,
   PinchGestureHandler,
@@ -26,6 +26,7 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
 import { Audio } from 'expo-av'
+import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
@@ -92,9 +93,8 @@ function Canvas(props, ref) {
     return sound
       ? () => {
           setTimeout(function () {
-            console.log('Unloading Sound')
             sound.unloadAsync()
-          }, 500)
+          }, 1000)
         }
       : undefined
   }, [sound])
@@ -575,11 +575,7 @@ function Canvas(props, ref) {
   }
 
   let handlePress = (evt) => {
-    let { nativeEvent } = evt
     raycast(evt)
-    console.log('clicked')
-
-    //console.log('Press')
   }
 
   let handlePressOut = (evt) => {
@@ -613,6 +609,14 @@ function Canvas(props, ref) {
     scale = nativeEvent.velocity
   }
 
+  function debounceEventHandler(...args) {
+    const debounced = _.debounce(...args)
+    return function (e) {
+      e.persist()
+      return debounced(e)
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <PinchGestureHandler onGestureEvent={handlePinch}>
@@ -624,7 +628,7 @@ function Canvas(props, ref) {
             <Pressable
               onLongPress={handleLongPress}
               onPressOut={handlePressOut}
-              onPress={handlePress}
+              onPress={debounceEventHandler(handlePress, 70)}
             >
               <GLView
                 onContextCreate={onContextCreate}

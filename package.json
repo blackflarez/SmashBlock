@@ -23,6 +23,7 @@
     "expo-status-bar": "~1.0.4",
     "expo-three": "^6.0.1",
     "firebase": "8.2.3",
+    "lodash": "^4.17.21",
     "metro": "^0.59.0",
     "react": "16.13.1",
     "react-dom": "16.13.1",
