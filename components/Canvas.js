@@ -25,6 +25,7 @@ import {
 } from 'react-native-gesture-handler'
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
+import { Audio } from 'expo-av'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
@@ -66,6 +67,38 @@ var deltaX = 0,
   rotationSpeed = 0.001
 
 function Canvas(props, ref) {
+  const [sound, setSound] = React.useState()
+
+  async function playSound(type) {
+    let blockHit
+
+    if (type === 'hit') {
+      blockHit = await Audio.Sound.createAsync(
+        require(`../assets/sounds/hit.mp3`)
+      )
+    } else if (type === 'break') {
+      blockHit = await Audio.Sound.createAsync(
+        require(`../assets/sounds/break.mp3`)
+      )
+    }
+
+    const { sound } = blockHit
+
+    setSound(sound)
+    await sound.replayAsync()
+  }
+
+  React.useEffect(() => {
+    return sound
+      ? () => {
+          setTimeout(function () {
+            console.log('Unloading Sound')
+            sound.unloadAsync()
+          }, 500)
+        }
+      : undefined
+  }, [sound])
+
   useImperativeHandle(
     ref,
     () => ({
@@ -100,6 +133,8 @@ function Canvas(props, ref) {
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
       renderer.shadowMap.enabled = true
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap
+
       //camera
       camera = new THREE.PerspectiveCamera(
         2,
@@ -130,6 +165,9 @@ function Canvas(props, ref) {
 
       //assets
       const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
+      const floorUri = Asset.fromModule(
+        require('../assets/models/floor.glb')
+      ).uri
       const tex = Asset.fromModule(require('../assets/models/cube.png')).uri
       const floorTex = Asset.fromModule(
         require('../assets/models/floor.png')
@@ -161,18 +199,19 @@ function Canvas(props, ref) {
       })
 
       for (let i = 0; i < area; i++) {
-        ms[i] = loadModel(uri).then((result) => {
+        ms[i] = loadModel(floorUri).then((result) => {
           floorModels[i] = result.scene.children[0]
         })
       }
 
-      Promise.all([m1, t1, t2, m2, ms[area]]).then(() => {
+      Promise.all([m1, t1, t2, m2, ms[area - 1]]).then(() => {
         //cube
         cube = model
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
         cube.material.metalness = 0
         cube.name = 'cube'
         cube.castShadow = true
+        cube.material.transparent = true
         world.add(cube)
 
         //Skybox
@@ -264,8 +303,8 @@ function Canvas(props, ref) {
       if (world.rotation.x > 1.15) {
         world.rotation.x = 1.15
       }
-      if (world.rotation.x < -1.95) {
-        world.rotation.x = -1.95
+      if (world.rotation.x < -0.35) {
+        world.rotation.x = -0.35
       }
 
       if (deltaX > 0) {
@@ -344,14 +383,37 @@ function Canvas(props, ref) {
     const inflate = new TWEEN.Tween(target.scale)
       .to(
         {
-          x: 0.036,
-          y: 0.035,
-          z: 0.036,
+          x: 0.035,
+          y: 0.034,
+          z: 0.035,
         },
-        100
+        65
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Elastic.Out)
+
+    const inflateSlow = new TWEEN.Tween(target.scale)
+      .to(
+        {
+          x: 0.035,
+          y: 0.034,
+          z: 0.035,
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Elastic.Out)
+
+    const shrink = new TWEEN.Tween(target.scale)
+      .to(
+        {
+          x: 0.032499998807907104 / 2,
+          y: 0.032499998807907104 / 2,
+          z: 0.032499998807907104 / 2,
+        },
+        1
+      )
+      .yoyo(true)
 
     const deflate = new TWEEN.Tween(target.scale)
       .to(
@@ -376,17 +438,27 @@ function Canvas(props, ref) {
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.In)
 
-    const destroy = new TWEEN.Tween(target.scale)
+    const destroy = new TWEEN.Tween(target.material)
       .to(
         {
-          x: 0,
-          y: 0,
-          z: 0,
+          opacity: 0,
         },
-        1
+        150
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.Out)
+      .onUpdate(() => (target.castShadow = false))
+      .onComplete(() => (target.castShadow = true))
+
+    const create = new TWEEN.Tween(target.material)
+      .to(
+        {
+          opacity: 100,
+        },
+        20
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.In)
 
     const returnRotation = new TWEEN.Tween(target.rotation)
       .to(
@@ -395,7 +467,7 @@ function Canvas(props, ref) {
           y: 0.78,
           z: 0,
         },
-        500
+        750
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Elastic.Out)
@@ -412,7 +484,10 @@ function Canvas(props, ref) {
       inflate.chain(deflate)
       inflate.start()
     } else if (type === 'destroy') {
-      destroy.chain(deflate)
+      destroy.chain(shrink)
+      shrink.chain(create)
+      create.chain(inflateSlow)
+      inflateSlow.chain(deflate)
       destroy.start()
     } else if (type === 'returnRotation') {
       returnRotation.start()
@@ -455,27 +530,34 @@ function Canvas(props, ref) {
       hovering = []
     }
 
+    if (
+      (longPressing && intersects[0].object.name === 'floor') ||
+      (longPressing && intersects[0].object.name === 'sky')
+    ) {
+      haptics(Haptics.ImpactFeedbackStyle.Medium)
+      panning = true
+    }
+
     if (intersects[0].object.name === 'cube' && hovering.length === 0) {
       //Picking up cube
       if (longPressing) {
-        haptics(Haptics.ImpactFeedbackStyle.Light)
         //animation('rise', intersects[0].object, intersects[0].object)
         //hovering.push(intersects[0].object)
-        animation('click', intersects[0].object, intersects[0].object)
-        panning = true
       }
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
           props.click(currentBlock.name)
           props.generate()
-          animation('destroy', intersects[0].object, intersects[0].object)
-          haptics(Haptics.ImpactFeedbackStyle.Light)
+          haptics(Haptics.ImpactFeedbackStyle.Heavy)
           intersects[0].object.material = new THREE.MeshLambertMaterial({
             color: currentBlock.colour,
           })
+          playSound('break')
+          animation('destroy', intersects[0].object, intersects[0].object)
         } else {
-          //haptics(Haptics.ImpactFeedbackStyle.Light)
+          haptics(Haptics.ImpactFeedbackStyle.Light)
+          playSound('hit')
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1
         }
@@ -495,6 +577,8 @@ function Canvas(props, ref) {
   let handlePress = (evt) => {
     let { nativeEvent } = evt
     raycast(evt)
+    console.log('clicked')
+
     //console.log('Press')
   }
 
