@@ -56,6 +56,7 @@ var deltaX = 0,
   width = Dimensions.get('window').width,
   height = Dimensions.get('window').height,
   panning = false,
+  panningOut = false,
   longPressing = false,
   longPressingOut = false,
   hovering = [],
@@ -94,7 +95,7 @@ function Canvas(props, ref) {
       ? () => {
           setTimeout(function () {
             sound.unloadAsync()
-          }, 1000)
+          }, 100)
         }
       : undefined
   }, [sound])
@@ -295,7 +296,6 @@ function Canvas(props, ref) {
     async function animate() {
       //Rotate cube
       if (panning) {
-        console.log(panning)
         world.rotation.x += deltaY * rotationSpeed
         world.rotation.y += deltaX * rotationSpeed
       }
@@ -530,12 +530,8 @@ function Canvas(props, ref) {
       hovering = []
     }
 
-    if (
-      (longPressing && intersects[0].object.name === 'floor') ||
-      (longPressing && intersects[0].object.name === 'sky')
-    ) {
-      haptics(Haptics.ImpactFeedbackStyle.Medium)
-      panning = true
+    if (intersects[0].object.name !== 'cube' && panningOut) {
+      panningOut = false
     }
 
     if (intersects[0].object.name === 'cube' && hovering.length === 0) {
@@ -588,15 +584,17 @@ function Canvas(props, ref) {
 
   let handlePan = async (evt) => {
     let { nativeEvent } = evt
+    panning = true
     deltaX = Math.round(nativeEvent.translationX)
     deltaY = Math.round(nativeEvent.translationY)
   }
 
   let onPanOut = async (evt) => {
-    console.log('pan out')
     let { nativeEvent } = evt
-
+    haptics(Haptics.ImpactFeedbackStyle.Light)
     if (nativeEvent.state === State.END) {
+      console.log('pan out')
+      panningOut = true
       panning = false
       longPressing = false
       longPressingOut = true
@@ -628,7 +626,7 @@ function Canvas(props, ref) {
             <Pressable
               onLongPress={handleLongPress}
               onPressOut={handlePressOut}
-              onPress={debounceEventHandler(handlePress, 70)}
+              onPress={debounceEventHandler(handlePress, 100)}
             >
               <GLView
                 onContextCreate={onContextCreate}
