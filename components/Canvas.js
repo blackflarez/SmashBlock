@@ -26,6 +26,7 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
 import { Audio } from 'expo-av'
+import AudioManager from '../components/AudioManager'
 import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
@@ -66,40 +67,12 @@ var deltaX = 0,
     health: 5,
     colour: 'grey',
   },
-  rotationSpeed = 0.001
+  rotationSpeed = 0.001,
+  listener,
+  sound,
+  audioLoader
 
 function Canvas(props, ref) {
-  const [sound, setSound] = React.useState()
-
-  async function playSound(type) {
-    let blockHit
-
-    if (type === 'hit') {
-      blockHit = await Audio.Sound.createAsync(
-        require(`../assets/sounds/hit.mp3`)
-      )
-    } else if (type === 'break') {
-      blockHit = await Audio.Sound.createAsync(
-        require(`../assets/sounds/break.mp3`)
-      )
-    }
-
-    const { sound } = blockHit
-
-    setSound(sound)
-    await sound.replayAsync()
-  }
-
-  React.useEffect(() => {
-    return sound
-      ? () => {
-          setTimeout(function () {
-            sound.unloadAsync()
-          }, 100)
-        }
-      : undefined
-  }, [sound])
-
   useImperativeHandle(
     ref,
     () => ({
@@ -124,6 +97,8 @@ function Canvas(props, ref) {
     }
 
     async function init() {
+      AudioManager.setupAsync()
+
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
@@ -549,11 +524,12 @@ function Canvas(props, ref) {
           intersects[0].object.material = new THREE.MeshLambertMaterial({
             color: currentBlock.colour,
           })
-          playSound('break')
+          //AudioManager.playAsync('break', false)
+
           animation('destroy', intersects[0].object, intersects[0].object)
         } else {
+          AudioManager.playAsync('hit', false)
           haptics(Haptics.ImpactFeedbackStyle.Light)
-          playSound('hit')
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1
         }
@@ -626,7 +602,7 @@ function Canvas(props, ref) {
             <Pressable
               onLongPress={handleLongPress}
               onPressOut={handlePressOut}
-              onPress={debounceEventHandler(handlePress, 100)}
+              onPress={debounceEventHandler(handlePress, 50)}
             >
               <GLView
                 onContextCreate={onContextCreate}
