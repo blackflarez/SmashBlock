@@ -11,6 +11,7 @@ import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
+import * as Haptics from 'expo-haptics'
 
 const blocks = [
   {
@@ -35,6 +36,12 @@ export default function HomeScreen({ navigation }) {
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
 
+  function haptics(style) {
+    if (Platform.OS !== 'web') {
+      Haptics.impactAsync(style)
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       await auth.signOut()
@@ -45,6 +52,7 @@ export default function HomeScreen({ navigation }) {
 
   const handleScores = async () => {
     try {
+      haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Scores')
     } catch (error) {
       console.log(error)
@@ -53,6 +61,7 @@ export default function HomeScreen({ navigation }) {
 
   const handleInventory = async () => {
     try {
+      haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Inventory')
     } catch (error) {
       console.log(error)
@@ -128,24 +137,23 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark-content" />
+      <StatusBar style="light-content" />
       <View style={styles.row}>
-        <Text style={styles.title}>{user.email} </Text>
-        <IconButton
-          name="linechart"
-          size={24}
-          color="#000"
-          onPress={handleScores}
-        />
         <IconButton
           name="logout"
-          size={24}
+          size={32}
           color="#000"
           onPress={handleSignOut}
         />
         <IconButton
+          name="linechart"
+          size={32}
+          color="#000"
+          onPress={handleScores}
+        />
+        <IconButton
           name="wallet"
-          size={24}
+          size={32}
           color="#000"
           onPress={handleInventory}
         />

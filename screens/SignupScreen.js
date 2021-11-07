@@ -1,7 +1,15 @@
 import { StatusBar } from 'expo-status-bar'
 import React from 'react'
 import { useState } from 'react'
-import { StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native'
+import {
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  KeyboardAvoidingView,
+  View,
+  Platform,
+} from 'react-native'
 
 import { InputField, ErrorMessage } from '../components'
 import Firebase from '../config/firebase'
@@ -36,72 +44,80 @@ export default function SignupScreen({ navigation }) {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        flexGrow: 1,
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: 50,
-        paddingHorizontal: 12,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
     >
-      <StatusBar style="dark-content" />
-      <Text style={styles.title}>Create new account</Text>
-      <InputField
-        inputStyle={{
-          fontSize: 14,
-        }}
-        containerStyle={{
+      <ScrollView
+        contentContainerStyle={{
+          flex: 1,
           backgroundColor: '#fff',
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: '#000',
+          justifyContent: 'center',
+          alignItems: 'center',
+          marginBottom: 50,
         }}
-        leftIcon="email"
-        placeholder="Enter email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-        textContentType="emailAddress"
-        autoFocus={true}
-        value={email}
-        onChangeText={(text) => setEmail(text)}
-      />
-      <InputField
-        inputStyle={{
-          fontSize: 14,
-        }}
-        containerStyle={{
-          backgroundColor: '#fff',
-          marginBottom: 20,
-          borderWidth: 1,
-          borderColor: '#000',
-        }}
-        leftIcon="lock"
-        placeholder="Enter password"
-        autoCapitalize="none"
-        autoCorrect={false}
-        secureTextEntry={passwordVisibility}
-        textContentType="password"
-        rightIcon={rightIcon}
-        value={password}
-        onChangeText={(text) => setPassword(text)}
-        handlePasswordVisibility={handlePasswordVisibility}
-      />
-      {signupError ? <ErrorMessage error={signupError} visible={true} /> : null}
-      <TouchableOpacity onPress={onHandleSignup} style={styles.button}>
-        <Text style={styles.buttonText}>SIGN UP</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.subButton}
-        onPress={() => navigation.navigate('Login')}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.subButtonText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <StatusBar style="light-content" />
+        <View>
+          <Text style={styles.title}>Create new account</Text>
+          <InputField
+            inputStyle={{
+              fontSize: 14,
+            }}
+            containerStyle={{
+              backgroundColor: '#fff',
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: '#000',
+            }}
+            leftIcon="email"
+            placeholder="Enter email"
+            autoCapitalize="none"
+            keyboardType="email-address"
+            textContentType="emailAddress"
+            value={email}
+            onChangeText={(text) => setEmail(text)}
+          />
+          <InputField
+            inputStyle={{
+              fontSize: 14,
+            }}
+            containerStyle={{
+              backgroundColor: '#fff',
+              marginBottom: 20,
+              borderWidth: 1,
+              borderColor: '#000',
+            }}
+            leftIcon="lock"
+            placeholder="Enter password"
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry={passwordVisibility}
+            textContentType="password"
+            rightIcon={rightIcon}
+            value={password}
+            onChangeText={(text) => setPassword(text)}
+            handlePasswordVisibility={handlePasswordVisibility}
+          />
+        </View>
+        {signupError ? (
+          <ErrorMessage error={signupError} visible={true} />
+        ) : null}
+        <TouchableOpacity onPress={onHandleSignup} style={styles.button}>
+          <Text style={styles.buttonText}>SIGN UP</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.subButton}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={styles.subButtonText}>
+            Already have an account? Login
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   )
 }
 
@@ -117,6 +133,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#fff',
     padding: 10,
+    paddingHorizontal: 118,
     borderColor: '#000',
     borderWidth: 1,
     margin: 10,

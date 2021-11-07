@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar'
 import {
   StyleSheet,
-  Text,
+  Animated,
   View,
   Pressable,
   Dimensions,
@@ -17,7 +17,7 @@ import ExpoTHREE, {
 } from 'expo-three'
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
 import * as React from 'react'
-import { useState, forwardRef, useImperativeHandle, useCallback } from 'react'
+import { useState, forwardRef, useImperativeHandle, useRef } from 'react'
 import {
   PanGestureHandler,
   PinchGestureHandler,
@@ -73,6 +73,8 @@ var deltaX = 0,
   audioLoader
 
 function Canvas(props, ref) {
+  const fadeAnim = useRef(new Animated.Value(0)).current
+
   useImperativeHandle(
     ref,
     () => ({
@@ -265,7 +267,13 @@ function Canvas(props, ref) {
         //world
         world.rotation.y = 0.78
         scene.add(world)
+
         animate()
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }).start()
       })
     }
 
@@ -568,8 +576,9 @@ function Canvas(props, ref) {
 
   let onPanOut = async (evt) => {
     let { nativeEvent } = evt
-    haptics(Haptics.ImpactFeedbackStyle.Light)
+
     if (nativeEvent.state === State.END) {
+      haptics(Haptics.ImpactFeedbackStyle.Light)
       console.log('pan out')
       panningOut = true
       panning = false
@@ -594,25 +603,32 @@ function Canvas(props, ref) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <PinchGestureHandler onGestureEvent={handlePinch}>
-        <PanGestureHandler
-          onGestureEvent={handlePan}
-          onHandlerStateChange={onPanOut}
-        >
-          <View style={styles.wrapper}>
-            <Pressable
-              onLongPress={handleLongPress}
-              onPressOut={handlePressOut}
-              onPress={debounceEventHandler(handlePress, 50)}
-            >
-              <GLView
-                onContextCreate={onContextCreate}
-                style={styles.content}
-              />
-            </Pressable>
-          </View>
-        </PanGestureHandler>
-      </PinchGestureHandler>
+      <Animated.View
+        style={{
+          ...props.style,
+          opacity: fadeAnim, // Bind opacity to animated value
+        }}
+      >
+        <PinchGestureHandler onGestureEvent={handlePinch}>
+          <PanGestureHandler
+            onGestureEvent={handlePan}
+            onHandlerStateChange={onPanOut}
+          >
+            <View style={styles.wrapper}>
+              <Pressable
+                onLongPress={handleLongPress}
+                onPressOut={handlePressOut}
+                onPress={debounceEventHandler(handlePress, 50)}
+              >
+                <GLView
+                  onContextCreate={onContextCreate}
+                  style={styles.content}
+                />
+              </Pressable>
+            </View>
+          </PanGestureHandler>
+        </PinchGestureHandler>
+      </Animated.View>
     </SafeAreaView>
   )
 }

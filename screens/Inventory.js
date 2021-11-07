@@ -1,21 +1,16 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState, useEffect } from 'react'
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native'
+import React, { useContext, useState, useEffect, useRef } from 'react'
+import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { IconButton } from '../components'
 
 const auth = Firebase.auth()
 
-export default function Inventory({ navigation }) {
+export default function Inventory({ navigation }, props) {
   const [inventory, setInventory] = useState([])
   const { user } = useContext(AuthenticatedUserContext)
+  const fadeAnim = useRef(new Animated.Value(0)).current
 
   const handleBack = async () => {
     try {
@@ -42,6 +37,12 @@ export default function Inventory({ navigation }) {
           } else {
             console.log('No data available')
           }
+
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start()
         })
     }
     init()
@@ -49,11 +50,17 @@ export default function Inventory({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark-content" />
-      <IconButton name="left" size={24} color="#000" onPress={handleBack} />
-      <Text style={styles.title}>Inventory</Text>
-      <Text> </Text>
-      <Text style={styles.text}>{inventory}</Text>
+      <Animated.View
+        style={{
+          ...props.style,
+          opacity: fadeAnim, // Bind opacity to animated value
+        }}
+      >
+        <StatusBar style="dark-content" />
+        <Text style={styles.title}>Inventory</Text>
+        <Text> </Text>
+        <Text style={styles.text}>{inventory}</Text>
+      </Animated.View>
     </View>
   )
 }
@@ -62,7 +69,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: 50,
+    paddingBottom: 250,
     paddingHorizontal: 12,
     justifyContent: 'center',
     alignItems: 'center',

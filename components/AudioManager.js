@@ -9,7 +9,6 @@ class AudioManager {
   playAsync = async (name, isLooping) => {
     if (name in this.sounds) {
       const soundObject = this.sounds[name]
-      console.log(this.sounds)
       try {
         //await soundObject.setIsLoopingAsync(isLooping)
         //await soundObject.setPositionAsync(0)
