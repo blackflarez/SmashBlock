@@ -13,7 +13,7 @@ import { IconButton } from '../components'
 
 const auth = Firebase.auth()
 
-export default function HomeScreen({ navigation }) {
+export default function Scores({ navigation }) {
   const [leaderboard, setLeaderboard] = useState([])
   const { user } = useContext(AuthenticatedUserContext)
 

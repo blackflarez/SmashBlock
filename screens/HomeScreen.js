@@ -51,8 +51,21 @@ export default function HomeScreen({ navigation }) {
     }
   }
 
+  const handleInventory = async () => {
+    try {
+      navigation.navigate('Inventory')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
   async function setDatabase() {
-    await Firebase.database().ref(`users/${user.uid}/userData/gold`).set(gold)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory/gold`)
+      .set(gold)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory/stone`)
+      .set(stone)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/strength`)
       .set(strength)
@@ -68,13 +81,8 @@ export default function HomeScreen({ navigation }) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            setGold(snapshot.val().userData.gold)
-            setStone(snapshot.val().userData.stone)
-            setStrength(snapshot.val().userData.strength)
-            setStrengthPrice(snapshot.val().userData.strengthPrice)
-            setAutomation(snapshot.val().userData.automation)
-            setAutomationPrice(snapshot.val().userData.automationPrice)
-            setTimeOffline(snapshot.val().userData.timeOffline)
+            setGold(snapshot.val().userData.inventory.gold)
+            setStone(snapshot.val().userData.inventory.gold)
           } else {
             console.log('No data available')
             setDatabase()
@@ -86,9 +94,6 @@ export default function HomeScreen({ navigation }) {
   }, [])
 
   async function updateBalance(type) {
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/${type}`)
-      .set(eval(type))
     if (type === 'gold') {
       setGold(gold + strength)
       await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
@@ -97,6 +102,9 @@ export default function HomeScreen({ navigation }) {
     if (type === 'stone') {
       setStone(stone + strength)
     }
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory/${type}`)
+      .set(eval(type))
   }
 
   async function generateBlock() {
@@ -135,9 +143,13 @@ export default function HomeScreen({ navigation }) {
           color="#000"
           onPress={handleSignOut}
         />
+        <IconButton
+          name="wallet"
+          size={24}
+          color="#000"
+          onPress={handleInventory}
+        />
       </View>
-      <Text style={styles.title}> Gold: {gold}</Text>
-      <Text style={styles.title}> Stone: {stone}</Text>
       <View style={styles.canvas}>
         <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
       </View>
@@ -156,7 +168,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 650,
+    marginTop: 650,
   },
   title: {
     fontSize: 24,

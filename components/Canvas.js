@@ -97,6 +97,7 @@ function Canvas(props, ref) {
     }
 
     async function init() {
+      //Audio
       AudioManager.setupAsync()
 
       //scene
@@ -518,13 +519,13 @@ function Canvas(props, ref) {
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
+          AudioManager.playAsync('break', false)
           props.click(currentBlock.name)
           props.generate()
           haptics(Haptics.ImpactFeedbackStyle.Heavy)
           intersects[0].object.material = new THREE.MeshLambertMaterial({
             color: currentBlock.colour,
           })
-          //AudioManager.playAsync('break', false)
 
           animation('destroy', intersects[0].object, intersects[0].object)
         } else {
