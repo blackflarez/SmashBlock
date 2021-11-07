@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 10,
+    margin: 15,
   },
 })
 

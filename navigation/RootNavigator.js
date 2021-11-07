@@ -37,10 +37,10 @@ export default function RootNavigator() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#000',
+          backgroundColor: '#fff',
         }}
       >
-        <ActivityIndicator size="large" color="#fff" />
+        <ActivityIndicator size="large" color="#000" />
       </View>
     )
   }
