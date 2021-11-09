@@ -1,6 +1,5 @@
 import { Audio } from 'expo-av'
 
-// import * as AssetUtils from 'expo-asset-utils';
 import Assets from '../components/Assets'
 
 class AudioManager {
@@ -11,7 +10,9 @@ class AudioManager {
       const soundObject = this.sounds[name]
       try {
         //await soundObject.setIsLoopingAsync(isLooping)
+
         //await soundObject.setPositionAsync(0)
+        await soundObject.setIsLoopingAsync(isLooping)
         await soundObject.playFromPositionAsync(0)
       } catch ({ message }) {
         console.warn(`Error playing audio: ${message}`)
@@ -52,10 +53,9 @@ class AudioManager {
     for (let key of keys) {
       const item = Assets.audio[key]
       this.sounds[key.split('.')[0]] = (
-        await Audio.Sound.createAsync(item, {
+        await Audio.Sound.loadAsync(item, {
           shouldPlay: false,
           progressUpdateIntervalMillis: 1,
-          downloadFirst: true,
         })
       ).sound
     }

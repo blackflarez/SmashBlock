@@ -1,5 +1,5 @@
 module.exports = {
-    resolver: {
-      assetExts: ['db', 'mp3', 'ttf', 'obj', 'png', 'jpg', 'gltf', 'glb'],
-    },
-  };
+  resolver: {
+    assetExts: ['db', 'mp3', 'ttf', 'obj', 'png', 'jpg', 'gltf', 'glb', 'm4a'],
+  },
+}
