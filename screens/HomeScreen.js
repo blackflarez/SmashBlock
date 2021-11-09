@@ -100,7 +100,7 @@ export default function HomeScreen({ navigation }) {
         .then((snapshot) => {
           if (snapshot.exists()) {
             setGold(snapshot.val().userData.inventory.gold)
-            setStone(snapshot.val().userData.inventory.gold)
+            setStone(snapshot.val().userData.inventory.stone)
             setIron(snapshot.val().userData.inventory.iron)
           } else {
             console.log('No data available')
