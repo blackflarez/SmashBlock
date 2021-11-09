@@ -18,10 +18,12 @@ import AudioManager from '../components/AudioManager'
 const blocks = [
   {
     name: 'gold',
-    health: 10,
+    health: 15,
     colour: 'darkgoldenrod',
+    probability: 5,
   },
-  { name: 'stone', health: 5, colour: 'grey' },
+  { name: 'stone', health: 5, colour: 'gray', probability: 90 },
+  { name: 'iron', health: 10, colour: 'slategray', probability: 50 },
 ]
 
 export default function HomeScreen({ navigation }) {
@@ -32,6 +34,7 @@ export default function HomeScreen({ navigation }) {
   const [name, setName] = useState('')
   const [gold, setGold] = useState(0)
   const [stone, setStone] = useState(0)
+  const [iron, setIron] = useState(0)
   const [strength, setStrength] = useState(1)
   const [strengthPrice, setStrengthPrice] = useState(10)
   const [automation, setAutomation] = useState(0)
@@ -78,6 +81,9 @@ export default function HomeScreen({ navigation }) {
       .ref(`users/${user.uid}/userData/inventory/stone`)
       .set(stone)
     await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory/iron`)
+      .set(iron)
+    await Firebase.database()
       .ref(`users/${user.uid}/userData/strength`)
       .set(strength)
     await Firebase.database()
@@ -95,6 +101,7 @@ export default function HomeScreen({ navigation }) {
           if (snapshot.exists()) {
             setGold(snapshot.val().userData.inventory.gold)
             setStone(snapshot.val().userData.inventory.gold)
+            setIron(snapshot.val().userData.inventory.iron)
           } else {
             console.log('No data available')
             setDatabase()
@@ -114,16 +121,23 @@ export default function HomeScreen({ navigation }) {
     if (type === 'stone') {
       setStone(stone + strength)
     }
+    if (type === 'iron') {
+      setIron(iron + strength)
+    }
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory/${type}`)
       .set(eval(type))
   }
 
   async function generateBlock() {
-    canvas.current.setFromOutside(
-      blocks[Math.floor(Math.random() * blocks.length)]
-    )
-    AudioManager.playAsync('break', false)
+    let chance = Math.random() * 100
+    let block = blocks[Math.floor(Math.random() * blocks.length)]
+    if (block.probability > chance) {
+      canvas.current.setFromOutside(block)
+      AudioManager.playAsync('break', false)
+    } else {
+      generateBlock()
+    }
   }
 
   if (isLoading) {
