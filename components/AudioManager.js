@@ -10,7 +10,6 @@ class AudioManager {
       const soundObject = this.sounds[name]
       try {
         //await soundObject.setIsLoopingAsync(isLooping)
-
         //await soundObject.setPositionAsync(0)
         await soundObject.setIsLoopingAsync(isLooping)
         await soundObject.playFromPositionAsync(0)
@@ -38,12 +37,13 @@ class AudioManager {
   configureExperienceAudioAsync = async () => {
     await Audio.setIsEnabledAsync(true)
     return Audio.setAudioModeAsync({
-      allowsRecordingIOS: false,
-      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
       playsInSilentModeIOS: false,
+      allowsRecordingIOS: false,
+      staysActiveInBackground: false,
+      interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_MIX_WITH_OTHERS,
       shouldDuckAndroid: true,
-      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-      playThroughEarpieceAndroid: true,
+      interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS,
+      playThroughEarpieceAndroid: false,
     })
   }
 
@@ -53,9 +53,10 @@ class AudioManager {
     for (let key of keys) {
       const item = Assets.audio[key]
       this.sounds[key.split('.')[0]] = (
-        await Audio.Sound.loadAsync(item, {
+        await Audio.Sound.createAsync(item, {
           shouldPlay: false,
           progressUpdateIntervalMillis: 1,
+          downloadFirst: true,
         })
       ).sound
     }
