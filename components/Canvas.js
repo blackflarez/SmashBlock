@@ -17,7 +17,7 @@ import ExpoTHREE, {
 } from 'expo-three'
 import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
 import * as React from 'react'
-import { useState, forwardRef, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef } from 'react'
 import {
   PanGestureHandler,
   PinchGestureHandler,
@@ -44,6 +44,7 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  cubeDestruction,
   sky,
   floors,
   outerFloors = [],
@@ -68,9 +69,9 @@ var deltaX = 0,
     colour: 'grey',
   },
   rotationSpeed = 0.001,
-  listener,
-  sound,
-  audioLoader
+  mixer,
+  clips,
+  clock = new THREE.Clock()
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -84,6 +85,12 @@ function Canvas(props, ref) {
     }),
     []
   )
+
+  function haptics(style) {
+    if (Platform.OS === 'iOS') {
+      Haptics.impactAsync(style)
+    }
+  }
 
   async function onContextCreate(gl) {
     function loadModel(url) {
@@ -133,7 +140,7 @@ function Canvas(props, ref) {
 
       //lights
       const light5 = new THREE.DirectionalLight(0xffffff, 1)
-      light5.position.set(-100, 150, -150)
+      light5.position.set(-200, 200, 150)
       light5.shadow.mapSize.set(8192, 8192)
       light5.castShadow = true
 
@@ -143,9 +150,14 @@ function Canvas(props, ref) {
       world.add(ambientLight)
 
       //assets
-      const uri = Asset.fromModule(require('../assets/models/cube.glb')).uri
+      const uri = Asset.fromModule(
+        require('../assets/models/cubescaled.glb')
+      ).uri
+      const destructionUri = Asset.fromModule(
+        require('../assets/models/cubedestruction.glb')
+      ).uri
       const floorUri = Asset.fromModule(
-        require('../assets/models/floor.glb')
+        require('../assets/models/floorscaled.glb')
       ).uri
       const tex = Asset.fromModule(require('../assets/models/cube.png')).uri
       const floorTex = Asset.fromModule(
@@ -153,7 +165,12 @@ function Canvas(props, ref) {
       ).uri
 
       //models
-      let model, texture, skyModel, floorTexture
+      let model,
+        texture,
+        skyModel,
+        floorTexture,
+        destructionModel,
+        destructionAnims
       let floorModels = []
       let ms = []
 
@@ -170,6 +187,11 @@ function Canvas(props, ref) {
         skyModel = result.scene.children[0]
       })
 
+      let m3 = loadModel(destructionUri).then((result) => {
+        destructionModel = result.scene
+        destructionAnims = result.animations
+      })
+
       let t1 = loadTexture(tex).then((result) => {
         texture = result
       })
@@ -183,7 +205,7 @@ function Canvas(props, ref) {
         })
       }
 
-      Promise.all([m1, t1, t2, m2, ms[area - 1]]).then(() => {
+      Promise.all([m1, t1, t2, m2, m3, ms[area - 1]]).then(() => {
         //cube
         cube = model
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
@@ -191,7 +213,38 @@ function Canvas(props, ref) {
         cube.name = 'cube'
         cube.castShadow = true
         cube.material.transparent = true
+        cube.scale.x = 0.032499998807907104
+        cube.scale.y = 0.032499998807907104
+        cube.scale.z = 0.032499998807907104
         world.add(cube)
+
+        //cubeDestruction
+        cubeDestruction = destructionModel
+        cubeDestruction.material = new THREE.MeshLambertMaterial({
+          color: 'grey',
+        })
+
+        cubeDestruction.traverse((o) => {
+          if (o.isMesh)
+            o.material = new THREE.MeshLambertMaterial({
+              color: currentBlock.colour,
+            })
+        })
+        cubeDestruction.material.metalness = 0
+        cubeDestruction.name = 'cubeDestruction'
+        cubeDestruction.castShadow = true
+        cubeDestruction.material.transparent = true
+        cubeDestruction.scale.x = 0.03
+        cubeDestruction.scale.y = 0.03
+        cubeDestruction.scale.z = 0.03
+
+        mixer = new THREE.AnimationMixer(cubeDestruction)
+
+        cubeDestruction.animations = destructionAnims
+        clips = cubeDestruction.animations
+        //console.log(cubeDestruction)
+
+        scene.add(cubeDestruction)
 
         //Skybox
         sky = skyModel
@@ -251,6 +304,9 @@ function Canvas(props, ref) {
             outerFloors[lev].position.y = y
             outerFloors[lev].position.x = x
             outerFloors[lev].position.z = z
+            outerFloors[lev].scale.x = 0.032499998807907104
+            outerFloors[lev].scale.y = 0.032499998807907104
+            outerFloors[lev].scale.z = 0.032499998807907104
             outerFloors[lev].name = `floor`
             if (level === -1) {
               outerFloors[lev].receiveShadow = true
@@ -262,10 +318,8 @@ function Canvas(props, ref) {
           l++
         }
 
-        //Particles
-
         //world
-        world.rotation.y = 0.78
+        scene.rotation.y = -0.78
         scene.add(world)
 
         animate()
@@ -280,15 +334,15 @@ function Canvas(props, ref) {
     async function animate() {
       //Rotate cube
       if (panning) {
-        world.rotation.x += deltaY * rotationSpeed
-        world.rotation.y += deltaX * rotationSpeed
+        scene.rotation.x += deltaY * rotationSpeed
+        scene.rotation.y += deltaX * rotationSpeed
       }
 
-      if (world.rotation.x > 1.15) {
-        world.rotation.x = 1.15
+      if (scene.rotation.x > 1.15) {
+        scene.rotation.x = 1.15
       }
-      if (world.rotation.x < -0.35) {
-        world.rotation.x = -0.35
+      if (scene.rotation.x < -0.35) {
+        scene.rotation.x = -0.35
       }
 
       if (deltaX > 0) {
@@ -328,6 +382,10 @@ function Canvas(props, ref) {
       if (camera.position.z > maximum) {
         camera.position.z = maximum
       }
+
+      //Animation
+      var dt = clock.getDelta()
+      mixer.update(dt)
 
       TWEEN.update()
       camera.lookAt(0, 0, 0)
@@ -448,7 +506,7 @@ function Canvas(props, ref) {
       .to(
         {
           x: 0,
-          y: 0.78,
+          y: -0.78,
           z: 0,
         },
         750
@@ -475,12 +533,19 @@ function Canvas(props, ref) {
       destroy.start()
     } else if (type === 'returnRotation') {
       returnRotation.start()
-    }
-  }
-
-  function haptics(style) {
-    if (Platform.OS !== 'web') {
-      Haptics.impactAsync(style)
+    } else if (type === 'destruction') {
+      cubeDestruction.traverse((o) => {
+        if (o.isMesh)
+          o.material = new THREE.MeshLambertMaterial({
+            color: currentBlock.colour,
+          })
+      })
+      cubeDestruction.visible = true
+      clips.forEach(function (clip) {
+        mixer.clipAction(clip).setLoop(THREE.LoopOnce)
+        mixer.clipAction(clip).clampWhenFinished = true
+        mixer.clipAction(clip).play().reset()
+      })
     }
   }
 
@@ -492,7 +557,7 @@ function Canvas(props, ref) {
     raycaster = new THREE.Raycaster()
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
-    var intersects = raycaster.intersectObjects(scene.children, true)
+    var intersects = raycaster.intersectObjects(world.children, true)
 
     //Placing cube
     if (
@@ -527,6 +592,7 @@ function Canvas(props, ref) {
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
+          animation('destruction', cubeDestruction, cubeDestruction)
           AudioManager.playAsync('break', false)
           props.click(currentBlock.name)
           props.generate()
@@ -552,7 +618,7 @@ function Canvas(props, ref) {
     longPressing = true
 
     raycast(evt)
-    console.log('LongPress')
+    //console.log('LongPress')
   }
 
   let handlePress = (evt) => {
@@ -561,7 +627,7 @@ function Canvas(props, ref) {
 
   let handlePressOut = (evt) => {
     if (longPressing) {
-      console.log('LongPressOut')
+      //console.log('LongPressOut')
     } else {
       //console.log('PressOut')
     }
@@ -579,12 +645,12 @@ function Canvas(props, ref) {
 
     if (nativeEvent.state === State.END) {
       haptics(Haptics.ImpactFeedbackStyle.Light)
-      console.log('pan out')
+      //console.log('pan out')
       panningOut = true
       panning = false
       longPressing = false
       longPressingOut = true
-      animation('returnRotation', world, world)
+      animation('returnRotation', scene, scene)
     }
   }
 

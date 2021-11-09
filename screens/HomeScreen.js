@@ -6,6 +6,7 @@ import {
   View,
   TouchableOpacity,
   Pressable,
+  AppState,
 } from 'react-native'
 import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
@@ -36,8 +37,32 @@ export default function HomeScreen({ navigation }) {
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
 
+  const appState = useRef(AppState.currentState)
+  const [appStateVisible, setAppStateVisible] = useState(appState.current)
+
+  useEffect(() => {
+    AppState.addEventListener('change', _handleAppStateChange)
+
+    return () => {
+      AppState.removeEventListener('change', _handleAppStateChange)
+    }
+  }, [])
+
+  const _handleAppStateChange = (nextAppState) => {
+    if (
+      appState.current.match(/inactive|background/) &&
+      nextAppState === 'active'
+    ) {
+      console.log('App has come to the foreground!')
+    }
+
+    appState.current = nextAppState
+    setAppStateVisible(appState.current)
+    console.log('AppState', appState.current)
+  }
+
   function haptics(style) {
-    if (Platform.OS !== 'web') {
+    if (Platform.OS === 'iOS') {
       Haptics.impactAsync(style)
     }
   }
@@ -137,6 +162,9 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.container}>
+        <Text>Current state is: {appStateVisible}</Text>
+      </View>
       <StatusBar style="light-content" />
       <View style={styles.row}>
         <IconButton

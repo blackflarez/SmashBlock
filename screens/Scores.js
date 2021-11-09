@@ -49,13 +49,13 @@ export default function Scores({ navigation }, props) {
 
   return (
     <View style={styles.container}>
+      <StatusBar style="dark-content" />
       <Animated.View
         style={{
           ...props.style,
           opacity: fadeAnim, // Bind opacity to animated value
         }}
       >
-        <StatusBar style="dark-content" />
         <Text style={styles.title}>Leaderboard</Text>
         <Text> </Text>
         <Text style={styles.text}>{leaderboard}</Text>
