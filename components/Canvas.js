@@ -26,7 +26,7 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
 import { Audio } from 'expo-av'
-import AudioManager from '../components/AudioManager'
+
 import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
@@ -87,7 +87,7 @@ function Canvas(props, ref) {
   )
 
   function haptics(style) {
-    if (Platform.OS === 'iOS') {
+    if (Platform.OS === 'ios') {
       Haptics.impactAsync(style)
     }
   }
@@ -106,9 +106,6 @@ function Canvas(props, ref) {
     }
 
     async function init() {
-      //Audio
-      AudioManager.setupAsync()
-
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
@@ -593,7 +590,7 @@ function Canvas(props, ref) {
       if (!longPressing) {
         if (currentBlock.health <= 0) {
           animation('destruction', cubeDestruction, cubeDestruction)
-          AudioManager.playAsync('break', false)
+
           props.click(currentBlock.name)
           props.generate()
           haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -603,7 +600,6 @@ function Canvas(props, ref) {
 
           animation('destroy', intersects[0].object, intersects[0].object)
         } else {
-          AudioManager.playAsync('hit', false)
           haptics(Haptics.ImpactFeedbackStyle.Light)
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1

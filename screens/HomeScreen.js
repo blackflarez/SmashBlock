@@ -6,13 +6,14 @@ import {
   View,
   TouchableOpacity,
   Pressable,
-  AppState,
+  Platform,
 } from 'react-native'
 import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import * as Haptics from 'expo-haptics'
+import AudioManager from '../components/AudioManager'
 
 const blocks = [
   {
@@ -37,32 +38,8 @@ export default function HomeScreen({ navigation }) {
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
 
-  const appState = useRef(AppState.currentState)
-  const [appStateVisible, setAppStateVisible] = useState(appState.current)
-
-  useEffect(() => {
-    AppState.addEventListener('change', _handleAppStateChange)
-
-    return () => {
-      AppState.removeEventListener('change', _handleAppStateChange)
-    }
-  }, [])
-
-  const _handleAppStateChange = (nextAppState) => {
-    if (
-      appState.current.match(/inactive|background/) &&
-      nextAppState === 'active'
-    ) {
-      console.log('App has come to the foreground!')
-    }
-
-    appState.current = nextAppState
-    setAppStateVisible(appState.current)
-    console.log('AppState', appState.current)
-  }
-
   function haptics(style) {
-    if (Platform.OS === 'iOS') {
+    if (Platform.OS === 'ios') {
       Haptics.impactAsync(style)
     }
   }
@@ -110,6 +87,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     async function init() {
+      AudioManager.setupAsync()
       await Firebase.database()
         .ref(`users/${user.uid}`)
         .get()
@@ -145,6 +123,7 @@ export default function HomeScreen({ navigation }) {
     canvas.current.setFromOutside(
       blocks[Math.floor(Math.random() * blocks.length)]
     )
+    AudioManager.playAsync('break', false)
   }
 
   if (isLoading) {
@@ -162,9 +141,6 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.container}>
-        <Text>Current state is: {appStateVisible}</Text>
-      </View>
       <StatusBar style="light-content" />
       <View style={styles.row}>
         <IconButton
