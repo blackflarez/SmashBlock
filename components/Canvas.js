@@ -26,7 +26,6 @@ import {
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
 import { Audio } from 'expo-av'
-
 import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
@@ -44,7 +43,7 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
-  cubeDestruction,
+  cubeDestruction = [],
   sky,
   floors,
   outerFloors = [],
@@ -69,8 +68,8 @@ var deltaX = 0,
     colour: 'grey',
   },
   rotationSpeed = 0.001,
-  mixer,
-  clips,
+  mixer = [],
+  clips = [],
   clock = new THREE.Clock()
 
 function Canvas(props, ref) {
@@ -153,6 +152,9 @@ function Canvas(props, ref) {
       const destructionUri = Asset.fromModule(
         require('../assets/models/cubedestruction.glb')
       ).uri
+      const destruction2Uri = Asset.fromModule(
+        require('../assets/models/cubedestruction2.glb')
+      ).uri
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
       ).uri
@@ -167,7 +169,9 @@ function Canvas(props, ref) {
         skyModel,
         floorTexture,
         destructionModel,
-        destructionAnims
+        destructionAnims = [],
+        destructionModel2
+
       let floorModels = []
       let ms = []
 
@@ -186,7 +190,12 @@ function Canvas(props, ref) {
 
       let m3 = loadModel(destructionUri).then((result) => {
         destructionModel = result.scene
-        destructionAnims = result.animations
+        destructionAnims[0] = result.animations
+      })
+
+      let m4 = loadModel(destruction2Uri).then((result) => {
+        destructionModel2 = result.scene
+        destructionAnims[1] = result.animations
       })
 
       let t1 = loadTexture(tex).then((result) => {
@@ -202,7 +211,7 @@ function Canvas(props, ref) {
         })
       }
 
-      Promise.all([m1, t1, t2, m2, m3, ms[area - 1]]).then(() => {
+      Promise.all([m1, t1, t2, m2, m3, m4, ms[area - 1]]).then(() => {
         //cube
         cube = model
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
@@ -216,32 +225,38 @@ function Canvas(props, ref) {
         world.add(cube)
 
         //cubeDestruction
-        cubeDestruction = destructionModel
-        cubeDestruction.material = new THREE.MeshLambertMaterial({
-          color: 'grey',
-        })
+        cubeDestruction[0] = destructionModel
+        cubeDestruction[1] = destructionModel2
 
-        cubeDestruction.traverse((o) => {
-          if (o.isMesh)
-            o.material = new THREE.MeshLambertMaterial({
-              color: currentBlock.colour,
-            })
-        })
-        cubeDestruction.material.metalness = 0
-        cubeDestruction.name = 'cubeDestruction'
-        cubeDestruction.castShadow = true
-        cubeDestruction.material.transparent = true
-        cubeDestruction.scale.x = 0.03
-        cubeDestruction.scale.y = 0.03
-        cubeDestruction.scale.z = 0.03
+        for (let i = 0; i < cubeDestruction.length; i++) {
+          cubeDestruction[i].material = new THREE.MeshLambertMaterial({
+            color: 'grey',
+          })
 
-        mixer = new THREE.AnimationMixer(cubeDestruction)
+          cubeDestruction[i].traverse((o) => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshLambertMaterial({
+                color: currentBlock.colour,
+              })
+              o.castShadow = true
+              o.material.transparent = true
+              o.material.metalness = 0
+            }
+          })
 
-        cubeDestruction.animations = destructionAnims
-        clips = cubeDestruction.animations
-        //console.log(cubeDestruction)
+          cubeDestruction[i].name = 'cubeDestruction'
 
-        scene.add(cubeDestruction)
+          cubeDestruction[i].scale.x = 0.03
+          cubeDestruction[i].scale.y = 0.03
+          cubeDestruction[i].scale.z = 0.03
+
+          mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
+
+          cubeDestruction[i].animations = destructionAnims[i]
+          clips[i] = cubeDestruction[i].animations
+
+          scene.add(cubeDestruction[i])
+        }
 
         //Skybox
         sky = skyModel
@@ -382,7 +397,9 @@ function Canvas(props, ref) {
 
       //Animation
       var dt = clock.getDelta()
-      mixer.update(dt)
+      for (let i = 0; i < mixer.length; i++) {
+        mixer[i].update(dt)
+      }
 
       TWEEN.update()
       camera.lookAt(0, 0, 0)
@@ -530,20 +547,22 @@ function Canvas(props, ref) {
       destroy.start()
     } else if (type === 'returnRotation') {
       returnRotation.start()
-    } else if (type === 'destruction') {
-      cubeDestruction.traverse((o) => {
-        if (o.isMesh)
-          o.material = new THREE.MeshLambertMaterial({
-            color: currentBlock.colour,
-          })
-      })
-      cubeDestruction.visible = true
-      clips.forEach(function (clip) {
-        mixer.clipAction(clip).setLoop(THREE.LoopOnce)
-        mixer.clipAction(clip).clampWhenFinished = true
-        mixer.clipAction(clip).play().reset()
-      })
     }
+  }
+
+  function destruction(target, reference) {
+    target.traverse((o) => {
+      if (o.isMesh)
+        o.material = new THREE.MeshLambertMaterial({
+          color: currentBlock.colour,
+        })
+    })
+    target.visible = true
+    clips[reference].forEach(function (clip) {
+      mixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
+      mixer[reference].clipAction(clip).clampWhenFinished = true
+      mixer[reference].clipAction(clip).play().reset()
+    })
   }
 
   let raycast = async (evt) => {
@@ -589,8 +608,8 @@ function Canvas(props, ref) {
       //Clicking cube
       if (!longPressing) {
         if (currentBlock.health <= 0) {
-          animation('destruction', cubeDestruction, cubeDestruction)
-
+          let rand = Math.floor(Math.random() * cubeDestruction.length)
+          destruction(cubeDestruction[rand], rand)
           props.click(currentBlock.name)
           props.generate()
           haptics(Haptics.ImpactFeedbackStyle.Heavy)
