@@ -124,7 +124,7 @@ function Canvas(props, ref) {
       //lights
       const light = new THREE.DirectionalLight(0xffffff, 1)
       light.position.set(-200, 200, 150)
-      light.shadow.mapSize.set(8192, 8192)
+      light.shadow.mapSize.set(2048, 2048)
       light.castShadow = true
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 1)
@@ -233,7 +233,7 @@ function Canvas(props, ref) {
         sky.scale.x = 600
         sky.scale.z = 600
         sky.scale.y = 600
-        scene.add(sky)
+        //scene.add(sky)
 
         //Floors
         var x = unit
@@ -500,23 +500,29 @@ function Canvas(props, ref) {
 
     if (type === 'place') {
       place.start()
+      return
     } else if (type === 'cancel') {
       cancel.start()
+      return
     } else if (type === 'rise') {
       inflate.chain(deflate)
       inflate.start()
       rise.start()
+      return
     } else if (type === 'click') {
       inflate.chain(deflate)
       inflate.start()
+      return
     } else if (type === 'destroy') {
       destroy.chain(shrink)
       shrink.chain(create)
       create.chain(inflateSlow)
       inflateSlow.chain(deflate)
       destroy.start()
+      return
     } else if (type === 'returnRotation') {
       returnRotation.start()
+      return
     }
   }
 
