@@ -123,24 +123,10 @@ export default function HomeScreen({ navigation }, props) {
   }, [])
 
   async function updateBalance(type) {
-    if (type.name === 'gold') {
-      setGold(gold + strength)
-      await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
-      await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
-    }
-    if (type.name === 'stone') {
-      setStone(stone + strength)
-    }
-    if (type.name === 'iron') {
-      setIron(iron + strength)
-    }
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/${type.name}`)
-      .set(eval(type.name))
-
     setinventoryNotificaitons(inventoryNotificaitons + strength)
     setCurrentBlock(type.name)
     setCurrentBlockColour(type.colour)
+
     Animated.sequence([
       Animated.timing(riseAnim, {
         toValue: 550,
@@ -170,6 +156,21 @@ export default function HomeScreen({ navigation }, props) {
         }),
       ]),
     ]).start()
+
+    if (type.name === 'gold') {
+      setGold(gold + strength)
+      await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
+      await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
+    }
+    if (type.name === 'stone') {
+      setStone(stone + strength)
+    }
+    if (type.name === 'iron') {
+      setIron(iron + strength)
+    }
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory/${type.name}`)
+      .set(eval(type.name))
   }
 
   async function generateBlock() {
