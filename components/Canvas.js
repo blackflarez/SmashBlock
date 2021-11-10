@@ -1,4 +1,3 @@
-import { StatusBar } from 'expo-status-bar'
 import {
   StyleSheet,
   Animated,
@@ -8,14 +7,9 @@ import {
   SafeAreaView,
   Platform,
 } from 'react-native'
-import Expo, { AR } from 'expo'
 import * as THREE from 'three'
-import ExpoTHREE, {
-  Renderer,
-  TextureLoader,
-  createARBackgroundTexture,
-} from 'expo-three'
-import { ExpoWebGLRenderingContext, GLView } from 'expo-gl'
+import ExpoTHREE, { Renderer, TextureLoader } from 'expo-three'
+import { GLView } from 'expo-gl'
 import * as React from 'react'
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 import {
@@ -25,7 +19,6 @@ import {
 } from 'react-native-gesture-handler'
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
-import { Audio } from 'expo-av'
 import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
@@ -57,7 +50,6 @@ var deltaX = 0,
   width = Dimensions.get('window').width,
   height = Dimensions.get('window').height,
   panning = false,
-  panningOut = false,
   longPressing = false,
   longPressingOut = false,
   hovering = [],
@@ -129,20 +121,15 @@ function Canvas(props, ref) {
 
       mouse = new THREE.Vector2()
 
-      //materials
-      const material = new THREE.MeshBasicMaterial({
-        map: new THREE.TextureLoader().load(),
-      })
-
       //lights
-      const light5 = new THREE.DirectionalLight(0xffffff, 1)
-      light5.position.set(-200, 200, 150)
-      light5.shadow.mapSize.set(8192, 8192)
-      light5.castShadow = true
+      const light = new THREE.DirectionalLight(0xffffff, 1)
+      light.position.set(-200, 200, 150)
+      light.shadow.mapSize.set(8192, 8192)
+      light.castShadow = true
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 1)
 
-      world.add(light5)
+      world.add(light)
       world.add(ambientLight)
 
       //assets
@@ -155,55 +142,42 @@ function Canvas(props, ref) {
       const destruction2Uri = Asset.fromModule(
         require('../assets/models/cubedestruction2.glb')
       ).uri
+      const destruction3Uri = Asset.fromModule(
+        require('../assets/models/cubedestruction3.glb')
+      ).uri
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
       ).uri
-      const tex = Asset.fromModule(require('../assets/models/cube.png')).uri
-      const floorTex = Asset.fromModule(
-        require('../assets/models/floor.png')
-      ).uri
 
-      //models
-      let model,
-        texture,
-        skyModel,
-        floorTexture,
-        destructionModel,
-        destructionAnims = [],
-        destructionModel2
+      let m1 = loadModel(uri).then((result) => {
+        cube = result.scene.children[0]
+      })
+
+      let m2 = loadModel(uri).then((result) => {
+        sky = result.scene.children[0]
+      })
+
+      let m3 = loadModel(destructionUri).then((result) => {
+        cubeDestruction[0] = result.scene
+        cubeDestruction[0].animations = result.animations
+      })
+
+      let m4 = loadModel(destruction2Uri).then((result) => {
+        cubeDestruction[1] = result.scene
+        cubeDestruction[1].animations = result.animations
+      })
+
+      let m5 = loadModel(destruction3Uri).then((result) => {
+        cubeDestruction[2] = result.scene
+        cubeDestruction[2].animations = result.animations
+      })
 
       let floorModels = []
       let ms = []
-
       let sizes = [0, 1, 9, 25, 49, 81, 121, 169, 225, 289]
       let levels = 1
       floors = sizes[7]
       let area = levels * floors
-
-      let m1 = loadModel(uri).then((result) => {
-        model = result.scene.children[0]
-      })
-
-      let m2 = loadModel(uri).then((result) => {
-        skyModel = result.scene.children[0]
-      })
-
-      let m3 = loadModel(destructionUri).then((result) => {
-        destructionModel = result.scene
-        destructionAnims[0] = result.animations
-      })
-
-      let m4 = loadModel(destruction2Uri).then((result) => {
-        destructionModel2 = result.scene
-        destructionAnims[1] = result.animations
-      })
-
-      let t1 = loadTexture(tex).then((result) => {
-        texture = result
-      })
-      let t2 = loadTexture(floorTex).then((result) => {
-        floorTexture = result
-      })
 
       for (let i = 0; i < area; i++) {
         ms[i] = loadModel(floorUri).then((result) => {
@@ -211,9 +185,8 @@ function Canvas(props, ref) {
         })
       }
 
-      Promise.all([m1, t1, t2, m2, m3, m4, ms[area - 1]]).then(() => {
+      Promise.all([m1, m2, m3, m4, m5, ms[area - 1]]).then(() => {
         //cube
-        cube = model
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
         cube.material.metalness = 0
         cube.name = 'cube'
@@ -225,9 +198,6 @@ function Canvas(props, ref) {
         world.add(cube)
 
         //cubeDestruction
-        cubeDestruction[0] = destructionModel
-        cubeDestruction[1] = destructionModel2
-
         for (let i = 0; i < cubeDestruction.length; i++) {
           cubeDestruction[i].material = new THREE.MeshLambertMaterial({
             color: 'grey',
@@ -251,15 +221,12 @@ function Canvas(props, ref) {
           cubeDestruction[i].scale.z = 0.032499998807907104
 
           mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
-
-          cubeDestruction[i].animations = destructionAnims[i]
           clips[i] = cubeDestruction[i].animations
 
           scene.add(cubeDestruction[i])
         }
 
         //Skybox
-        sky = skyModel
         sky.name = 'sky'
         sky.material = new THREE.MeshBasicMaterial({ color: 0xffffff })
         sky.material.side = THREE.BackSide
@@ -301,9 +268,6 @@ function Canvas(props, ref) {
           for (let i = 0; i < floors; i++) {
             let lev = i + l * floors
             outerFloors[lev] = floorModels[lev]
-            floorTexture.flipY = false
-            floorTexture.magFilter = THREE.NearestFilter
-            floorTexture.anisotropy = 16
             outerFloors[lev].material = new THREE.MeshStandardMaterial({
               color: 0xeeeeee,
             })
@@ -557,6 +521,7 @@ function Canvas(props, ref) {
   }
 
   function destruction(target, reference) {
+    target.rotation.y += Math.floor(Math.random() * 5)
     target.traverse((o) => {
       if (o.isMesh)
         o.material = new THREE.MeshLambertMaterial({
@@ -601,10 +566,6 @@ function Canvas(props, ref) {
       hovering = []
     }
 
-    if (intersects[0].object.name !== 'cube' && panningOut) {
-      panningOut = false
-    }
-
     if (intersects[0].object.name === 'cube' && hovering.length === 0) {
       //Picking up cube
       if (longPressing) {
@@ -629,29 +590,17 @@ function Canvas(props, ref) {
           animation('click', intersects[0].object, intersects[0].object)
           currentBlock.health -= 1
         }
-
-        //console.log(currentBlock)
       }
     }
   }
 
   let handleLongPress = (evt) => {
     longPressing = true
-
     raycast(evt)
-    //console.log('LongPress')
   }
 
   let handlePress = (evt) => {
     raycast(evt)
-  }
-
-  let handlePressOut = (evt) => {
-    if (longPressing) {
-      //console.log('LongPressOut')
-    } else {
-      //console.log('PressOut')
-    }
   }
 
   let handlePan = async (evt) => {
@@ -666,8 +615,7 @@ function Canvas(props, ref) {
 
     if (nativeEvent.state === State.END) {
       haptics(Haptics.ImpactFeedbackStyle.Light)
-      //console.log('pan out')
-      panningOut = true
+
       panning = false
       longPressing = false
       longPressingOut = true
@@ -704,7 +652,6 @@ function Canvas(props, ref) {
             <View style={styles.wrapper}>
               <Pressable
                 onLongPress={handleLongPress}
-                onPressOut={handlePressOut}
                 onPress={debounceEventHandler(handlePress, 50)}
               >
                 <GLView
