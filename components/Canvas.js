@@ -59,7 +59,7 @@ var deltaX = 0,
     health: 5,
     colour: 'grey',
   },
-  rotationSpeed = 0.001,
+  rotationSpeed = 0.0005,
   mixer = [],
   clips = [],
   clock = new THREE.Clock()
@@ -335,7 +335,7 @@ function Canvas(props, ref) {
       }
 
       //Scale cube
-      const minimum = 8
+      const minimum = 9
       const maximum = 15 + floors
       const threshold = 0.5
       camera.position.z -= scale / 15
@@ -403,9 +403,9 @@ function Canvas(props, ref) {
     const inflate = new TWEEN.Tween(target.scale)
       .to(
         {
-          x: 0.035,
+          x: 0.0345,
           y: 0.034,
-          z: 0.035,
+          z: 0.0345,
         },
         65
       )
@@ -577,7 +577,7 @@ function Canvas(props, ref) {
         if (currentBlock.health <= 0) {
           let rand = Math.floor(Math.random() * cubeDestruction.length)
           destruction(cubeDestruction[rand], rand)
-          props.click(currentBlock.name)
+          props.click(currentBlock)
           props.generate()
           haptics(Haptics.ImpactFeedbackStyle.Heavy)
           intersects[0].object.material = new THREE.MeshLambertMaterial({

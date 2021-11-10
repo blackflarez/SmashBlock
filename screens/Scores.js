@@ -37,7 +37,7 @@ export default function Scores({ navigation }, props) {
             Animated.timing(fadeAnim, {
               toValue: 1,
               duration: 300,
-              useNativeDriver: true,
+              useNativeDriver: false,
             }).start()
           } else {
             console.log('No data available')
