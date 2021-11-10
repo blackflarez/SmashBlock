@@ -1,27 +1,58 @@
 import React from 'react'
-import { Pressable, StyleSheet } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { AntDesign } from '@expo/vector-icons'
+import { Badge } from 'react-native-paper'
 
-const IconButton = ({ color, size, onPress, name }) => {
+const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
+  if (notifications > 0) {
+    visible = true
+  } else {
+    visible = false
+  }
   return (
-    <Pressable
-      style={(args) => {
-        if (args.pressed) {
+    <View>
+      <Pressable
+        style={(args) => {
+          if (args.pressed) {
+            return [
+              styles.base,
+              {
+                opacity: 0.5,
+                backgroundColor: '#eee',
+                borderRadius: 50,
+                width: 50,
+                height: 50,
+              },
+            ]
+          }
+
           return [
             styles.base,
             {
-              opacity: 0.5,
-              backgroundColor: 'transparent',
+              opacity: 1,
+              backgroundColor: '#eee',
+              borderRadius: 50,
+              width: 50,
+              height: 50,
             },
           ]
-        }
-
-        return [styles.base, { opacity: 1, backgroundColor: 'transparent' }]
-      }}
-      onPress={onPress}
-    >
-      <AntDesign name={name} size={size} color={color} />
-    </Pressable>
+        }}
+        onPress={onPress}
+      >
+        <AntDesign name={name} size={size} color={color} />
+        <Badge
+          visible={visible}
+          size={20}
+          style={{
+            position: 'absolute',
+            top: -4,
+            right: -4,
+          }}
+        >
+          {notifications}
+        </Badge>
+      </Pressable>
+    </View>
   )
 }
 

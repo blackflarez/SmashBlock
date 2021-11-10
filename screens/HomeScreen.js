@@ -5,7 +5,7 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Pressable,
+  Animated,
   Platform,
 } from 'react-native'
 import { IconButton } from '../components'
@@ -26,7 +26,7 @@ const blocks = [
   { name: 'iron', health: 10, colour: 'slategray', probability: 50 },
 ]
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
@@ -40,6 +40,11 @@ export default function HomeScreen({ navigation }) {
   const [automation, setAutomation] = useState(0)
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
+  const [inventoryNotificaitons, setinventoryNotificaitons] = useState(0)
+  const [currentBlock, setCurrentBlock] = useState('')
+  const [currentBlockColour, setCurrentBlockColour] = useState('black')
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const riseAnim = useRef(new Animated.Value(550)).current
 
   function haptics(style) {
     if (Platform.OS === 'ios') {
@@ -66,6 +71,7 @@ export default function HomeScreen({ navigation }) {
 
   const handleInventory = async () => {
     try {
+      setinventoryNotificaitons(0)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Inventory')
     } catch (error) {
@@ -74,6 +80,9 @@ export default function HomeScreen({ navigation }) {
   }
 
   async function setDatabase() {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/strength`)
+      .set(strength)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory/gold`)
       .set(gold)
@@ -99,6 +108,7 @@ export default function HomeScreen({ navigation }) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
+            setStrength(snapshot.val().userData.strength)
             setGold(snapshot.val().userData.inventory.gold)
             setStone(snapshot.val().userData.inventory.stone)
             setIron(snapshot.val().userData.inventory.iron)
@@ -113,20 +123,53 @@ export default function HomeScreen({ navigation }) {
   }, [])
 
   async function updateBalance(type) {
-    if (type === 'gold') {
+    if (type.name === 'gold') {
       setGold(gold + strength)
       await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
       await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
     }
-    if (type === 'stone') {
+    if (type.name === 'stone') {
       setStone(stone + strength)
     }
-    if (type === 'iron') {
+    if (type.name === 'iron') {
       setIron(iron + strength)
     }
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/${type}`)
-      .set(eval(type))
+      .ref(`users/${user.uid}/userData/inventory/${type.name}`)
+      .set(eval(type.name))
+
+    setinventoryNotificaitons(inventoryNotificaitons + strength)
+    setCurrentBlock(type.name)
+    setCurrentBlockColour(type.colour)
+    Animated.sequence([
+      Animated.timing(riseAnim, {
+        toValue: 550,
+        duration: 1,
+        useNativeDriver: false,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 50,
+        useNativeDriver: false,
+      }),
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: false,
+      }),
+      Animated.parallel([
+        Animated.timing(riseAnim, {
+          toValue: 700,
+          duration: 800,
+          useNativeDriver: false,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 800,
+          useNativeDriver: false,
+        }),
+      ]),
+    ]).start()
   }
 
   async function generateBlock() {
@@ -147,7 +190,7 @@ export default function HomeScreen({ navigation }) {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: '#000',
+          backgroundColor: '#fff',
         }}
       ></View>
     )
@@ -156,26 +199,50 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="light-content" />
+
       <View style={styles.row}>
         <IconButton
           name="logout"
           size={32}
           color="#000"
           onPress={handleSignOut}
+          visible={false}
         />
+
         <IconButton
           name="linechart"
           size={32}
           color="#000"
           onPress={handleScores}
+          visible={false}
         />
         <IconButton
           name="wallet"
           size={32}
           color="#000"
           onPress={handleInventory}
+          notifications={inventoryNotificaitons}
         />
       </View>
+
+      <Animated.View
+        style={{
+          ...props.style,
+          justifyContent: 'center',
+          opacity: fadeAnim,
+          bottom: riseAnim,
+        }}
+      >
+        <Text
+          style={{
+            ...props.style,
+            color: currentBlockColour,
+            fontSize: 32,
+          }}
+        >
+          +{strength} {currentBlock}
+        </Text>
+      </Animated.View>
       <View style={styles.canvas}>
         <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
       </View>
