@@ -245,10 +245,10 @@ function Canvas(props, ref) {
           })
 
           cubeDestruction[i].name = 'cubeDestruction'
-
-          cubeDestruction[i].scale.x = 0.03
-          cubeDestruction[i].scale.y = 0.03
-          cubeDestruction[i].scale.z = 0.03
+          cubeDestruction[i].visible = false
+          cubeDestruction[i].scale.x = 0.032499998807907104
+          cubeDestruction[i].scale.y = 0.032499998807907104
+          cubeDestruction[i].scale.z = 0.032499998807907104
 
           mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
 
@@ -503,7 +503,10 @@ function Canvas(props, ref) {
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.Out)
-      .onUpdate(() => (target.castShadow = false))
+      .onUpdate(() => {
+        target.castShadow = false
+        target.visible = false
+      })
       .onComplete(() => (target.castShadow = true))
 
     const create = new TWEEN.Tween(target.material)
@@ -515,6 +518,9 @@ function Canvas(props, ref) {
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.In)
+      .onComplete(() => {
+        target.visible = true
+      })
 
     const returnRotation = new TWEEN.Tween(target.rotation)
       .to(
