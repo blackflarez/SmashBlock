@@ -48,7 +48,6 @@ class AudioManager {
   }
 
   setupAudioAsync = async () => {
-    console.log('setting up audio')
     const keys = Object.keys(Assets.audio)
     for (let key of keys) {
       const item = Assets.audio[key]
