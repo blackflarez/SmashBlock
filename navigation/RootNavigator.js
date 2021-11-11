@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { View, ActivityIndicator } from 'react-native'
-
+import { StatusBar } from 'expo-status-bar'
 import Firebase from '../config/firebase'
 import { AuthenticatedUserContext } from './AuthenticatedUserProvider'
 import AuthStack from './AuthStack'
@@ -41,6 +41,7 @@ export default function RootNavigator() {
         }}
       >
         <ActivityIndicator size="large" color="#000" />
+        <StatusBar style="light-content" />
       </View>
     )
   }

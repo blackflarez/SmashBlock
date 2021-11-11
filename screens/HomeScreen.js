@@ -1,13 +1,6 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef } from 'react'
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Animated,
-  Platform,
-} from 'react-native'
+import { StyleSheet, Text, View, Animated, Platform } from 'react-native'
 import { IconButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -42,7 +35,8 @@ export default function HomeScreen({ navigation }, props) {
   const [timeOffline, setTimeOffline] = useState(0)
   const [inventoryNotificaitons, setinventoryNotificaitons] = useState(0)
   const [currentBlock, setCurrentBlock] = useState('')
-  const [currentBlockColour, setCurrentBlockColour] = useState('black')
+  const [currentBlockColour, setCurrentBlockColour] = useState('gray')
+  const introFadeAnim = useRef(new Animated.Value(0)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
   const riseAnim = useRef(new Animated.Value(550)).current
 
@@ -117,6 +111,11 @@ export default function HomeScreen({ navigation }, props) {
             setDatabase()
           }
           setIsLoading(false)
+          Animated.timing(introFadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start()
         })
     }
     init()
@@ -193,15 +192,26 @@ export default function HomeScreen({ navigation }, props) {
           alignItems: 'center',
           backgroundColor: '#fff',
         }}
-      ></View>
+      >
+        <StatusBar style="light-content" />
+      </View>
     )
   }
 
   return (
     <View style={styles.container}>
       <StatusBar style="light-content" />
+      <Animated.View
+        style={{
+          ...props.style,
+          opacity: introFadeAnim,
 
-      <View style={styles.row}>
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: 650,
+        }}
+      >
         <IconButton
           name="logout"
           size={32}
@@ -224,8 +234,7 @@ export default function HomeScreen({ navigation }, props) {
           onPress={handleInventory}
           notifications={inventoryNotificaitons}
         />
-      </View>
-
+      </Animated.View>
       <Animated.View
         style={{
           ...props.style,
@@ -238,12 +247,13 @@ export default function HomeScreen({ navigation }, props) {
           style={{
             ...props.style,
             color: currentBlockColour,
-            fontSize: 32,
+            fontSize: 26,
           }}
         >
           +{strength} {currentBlock}
         </Text>
       </Animated.View>
+
       <View style={styles.canvas}>
         <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
       </View>
@@ -257,12 +267,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 650,
   },
   title: {
     fontSize: 24,

@@ -2,7 +2,6 @@ import {
   StyleSheet,
   Animated,
   View,
-  Pressable,
   Dimensions,
   SafeAreaView,
   Platform,
@@ -13,13 +12,14 @@ import { GLView } from 'expo-gl'
 import * as React from 'react'
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 import {
+  LongPressGestureHandler,
   PanGestureHandler,
   PinchGestureHandler,
   State,
+  TapGestureHandler,
 } from 'react-native-gesture-handler'
 import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
-import _ from 'lodash'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
@@ -44,14 +44,11 @@ var deltaX = 0,
   renderer,
   scene,
   camera,
-  speed,
   raycaster,
   mouse,
   width = Dimensions.get('window').width,
   height = Dimensions.get('window').height,
   panning = false,
-  longPressing = false,
-  longPressingOut = false,
   hovering = [],
   unit = 0.065,
   currentBlock = {
@@ -62,10 +59,12 @@ var deltaX = 0,
   rotationSpeed = 0.0005,
   mixer = [],
   clips = [],
-  clock = new THREE.Clock()
+  clock = new THREE.Clock(),
+  timer
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const doubleTapRef = useRef(null)
 
   useImperativeHandle(
     ref,
@@ -527,7 +526,8 @@ function Canvas(props, ref) {
   }
 
   function destruction(target, reference) {
-    target.rotation.y += Math.floor(Math.random() * 5)
+    target.rotation.y += Math.PI / 2
+
     target.traverse((o) => {
       if (o.isMesh)
         o.material = new THREE.MeshLambertMaterial({
@@ -542,71 +542,67 @@ function Canvas(props, ref) {
     })
   }
 
-  let raycast = async (evt) => {
+  async function raycast(evt) {
     let { nativeEvent } = evt
     camera.updateProjectionMatrix()
-    mouse.x = (nativeEvent.pageX / width) * 2 - 1
-    mouse.y = -(nativeEvent.pageY / height) * 2 + 1
+    mouse.x = (nativeEvent.absoluteX / width) * 2 - 1
+    mouse.y = -(nativeEvent.absoluteY / height) * 2 + 1
     raycaster = new THREE.Raycaster()
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(world.children, true)
+    return intersects[0]
+  }
 
-    //Placing cube
-    if (
-      intersects[0].object.name === 'floor' &&
-      intersects[0].object.position.y === -unit &&
-      hovering.length !== 0
-    ) {
-      animation('place', hovering[0], intersects[0].object)
-      hovering = []
+  function hitBlock(block) {
+    if (currentBlock.health <= 0) {
+      //clearInterval(timer)
+      //timer = null
+      let rand = Math.floor(Math.random() * cubeDestruction.length)
+      destruction(cubeDestruction[rand], rand)
+      props.click(currentBlock)
+      props.generate()
+      haptics(Haptics.ImpactFeedbackStyle.Heavy)
+      block.object.material = new THREE.MeshLambertMaterial({
+        color: currentBlock.colour,
+      })
+      animation('destroy', block.object, block.object)
+    } else {
+      haptics(Haptics.ImpactFeedbackStyle.Light)
+      animation('click', block.object, block.object)
+      currentBlock.health -= 1
     }
-    //Cancel placing cube
-    if (
-      hovering.length !== 0 &&
-      intersects[0].object.name !== 'floor' &&
-      !longPressing &&
-      !longPressingOut
-    ) {
-      animation('cancel', hovering[0], hovering[0])
-      hovering = []
-    }
+  }
 
-    if (intersects[0].object.name === 'cube' && hovering.length === 0) {
-      //Picking up cube
-      if (longPressing) {
-        //animation('rise', intersects[0].object, intersects[0].object)
-        //hovering.push(intersects[0].object)
-      }
-      //Clicking cube
-      if (!longPressing) {
-        if (currentBlock.health <= 0) {
-          let rand = Math.floor(Math.random() * cubeDestruction.length)
-          destruction(cubeDestruction[rand], rand)
-          props.click(currentBlock)
-          props.generate()
-          haptics(Haptics.ImpactFeedbackStyle.Heavy)
-          intersects[0].object.material = new THREE.MeshLambertMaterial({
-            color: currentBlock.colour,
-          })
-
-          animation('destroy', intersects[0].object, intersects[0].object)
-        } else {
-          haptics(Haptics.ImpactFeedbackStyle.Light)
-          animation('click', intersects[0].object, intersects[0].object)
-          currentBlock.health -= 1
-        }
+  let handlePress = async (evt) => {
+    let { nativeEvent } = evt
+    if (nativeEvent.state === State.BEGAN) {
+      let block = await raycast(evt)
+      if (block.object.name === 'cube') {
+        hitBlock(block)
       }
     }
   }
 
-  let handleLongPress = (evt) => {
-    longPressing = true
-    raycast(evt)
+  let handleDoublePress = async (evt) => {
+    let { nativeEvent } = evt
+    if (nativeEvent.state === State.ACTIVE) {
+      //Multiplier
+    }
   }
 
-  let handlePress = (evt) => {
-    raycast(evt)
+  let handleLongPress = async (evt) => {
+    let { nativeEvent } = evt
+    if (nativeEvent.state === State.ACTIVE) {
+      let block = await raycast(evt)
+      if (block.object.name === 'cube') {
+        timer = setInterval(() => hitBlock(block), 200)
+      }
+    } else {
+      console.log('end')
+      clearInterval(timer)
+      timer = null
+    }
   }
 
   let handlePan = async (evt) => {
@@ -616,15 +612,11 @@ function Canvas(props, ref) {
     deltaY = Math.round(nativeEvent.translationY)
   }
 
-  let onPanOut = async (evt) => {
+  let handlePanOut = async (evt) => {
     let { nativeEvent } = evt
-
     if (nativeEvent.state === State.END) {
       haptics(Haptics.ImpactFeedbackStyle.Light)
-
       panning = false
-      longPressing = false
-      longPressingOut = true
       animation('returnRotation', scene, scene)
     }
   }
@@ -634,37 +626,34 @@ function Canvas(props, ref) {
     scale = nativeEvent.velocity
   }
 
-  function debounceEventHandler(...args) {
-    const debounced = _.debounce(...args)
-    return function (e) {
-      e.persist()
-      return debounced(e)
-    }
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <Animated.View
         style={{
           ...props.style,
-          opacity: fadeAnim, // Bind opacity to animated value
+          opacity: fadeAnim,
         }}
       >
         <PinchGestureHandler onGestureEvent={handlePinch}>
           <PanGestureHandler
             onGestureEvent={handlePan}
-            onHandlerStateChange={onPanOut}
+            onHandlerStateChange={handlePanOut}
           >
             <View style={styles.wrapper}>
-              <Pressable
-                onLongPress={handleLongPress}
-                onPress={debounceEventHandler(handlePress, 50)}
-              >
-                <GLView
-                  onContextCreate={onContextCreate}
-                  style={styles.content}
-                />
-              </Pressable>
+              <LongPressGestureHandler onHandlerStateChange={handleLongPress}>
+                <TapGestureHandler onHandlerStateChange={handlePress}>
+                  <TapGestureHandler
+                    ref={doubleTapRef}
+                    onHandlerStateChange={handleDoublePress}
+                    numberOfTaps={2}
+                  >
+                    <GLView
+                      onContextCreate={onContextCreate}
+                      style={styles.content}
+                    />
+                  </TapGestureHandler>
+                </TapGestureHandler>
+              </LongPressGestureHandler>
             </View>
           </PanGestureHandler>
         </PinchGestureHandler>
