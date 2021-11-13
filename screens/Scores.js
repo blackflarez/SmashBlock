@@ -49,7 +49,7 @@ export default function Scores({ navigation }, props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark-content" />
+      <StatusBar style="light" />
       <Animated.View
         style={{
           ...props.style,
