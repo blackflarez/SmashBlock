@@ -51,16 +51,18 @@ var deltaX = 0,
   panning = false,
   hovering = [],
   unit = 0.065,
-  currentBlock = {
+  currentBlock = Object.create({
     name: 'stone',
     health: 5,
     colour: 'grey',
-  },
+    metal: false,
+  }),
   rotationSpeed = 0.0005,
   mixer = [],
   clips = [],
   clock = new THREE.Clock(),
-  timer
+  timer,
+  speed = 200
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -526,13 +528,22 @@ function Canvas(props, ref) {
   }
 
   function destruction(target, reference) {
-    target.rotation.y += Math.PI / 2
+    target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    let material
+    if (currentBlock.metal) {
+      material = new THREE.MeshPhongMaterial({
+        color: currentBlock.colour,
+      })
+    } else {
+      material = new THREE.MeshLambertMaterial({
+        color: currentBlock.colour,
+      })
+    }
 
     target.traverse((o) => {
-      if (o.isMesh)
-        o.material = new THREE.MeshLambertMaterial({
-          color: currentBlock.colour,
-        })
+      if (o.isMesh) {
+        o.material = material
+      }
     })
     target.visible = true
     clips[reference].forEach(function (clip) {
@@ -556,17 +567,23 @@ function Canvas(props, ref) {
 
   function hitBlock(block) {
     if (currentBlock.health <= 0) {
-      //clearInterval(timer)
-      //timer = null
       let rand = Math.floor(Math.random() * cubeDestruction.length)
       destruction(cubeDestruction[rand], rand)
+      haptics(Haptics.ImpactFeedbackStyle.Heavy)
+      let material
+      if (currentBlock.metal) {
+        material = new THREE.MeshPhongMaterial({
+          color: currentBlock.colour,
+        })
+      } else {
+        material = new THREE.MeshLambertMaterial({
+          color: currentBlock.colour,
+        })
+      }
+      block.object.material = material
+      animation('destroy', block.object, block.object)
       props.click(currentBlock)
       props.generate()
-      haptics(Haptics.ImpactFeedbackStyle.Heavy)
-      block.object.material = new THREE.MeshLambertMaterial({
-        color: currentBlock.colour,
-      })
-      animation('destroy', block.object, block.object)
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
@@ -593,10 +610,12 @@ function Canvas(props, ref) {
 
   let handleLongPress = async (evt) => {
     let { nativeEvent } = evt
+    let block = await raycast(evt)
     if (nativeEvent.state === State.ACTIVE) {
-      let block = await raycast(evt)
       if (block.object.name === 'cube') {
-        timer = setInterval(() => hitBlock(block), 200)
+        timer = setInterval(async () => {
+          hitBlock(block)
+        }, speed)
       }
     } else {
       console.log('end')

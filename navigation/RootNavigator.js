@@ -41,7 +41,7 @@ export default function RootNavigator() {
         }}
       >
         <ActivityIndicator size="large" color="#000" />
-        <StatusBar style="light-content" />
+        <StatusBar style="dark" />
       </View>
     )
   }

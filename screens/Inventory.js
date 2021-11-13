@@ -50,11 +50,11 @@ export default function Inventory({ navigation }, props) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark-content" />
+      <StatusBar style="light" />
       <Animated.View
         style={{
           ...props.style,
-          opacity: fadeAnim, // Bind opacity to animated value
+          opacity: fadeAnim,
         }}
       >
         <Text style={styles.title}>Inventory</Text>

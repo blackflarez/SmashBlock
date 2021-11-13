@@ -58,7 +58,7 @@ export default function SignupScreen({ navigation }) {
         }}
         keyboardShouldPersistTaps="handled"
       >
-        <StatusBar style="light-content" />
+        <StatusBar style="dark" />
         <View>
           <Text style={styles.title}>Create new account</Text>
           <InputField

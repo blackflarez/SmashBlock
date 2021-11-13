@@ -13,10 +13,17 @@ const blocks = [
     name: 'gold',
     health: 15,
     colour: 'darkgoldenrod',
+    metal: true,
     probability: 5,
   },
-  { name: 'stone', health: 5, colour: 'gray', probability: 90 },
-  { name: 'iron', health: 10, colour: 'slategray', probability: 50 },
+  { name: 'stone', health: 5, colour: 'gray', metal: false, probability: 90 },
+  {
+    name: 'iron',
+    health: 10,
+    colour: 'slategray',
+    metal: true,
+    probability: 50,
+  },
 ]
 
 export default function HomeScreen({ navigation }, props) {
@@ -25,6 +32,7 @@ export default function HomeScreen({ navigation }, props) {
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
+  const [inventory, setInventory] = useState({})
   const [gold, setGold] = useState(0)
   const [stone, setStone] = useState(0)
   const [iron, setIron] = useState(0)
@@ -87,9 +95,6 @@ export default function HomeScreen({ navigation }, props) {
       .ref(`users/${user.uid}/userData/inventory/iron`)
       .set(iron)
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/strength`)
-      .set(strength)
-    await Firebase.database()
       .ref(`users/${user.uid}/userData/name`)
       .set(user.uid)
   }
@@ -121,10 +126,12 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  async function updateBalance(type) {
-    setinventoryNotificaitons(inventoryNotificaitons + strength)
-    setCurrentBlock(type.name)
-    setCurrentBlockColour(type.colour)
+  async function updateBalance(block) {
+    setinventoryNotificaitons(
+      (inventoryNotificaitons) => inventoryNotificaitons + strength
+    )
+    setCurrentBlock(block.name)
+    setCurrentBlockColour(block.colour)
 
     Animated.sequence([
       Animated.timing(riseAnim, {
@@ -156,28 +163,33 @@ export default function HomeScreen({ navigation }, props) {
       ]),
     ]).start()
 
-    if (type.name === 'gold') {
+    let amount
+    if (block.name === 'stone') {
+      setStone(stone + strength)
+      amount = stone + strength
+    }
+    if (block.name === 'iron') {
+      setIron(iron + strength)
+      amount = iron + strength
+    }
+    if (block.name === 'gold') {
       setGold(gold + strength)
+      amount = gold + strength
       await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
       await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
     }
-    if (type.name === 'stone') {
-      setStone(stone + strength)
-    }
-    if (type.name === 'iron') {
-      setIron(iron + strength)
-    }
+
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/${type.name}`)
-      .set(eval(type.name))
+      .ref(`users/${user.uid}/userData/inventory/${block.name}`)
+      .set(amount)
   }
 
   async function generateBlock() {
     let chance = Math.random() * 100
     let block = blocks[Math.floor(Math.random() * blocks.length)]
     if (block.probability > chance) {
-      canvas.current.setFromOutside(block)
       AudioManager.playAsync('break', false)
+      canvas.current.setFromOutside(block)
     } else {
       generateBlock()
     }
@@ -193,14 +205,14 @@ export default function HomeScreen({ navigation }, props) {
           backgroundColor: '#fff',
         }}
       >
-        <StatusBar style="light-content" />
+        <StatusBar style="dark" />
       </View>
     )
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light-content" />
+      <StatusBar style="dark" />
       <Animated.View
         style={{
           ...props.style,
