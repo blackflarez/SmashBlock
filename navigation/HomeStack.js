@@ -7,6 +7,7 @@ import {
 import HomeScreen from '../screens/HomeScreen'
 import Scores from '../screens/Scores'
 import Inventory from '../screens/Inventory'
+import Profile from '../screens/Profile'
 
 const Stack = createStackNavigator()
 var animation = true
@@ -42,6 +43,14 @@ export default function HomeStack() {
       <Stack.Screen
         name="Inventory"
         component={Inventory}
+        options={{
+          headerShown: true,
+          cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+        }}
+      />
+      <Stack.Screen
+        name="Profile"
+        component={Profile}
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
