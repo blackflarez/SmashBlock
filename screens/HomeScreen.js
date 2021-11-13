@@ -32,10 +32,7 @@ export default function HomeScreen({ navigation }, props) {
   const [isLoading, setIsLoading] = useState(true)
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
-  const [inventory, setInventory] = useState({})
-  const [gold, setGold] = useState(0)
-  const [stone, setStone] = useState(0)
-  const [iron, setIron] = useState(0)
+  const [inventory, setInventory] = useState({ gold: 0, stone: 0, iron: 0 })
   const [strength, setStrength] = useState(1)
   const [strengthPrice, setStrengthPrice] = useState(10)
   const [automation, setAutomation] = useState(0)
@@ -86,14 +83,8 @@ export default function HomeScreen({ navigation }, props) {
       .ref(`users/${user.uid}/userData/strength`)
       .set(strength)
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/gold`)
-      .set(gold)
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/stone`)
-      .set(stone)
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/iron`)
-      .set(iron)
+      .ref(`users/${user.uid}/userData/inventory`)
+      .set(inventory)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/name`)
       .set(user.uid)
@@ -108,9 +99,7 @@ export default function HomeScreen({ navigation }, props) {
         .then((snapshot) => {
           if (snapshot.exists()) {
             setStrength(snapshot.val().userData.strength)
-            setGold(snapshot.val().userData.inventory.gold)
-            setStone(snapshot.val().userData.inventory.stone)
-            setIron(snapshot.val().userData.inventory.iron)
+            setInventory(snapshot.val().userData.inventory)
           } else {
             console.log('No data available')
             setDatabase()
@@ -163,25 +152,10 @@ export default function HomeScreen({ navigation }, props) {
       ]),
     ]).start()
 
-    let amount
-    if (block.name === 'stone') {
-      setStone(stone + strength)
-      amount = stone + strength
-    }
-    if (block.name === 'iron') {
-      setIron(iron + strength)
-      amount = iron + strength
-    }
-    if (block.name === 'gold') {
-      setGold(gold + strength)
-      amount = gold + strength
-      await Firebase.database().ref(`scores/${user.uid}/score`).set(gold)
-      await Firebase.database().ref(`scores/${user.uid}/name`).set(user.uid)
-    }
-
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory/${block.name}`)
-      .set(amount)
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(`${block.name}`)
+      .set(Firebase.firebase_.database.ServerValue.increment(strength))
   }
 
   async function generateBlock() {
