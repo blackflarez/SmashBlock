@@ -30,7 +30,7 @@ const ErrorMessage = ({ error, visible }) => {
 
 const styles = StyleSheet.create({
   errorText: {
-    color: '#fff',
+    color: '#000',
     fontSize: 12,
     marginBottom: 10,
     fontWeight: '600',

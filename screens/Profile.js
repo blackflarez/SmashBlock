@@ -3,12 +3,11 @@ import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { IconButton } from '../components'
 
 const auth = Firebase.auth()
 
-export default function Scores({ navigation }, props) {
-  const [leaderboard, setLeaderboard] = useState([])
+export default function Profile({ navigation }, props) {
+  const [username, setUsername] = useState([])
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -23,25 +22,20 @@ export default function Scores({ navigation }, props) {
   useEffect(() => {
     async function init() {
       await Firebase.database()
-        .ref(`scores`)
+        .ref(`users/${user.uid}/userData/name`)
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            var scores = []
-            snapshot.forEach(function (childNodes) {
-              scores.push(
-                childNodes.val().name + ' - ' + childNodes.val().score + '\n'
-              )
-            })
-            setLeaderboard(scores)
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 300,
-              useNativeDriver: false,
-            }).start()
+            setUsername(snapshot.val())
           } else {
             console.log('No data available')
           }
+
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: false,
+          }).start()
         })
     }
     init()
@@ -53,12 +47,12 @@ export default function Scores({ navigation }, props) {
       <Animated.View
         style={{
           ...props.style,
-          opacity: fadeAnim, // Bind opacity to animated value
+          opacity: fadeAnim,
         }}
       >
-        <Text style={styles.title}>Leaderboard</Text>
+        <Text style={styles.title}>{username}</Text>
         <Text> </Text>
-        <Text style={styles.text}>{leaderboard}</Text>
+        <Text style={styles.text}>Friends...</Text>
       </Animated.View>
     </View>
   )

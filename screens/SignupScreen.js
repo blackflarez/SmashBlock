@@ -74,6 +74,7 @@ export default function SignupScreen({ navigation }) {
             leftIcon="email"
             placeholder="Enter email"
             autoCapitalize="none"
+            autoFocus={false}
             keyboardType="email-address"
             textContentType="emailAddress"
             value={email}

@@ -62,7 +62,7 @@ var deltaX = 0,
   clips = [],
   clock = new THREE.Clock(),
   timer,
-  speed = 200
+  speed = 100
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
