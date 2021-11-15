@@ -567,6 +567,8 @@ function Canvas(props, ref) {
 
   function hitBlock(block) {
     if (currentBlock.health <= 0) {
+      props.click(currentBlock)
+      props.generate()
       let rand = Math.floor(Math.random() * cubeDestruction.length)
       destruction(cubeDestruction[rand], rand)
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -582,8 +584,6 @@ function Canvas(props, ref) {
       }
       block.object.material = material
       animation('destroy', block.object, block.object)
-      props.click(currentBlock)
-      props.generate()
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
@@ -704,11 +704,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 2 }],
+    transform: [{ scale: 1 }],
   },
   content: {
-    width: width / 2,
-    height: height / 2,
+    width: width,
+    height: height,
   },
   image: {
     flex: 1,

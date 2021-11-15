@@ -208,7 +208,7 @@ export default function HomeScreen({ navigation }, props) {
     if (block.name === 'gold') {
       await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
       await Firebase.database()
-        .ref(`scores/${user.uid}/${name}/score`)
+        .ref(`scores/${user.uid}/score`)
         .set(inventory.gold)
     }
   }

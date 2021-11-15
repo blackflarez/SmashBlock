@@ -81,6 +81,7 @@ export default function Inventory({ navigation }, props) {
       name={item.name}
       amount={item.amount}
       onPress={() => handleOpen(item)}
+      colour={item.name}
     />
   )
 
