@@ -8,6 +8,7 @@ import HomeScreen from '../screens/HomeScreen'
 import Scores from '../screens/Scores'
 import Inventory from '../screens/Inventory'
 import Profile from '../screens/Profile'
+import { AntDesign } from '@expo/vector-icons'
 
 const Stack = createStackNavigator()
 var animation = true
@@ -24,9 +25,12 @@ export default function HomeStack() {
         gestureEnabled: true,
         animationEnabled: animation,
         gestureDirection: 'vertical',
-        gestureResponseDistance: 700,
+        gestureResponseDistance: 800,
         title: '',
         headerBackTitleVisible: false,
+        headerBackImage: () => (
+          <AntDesign name={'down'} size={24} style={{ padding: 24 }} />
+        ),
         headerTintColor: 'black',
         headerStyle: { elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
       }}

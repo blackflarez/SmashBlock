@@ -11,10 +11,9 @@ import {
 } from 'react-native'
 import { InputField, ErrorMessage } from '../components'
 import { IconButton } from '../components'
-import { Firebase, Database } from '../config/firebase'
+import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import * as Haptics from 'expo-haptics'
 import AudioManager from '../components/AudioManager'
 
 const blocks = [
@@ -57,12 +56,6 @@ export default function HomeScreen({ navigation }, props) {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const riseAnim = useRef(new Animated.Value(550)).current
 
-  function haptics(style) {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(style)
-    }
-  }
-
   const handleSignOut = async () => {
     try {
       await auth.signOut()
@@ -73,7 +66,6 @@ export default function HomeScreen({ navigation }, props) {
 
   const handleScores = async () => {
     try {
-      haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Scores')
     } catch (error) {
       console.log(error)
@@ -83,7 +75,6 @@ export default function HomeScreen({ navigation }, props) {
   const handleInventory = async () => {
     try {
       setinventoryNotificaitons(0)
-      haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Inventory')
     } catch (error) {
       console.log(error)
@@ -93,7 +84,6 @@ export default function HomeScreen({ navigation }, props) {
   const handleProfile = async () => {
     try {
       setProfileNotifications(0)
-      haptics(Haptics.ImpactFeedbackStyle.Light)
       navigation.navigate('Profile')
     } catch (error) {
       console.log(error)
@@ -318,13 +308,6 @@ export default function HomeScreen({ navigation }, props) {
         }}
       >
         <IconButton
-          name="logout"
-          size={32}
-          color="#000"
-          onPress={handleSignOut}
-          visible={false}
-        />
-        <IconButton
           name="user"
           size={32}
           color="#000"
@@ -339,7 +322,7 @@ export default function HomeScreen({ navigation }, props) {
           visible={false}
         />
         <IconButton
-          name="wallet"
+          name="appstore-o"
           size={32}
           color="#000"
           onPress={handleInventory}
