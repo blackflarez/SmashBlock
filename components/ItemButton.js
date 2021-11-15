@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable, StyleSheet, View, Text } from 'react-native'
-import { AntDesign } from '@expo/vector-icons'
+import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
 
 const ItemButton = ({
@@ -11,11 +11,21 @@ const ItemButton = ({
   amount,
   visible,
   notifications,
+  colour,
 }) => {
   if (notifications > 0) {
     visible = true
   } else {
     visible = false
+  }
+  let c
+
+  if (colour === 'iron') {
+    c = 'slategray'
+  } else if (colour === 'stone') {
+    c = 'gray'
+  } else if (colour === 'gold') {
+    c = 'gold'
   }
   return (
     <View>
@@ -47,7 +57,7 @@ const ItemButton = ({
         }}
         onPress={onPress}
       >
-        <AntDesign name={'CodeSandbox'} size={32} color={name} />
+        <Ionicons name={'cube'} size={32} color={c} />
 
         <Badge
           visible={true}
