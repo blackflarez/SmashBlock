@@ -1,7 +1,14 @@
 import React from 'react'
-import { Pressable, StyleSheet, View } from 'react-native'
+import { Pressable, StyleSheet, View, Platform } from 'react-native'
 import { AntDesign } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
+import * as Haptics from 'expo-haptics'
+
+function haptics(style) {
+  if (Platform.OS === 'ios') {
+    Haptics.impactAsync(style)
+  }
+}
 
 const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
   if (notifications > 0) {
@@ -37,7 +44,10 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
             },
           ]
         }}
-        onPress={onPress}
+        onPress={() => {
+          onPress()
+          haptics(Haptics.ImpactFeedbackStyle.Light)
+        }}
       >
         <AntDesign name={name} size={size} color={color} />
         <Badge

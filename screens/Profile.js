@@ -1,12 +1,14 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
-import { Firebase, Database } from '../config/firebase'
+import { Firebase } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
+import { Button } from '../components'
 
 const auth = Firebase.auth()
 
 export default function Profile({ navigation }, props) {
+  const auth = Firebase.auth()
   const [username, setUsername] = useState([])
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -14,6 +16,14 @@ export default function Profile({ navigation }, props) {
   const handleBack = async () => {
     try {
       navigation.navigate('Home')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut()
     } catch (error) {
       console.log(error)
     }
@@ -42,36 +52,47 @@ export default function Profile({ navigation }, props) {
   }, [])
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
       <Animated.View
         style={{
           ...props.style,
           opacity: fadeAnim,
+          flex: 1,
         }}
       >
-        <Text style={styles.title}>{username}</Text>
-        <Text> </Text>
-        <Text style={styles.text}>Friends...</Text>
+        <StatusBar style="light" />
+
+        <View style={styles.quarterHeight}>
+          <Text style={styles.title}>{username}</Text>
+        </View>
+        <View style={styles.halfHeight}>
+          <Text style={styles.title}>Friends</Text>
+        </View>
+        <View style={styles.quarterHeight}>
+          <Button
+            title="Log Out"
+            onPress={handleSignOut}
+            width={120}
+            titleSize={18}
+            backgroundColor={'#eee'}
+            containerStyle={{ marginBottom: 48, alignSelf: 'center' }}
+          />
+        </View>
       </Animated.View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  halfHeight: {
+    flex: 3,
+    backgroundColor: '#fff',
+    margin: 24,
+  },
+  quarterHeight: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 250,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+    margin: 24,
   },
   title: {
     fontSize: 24,
@@ -83,20 +104,8 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     color: '#000',
   },
-  button: {
-    backgroundColor: '#fff',
-    padding: 30,
-    borderColor: '#000',
-    borderWidth: 1,
-    margin: 10,
-  },
   buttonText: {
     color: '#000',
     fontSize: 16,
-  },
-  canvas: {
-    width: 250,
-    height: 400,
-    margin: 50,
   },
 })
