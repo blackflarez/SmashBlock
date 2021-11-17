@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
 } from 'react-native'
-import { InputField, ErrorMessage } from '../components'
+import { InputField, ErrorMessage, Plus } from '../components'
 import { IconButton } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -58,9 +58,8 @@ export default function HomeScreen({ navigation }, props) {
   const [profileNotifications, setProfileNotifications] = useState(0)
   const [currentBlock, setCurrentBlock] = useState('')
   const [currentBlockColour, setCurrentBlockColour] = useState('gray')
+  const [plusses, setPlusses] = useState([])
   const introFadeAnim = useRef(new Animated.Value(0)).current
-  const fadeAnim = useRef(new Animated.Value(0)).current
-  const riseAnim = useRef(new Animated.Value(550)).current
 
   const handleSignOut = async () => {
     try {
@@ -184,35 +183,15 @@ export default function HomeScreen({ navigation }, props) {
     setCurrentBlock(block.name)
     setCurrentBlockColour(block.colour)
 
-    Animated.sequence([
-      Animated.timing(riseAnim, {
-        toValue: 550,
-        duration: 1,
-        useNativeDriver: false,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 50,
-        useNativeDriver: false,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 250,
-        useNativeDriver: false,
-      }),
-      Animated.parallel([
-        Animated.timing(riseAnim, {
-          toValue: 700,
-          duration: 800,
-          useNativeDriver: false,
-        }),
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: false,
-        }),
-      ]),
-    ]).start()
+    setPlusses((plusses) => [
+      ...plusses,
+      <Plus
+        currentBlockColour={block.colour}
+        currentTool={currentTool}
+        currentBlock={block.name}
+        key={Math.random(1000)}
+      />,
+    ])
 
     Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
@@ -350,24 +329,7 @@ export default function HomeScreen({ navigation }, props) {
           onPress={handleCrafting}
         />
       </Animated.View>
-      <Animated.View
-        style={{
-          ...props.style,
-          justifyContent: 'center',
-          opacity: fadeAnim,
-          bottom: riseAnim,
-        }}
-      >
-        <Text
-          style={{
-            ...props.style,
-            color: currentBlockColour,
-            fontSize: 26,
-          }}
-        >
-          +{currentTool.efficiency} {currentBlock}
-        </Text>
-      </Animated.View>
+      <View>{plusses}</View>
 
       <View style={styles.canvas}>
         <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
