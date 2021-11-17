@@ -8,6 +8,7 @@ import HomeScreen from '../screens/HomeScreen'
 import Scores from '../screens/Scores'
 import Inventory from '../screens/Inventory'
 import Profile from '../screens/Profile'
+import Crafting from '../screens/Crafting'
 import { AntDesign } from '@expo/vector-icons'
 
 const Stack = createStackNavigator()
@@ -55,6 +56,14 @@ export default function HomeStack() {
       <Stack.Screen
         name="Profile"
         component={Profile}
+        options={{
+          headerShown: true,
+          cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+        }}
+      />
+      <Stack.Screen
+        name="Crafting"
+        component={Crafting}
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,

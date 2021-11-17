@@ -62,7 +62,8 @@ var deltaX = 0,
   clips = [],
   clock = new THREE.Clock(),
   timer,
-  speed = 100
+  holdSpeed = 100,
+  strength = 1
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -527,7 +528,9 @@ function Canvas(props, ref) {
     }
   }
 
-  function destruction(target, reference) {
+  function destruction() {
+    let reference = Math.floor(Math.random() * cubeDestruction.length)
+    let target = cubeDestruction[reference]
     target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
     if (currentBlock.metal) {
@@ -539,7 +542,6 @@ function Canvas(props, ref) {
         color: currentBlock.colour,
       })
     }
-
     target.traverse((o) => {
       if (o.isMesh) {
         o.material = material
@@ -565,29 +567,32 @@ function Canvas(props, ref) {
     return intersects[0]
   }
 
-  function hitBlock(block) {
+  function updateMaterial(block) {
+    let material
+    if (currentBlock.metal) {
+      material = new THREE.MeshPhongMaterial({
+        color: currentBlock.colour,
+      })
+    } else {
+      material = new THREE.MeshLambertMaterial({
+        color: currentBlock.colour,
+      })
+    }
+    block.object.material = material
+  }
+
+  async function hitBlock(block) {
     if (currentBlock.health <= 0) {
-      props.click(currentBlock)
-      props.generate()
-      let rand = Math.floor(Math.random() * cubeDestruction.length)
-      destruction(cubeDestruction[rand], rand)
+      await props.click(currentBlock)
+      destruction()
+      await props.generate()
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
-      let material
-      if (currentBlock.metal) {
-        material = new THREE.MeshPhongMaterial({
-          color: currentBlock.colour,
-        })
-      } else {
-        material = new THREE.MeshLambertMaterial({
-          color: currentBlock.colour,
-        })
-      }
-      block.object.material = material
       animation('destroy', block.object, block.object)
+      updateMaterial(block)
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
-      currentBlock.health -= 1
+      currentBlock.health -= strength
     }
   }
 
@@ -615,7 +620,7 @@ function Canvas(props, ref) {
       if (block.object.name === 'cube') {
         timer = setInterval(async () => {
           hitBlock(block)
-        }, speed)
+        }, holdSpeed)
       }
     } else {
       console.log('end')
@@ -704,11 +709,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 1 }],
+    transform: [{ scale: 2 }],
   },
   content: {
-    width: width,
-    height: height,
+    width: width / 2,
+    height: height / 2,
   },
   image: {
     flex: 1,

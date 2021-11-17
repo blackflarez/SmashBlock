@@ -3,5 +3,13 @@ import ItemButton from './ItemButton'
 import Button from './Button'
 import ErrorMessage from './ErrorMessage'
 import InputField from './InputField'
+import CraftingButton from './CraftingButton'
 
-export { IconButton, ItemButton, Button, ErrorMessage, InputField }
+export {
+  IconButton,
+  ItemButton,
+  Button,
+  ErrorMessage,
+  InputField,
+  CraftingButton,
+}

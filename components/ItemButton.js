@@ -3,16 +3,10 @@ import { Pressable, StyleSheet, View, Text } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
 
-const ItemButton = ({
-  color,
-  size,
-  onPress,
-  name,
-  amount,
-  visible,
-  notifications,
-  colour,
-}) => {
+const ItemButton = (
+  { color, size, onPress, name, amount, visible, notifications, colour },
+  props
+) => {
   if (notifications > 0) {
     visible = true
   } else {
@@ -26,6 +20,8 @@ const ItemButton = ({
     c = 'gray'
   } else if (colour === 'gold') {
     c = 'gold'
+  } else if (colour === 'wood') {
+    c = 'saddlebrown'
   }
   return (
     <View>
@@ -57,17 +53,20 @@ const ItemButton = ({
         }}
         onPress={onPress}
       >
+        <Text style={{ ...props.style, marginTop: -15, color: c }}>{name}</Text>
         <Ionicons name={'cube'} size={32} color={c} />
 
         <Badge
           visible={true}
           size={20}
           style={{
-            color: '#000',
+            ...props.style,
+            color: c,
             backgroundColor: 'transparent',
             position: 'absolute',
             top: 55,
             right: 5,
+            fontSize: 12,
           }}
         >
           {amount}
