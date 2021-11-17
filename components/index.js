@@ -4,6 +4,7 @@ import Button from './Button'
 import ErrorMessage from './ErrorMessage'
 import InputField from './InputField'
 import CraftingButton from './CraftingButton'
+import Plus from './Plus'
 
 export {
   IconButton,
@@ -12,4 +13,5 @@ export {
   ErrorMessage,
   InputField,
   CraftingButton,
+  Plus,
 }
