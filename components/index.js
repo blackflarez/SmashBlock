@@ -5,6 +5,7 @@ import ErrorMessage from './ErrorMessage'
 import InputField from './InputField'
 import CraftingButton from './CraftingButton'
 import Plus from './Plus'
+import MenuBar from './MenuBar'
 
 export {
   IconButton,
@@ -14,4 +15,5 @@ export {
   InputField,
   CraftingButton,
   Plus,
+  MenuBar,
 }

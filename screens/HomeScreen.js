@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { InputField, ErrorMessage, Plus } from '../components'
-import { IconButton } from '../components'
+import { MenuBar } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
@@ -49,13 +49,12 @@ export default function HomeScreen({ navigation }, props) {
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
   const [inventory, setInventory] = useState({})
+  const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [currentTool, setCurrentTool] = useState({ strength: 1, efficiency: 1 })
   const [strengthPrice, setStrengthPrice] = useState(10)
   const [automation, setAutomation] = useState(0)
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
-  const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
-  const [profileNotifications, setProfileNotifications] = useState(0)
   const [currentBlock, setCurrentBlock] = useState('')
   const [currentBlockColour, setCurrentBlockColour] = useState('gray')
   const [plusses, setPlusses] = useState([])
@@ -78,6 +77,7 @@ export default function HomeScreen({ navigation }, props) {
   }
 
   const handleInventory = async () => {
+    console.log('inven')
     try {
       setInventoryNotificaitons(0)
       navigation.navigate('Inventory')
@@ -294,40 +294,18 @@ export default function HomeScreen({ navigation }, props) {
         style={{
           ...props.style,
           opacity: introFadeAnim,
-
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: 650,
+          position: 'fixed',
+          bottom: 0,
+          marginBottom: 24,
         }}
       >
-        <IconButton
-          name="user"
-          size={32}
-          color="#000"
-          onPress={handleProfile}
-          visible={false}
-        />
-        <IconButton
-          name="linechart"
-          size={32}
-          color="#000"
-          onPress={handleScores}
-          visible={false}
-        />
-        <IconButton
-          name="appstore-o"
-          size={32}
-          color="#000"
-          onPress={handleInventory}
-          notifications={inventoryNotificaitons}
-        />
-        <IconButton
-          name="plussquareo"
-          size={32}
-          color="#000"
-          onPress={handleCrafting}
-        />
+        <MenuBar
+          onHandleInventory={handleInventory}
+          onHandleCrafting={handleCrafting}
+          onHandleProfile={handleProfile}
+          onHandleScores={handleScores}
+          inventoryNotificaitons={inventoryNotificaitons}
+        ></MenuBar>
       </Animated.View>
       <View>{plusses}</View>
 
