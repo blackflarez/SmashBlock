@@ -14,7 +14,6 @@ import { IconButton } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import AudioManager from '../components/AudioManager'
 
 const blocks = [
   {
@@ -24,12 +23,19 @@ const blocks = [
     metal: true,
     probability: 5,
   },
-  { name: 'stone', health: 5, colour: 'gray', metal: false, probability: 90 },
+  { name: 'stone', health: 5, colour: 'gray', metal: false, probability: 80 },
   {
     name: 'iron',
     health: 10,
     colour: 'slategray',
     metal: true,
+    probability: 50,
+  },
+  {
+    name: 'wood',
+    health: 3,
+    colour: 'saddlebrown',
+    metal: false,
     probability: 50,
   },
 ]
@@ -42,13 +48,13 @@ export default function HomeScreen({ navigation }, props) {
   const [userTakenError, setUserTakenError] = useState('')
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
-  const [inventory, setInventory] = useState({ gold: 0, stone: 0, iron: 0 })
-  const [strength, setStrength] = useState(1)
+  const [inventory, setInventory] = useState({})
+  const [currentTool, setCurrentTool] = useState({ strength: 1, efficiency: 1 })
   const [strengthPrice, setStrengthPrice] = useState(10)
   const [automation, setAutomation] = useState(0)
   const [automationPrice, setAutomationPrice] = useState(5)
   const [timeOffline, setTimeOffline] = useState(0)
-  const [inventoryNotificaitons, setinventoryNotificaitons] = useState(0)
+  const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [profileNotifications, setProfileNotifications] = useState(0)
   const [currentBlock, setCurrentBlock] = useState('')
   const [currentBlockColour, setCurrentBlockColour] = useState('gray')
@@ -74,7 +80,7 @@ export default function HomeScreen({ navigation }, props) {
 
   const handleInventory = async () => {
     try {
-      setinventoryNotificaitons(0)
+      setInventoryNotificaitons(0)
       navigation.navigate('Inventory')
     } catch (error) {
       console.log(error)
@@ -83,8 +89,15 @@ export default function HomeScreen({ navigation }, props) {
 
   const handleProfile = async () => {
     try {
-      setProfileNotifications(0)
       navigation.navigate('Profile')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleCrafting = async () => {
+    try {
+      navigation.navigate('Crafting')
     } catch (error) {
       console.log(error)
     }
@@ -130,8 +143,8 @@ export default function HomeScreen({ navigation }, props) {
 
   async function setDatabase() {
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/strength`)
-      .set(strength)
+      .ref(`users/${user.uid}/userData/currentTool`)
+      .set(currentTool)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .set(inventory)
@@ -145,7 +158,7 @@ export default function HomeScreen({ navigation }, props) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            setStrength(snapshot.val().userData.strength)
+            setCurrentTool(snapshot.val().userData.currentTool)
             setInventory(snapshot.val().userData.inventory)
             setName(snapshot.val().userData.name)
             setFirstTimeDialog(false)
@@ -163,9 +176,10 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  async function updateBalance(block) {
-    setinventoryNotificaitons(
-      (inventoryNotificaitons) => inventoryNotificaitons + strength
+  function updateBalance(block) {
+    setInventoryNotificaitons(
+      (inventoryNotificaitons) =>
+        inventoryNotificaitons + currentTool.efficiency
     )
     setCurrentBlock(block.name)
     setCurrentBlockColour(block.colour)
@@ -200,24 +214,25 @@ export default function HomeScreen({ navigation }, props) {
       ]),
     ]).start()
 
-    await Firebase.database()
+    Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
-      .set(Firebase.firebase_.database.ServerValue.increment(strength))
+      .set(
+        Firebase.firebase_.database.ServerValue.increment(
+          currentTool.efficiency
+        )
+      )
 
     if (block.name === 'gold') {
-      await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
-      await Firebase.database()
-        .ref(`scores/${user.uid}/score`)
-        .set(inventory.gold)
+      Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
+      Firebase.database().ref(`scores/${user.uid}/score`).set(inventory.gold)
     }
   }
 
-  async function generateBlock() {
+  function generateBlock() {
     let chance = Math.random() * 100
     let block = blocks[Math.floor(Math.random() * blocks.length)]
     if (block.probability > chance) {
-      //AudioManager.playAsync('break', false)
       canvas.current.setFromOutside(block)
     } else {
       generateBlock()
@@ -328,6 +343,12 @@ export default function HomeScreen({ navigation }, props) {
           onPress={handleInventory}
           notifications={inventoryNotificaitons}
         />
+        <IconButton
+          name="plussquareo"
+          size={32}
+          color="#000"
+          onPress={handleCrafting}
+        />
       </Animated.View>
       <Animated.View
         style={{
@@ -344,7 +365,7 @@ export default function HomeScreen({ navigation }, props) {
             fontSize: 26,
           }}
         >
-          +{strength} {currentBlock}
+          +{currentTool.efficiency} {currentBlock}
         </Text>
       </Animated.View>
 

@@ -4,12 +4,42 @@ import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
 import { Button } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { ItemButton } from '../components'
+import { CraftingButton } from '../components'
 
 const auth = Firebase.auth()
 
-export default function Inventory({ navigation }, props) {
-  const [inventory, setInventory] = useState({})
+const craftingItems = [
+  {
+    name: 'Stone Pickaxe',
+    description: 'Mine blocks twice as fast.',
+    recipe: { wood: 5, stone: 10 },
+    strength: 2,
+    efficiency: 1,
+    health: 100,
+    equipable: true,
+  },
+  {
+    name: 'Iron Pickaxe',
+    description: 'Mine blocks twice as fast.',
+    recipe: { wood: 5, iron: 10 },
+    strength: 3,
+    efficiency: 1,
+    health: 200,
+    equipable: true,
+  },
+  {
+    name: 'Diamond Pickaxe',
+    description: 'Mine blocks twice as fast.',
+    recipe: { wood: 5, diamond: 10 },
+    strength: 3,
+    efficiency: 1,
+    health: 200,
+    equipable: true,
+  },
+]
+
+export default function Crafting({ navigation }, props) {
+  const [inventory, setInventory] = useState(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentItem, setCurrentItem] = useState('')
   const { user } = useContext(AuthenticatedUserContext)
@@ -60,14 +90,34 @@ export default function Inventory({ navigation }, props) {
     init()
   }, [])
 
-  const renderItem = ({ item }) => (
-    <ItemButton
-      name={item.name}
-      amount={item.amount}
-      onPress={() => handleOpen(item)}
-      colour={item.name}
-    />
-  )
+  function getCraftable(item) {
+    try {
+      for (let i in item.recipe) {
+        let have = inventory.find((e) => e.name === i).amount
+        let required = item.recipe[i]
+        if (have < required) {
+          return false
+        }
+      }
+    } catch (err) {
+      return false
+    }
+    return true
+  }
+
+  const renderItem = ({ item }) =>
+    inventory !== null ? (
+      <CraftingButton
+        name={item.name}
+        amount={item.amount}
+        onPress={() => handleOpen(item)}
+        colour={item.name}
+        description={item.description}
+        recipe={item.recipe}
+        inventory={inventory}
+        craftable={getCraftable(item)}
+      />
+    ) : null
 
   return (
     <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
@@ -89,7 +139,7 @@ export default function Inventory({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.title}>{currentItem.name}</Text>
+              <Text style={styles.title}>{currentItem}</Text>
               <Button
                 title={'Close'}
                 onPress={() => {
@@ -101,16 +151,19 @@ export default function Inventory({ navigation }, props) {
         </Modal>
         <StatusBar style="light" />
         <View style={styles.quarterHeight}>
-          <Text style={styles.title}>Inventory</Text>
+          <Text style={styles.title}>Crafting</Text>
         </View>
         <View style={[styles.halfHeight]}>
           <FlatList
-            data={inventory}
+            data={craftingItems}
             renderItem={renderItem}
             keyExtractor={(item) => item.name}
-            numColumns={3}
-            scrollEnabled={false}
-            contentContainerStyle={{ marginLeft: 3 }}
+            numColumns={1}
+            scrollEnabled={true}
+            contentContainerStyle={{
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
           />
         </View>
         <View style={styles.quarterHeight}></View>
@@ -131,8 +184,10 @@ const styles = StyleSheet.create({
   halfHeight: {
     flex: 6,
     backgroundColor: '#eee',
+    margin: 20,
     borderRadius: 10,
     justifyContent: 'center',
+    alignContent: 'center',
     alignSelf: 'center',
   },
   quarterHeight: {
