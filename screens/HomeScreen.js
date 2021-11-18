@@ -9,8 +9,7 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
 } from 'react-native'
-import { InputField, ErrorMessage, Plus } from '../components'
-import { MenuBar } from '../components'
+import { InputField, ErrorMessage, Plus, MenuBar } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
@@ -294,9 +293,8 @@ export default function HomeScreen({ navigation }, props) {
         style={{
           ...props.style,
           opacity: introFadeAnim,
-          position: 'fixed',
-          bottom: 0,
-          marginBottom: 24,
+          position: 'absolute',
+          bottom: 50,
         }}
       >
         <MenuBar
