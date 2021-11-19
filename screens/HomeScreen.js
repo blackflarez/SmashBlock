@@ -305,7 +305,7 @@ export default function HomeScreen({ navigation }, props) {
           inventoryNotificaitons={inventoryNotificaitons}
         ></MenuBar>
       </Animated.View>
-      <View>{plusses}</View>
+      <View style={{ flex: 1 }}>{plusses}</View>
 
       <View style={styles.canvas}>
         <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
