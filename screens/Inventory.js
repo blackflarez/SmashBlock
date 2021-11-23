@@ -25,7 +25,6 @@ export default function Inventory({ navigation }, props) {
   const handleOpen = async (item) => {
     setModalVisible(true)
     setCurrentItem(item)
-    console.log(item)
   }
 
   useEffect(() => {
@@ -44,7 +43,6 @@ export default function Inventory({ navigation }, props) {
               }
             })
             setInventory(items)
-            //console.log(inventory)
           } else {
             console.log('No data available')
           }
@@ -88,7 +86,7 @@ export default function Inventory({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.title}>{currentItem}</Text>
+              <Text style={styles.title}>{currentItem.name}</Text>
               <Button
                 title={'Close'}
                 onPress={() => {
