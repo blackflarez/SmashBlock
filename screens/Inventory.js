@@ -1,10 +1,9 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
-import { Button } from '../components'
+import { Button, ItemButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { ItemButton } from '../components'
 
 const auth = Firebase.auth()
 
@@ -89,7 +88,7 @@ export default function Inventory({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.title}>{currentItem.name}</Text>
+              <Text style={styles.title}>{currentItem}</Text>
               <Button
                 title={'Close'}
                 onPress={() => {

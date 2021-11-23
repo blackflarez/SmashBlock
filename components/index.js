@@ -6,6 +6,7 @@ import InputField from './InputField'
 import CraftingButton from './CraftingButton'
 import Plus from './Plus'
 import MenuBar from './MenuBar'
+import Amount from './Amount'
 
 export {
   IconButton,
@@ -16,4 +17,5 @@ export {
   CraftingButton,
   Plus,
   MenuBar,
+  Amount,
 }

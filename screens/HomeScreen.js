@@ -76,7 +76,6 @@ export default function HomeScreen({ navigation }, props) {
   }
 
   const handleInventory = async () => {
-    console.log('inven')
     try {
       setInventoryNotificaitons(0)
       navigation.navigate('Inventory')
@@ -174,7 +173,9 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  function updateBalance(block) {
+  function updateBalance(block, bonus) {
+    var amount = currentTool.efficiency * bonus
+
     setInventoryNotificaitons(
       (inventoryNotificaitons) =>
         inventoryNotificaitons + currentTool.efficiency
@@ -186,7 +187,8 @@ export default function HomeScreen({ navigation }, props) {
       ...plusses,
       <Plus
         currentBlockColour={block.colour}
-        currentTool={currentTool}
+        amount={amount}
+        bonus={bonus}
         currentBlock={block.name}
         key={Math.random(1000)}
       />,
@@ -195,11 +197,7 @@ export default function HomeScreen({ navigation }, props) {
     Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
-      .set(
-        Firebase.firebase_.database.ServerValue.increment(
-          currentTool.efficiency
-        )
-      )
+      .set(Firebase.firebase_.database.ServerValue.increment(amount))
 
     if (block.name === 'gold') {
       Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)

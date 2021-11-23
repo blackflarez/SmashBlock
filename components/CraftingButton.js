@@ -2,6 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, View, Text } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
+import { Amount } from '../components'
 
 var recipeString
 
@@ -22,7 +23,6 @@ const CraftingButton = (
   },
   props
 ) => {
-  console.log(craftable)
   if (notifications > 0) {
     visible = true
   } else {
@@ -39,7 +39,8 @@ const CraftingButton = (
 
       list.push(
         <Text style={{ color: '#fff', fontSize: 12, margin: 1 }} key={i}>
-          {total}/{recipe[i]} {i.charAt(0).toUpperCase() + i.slice(1)}
+          {Amount(total)}/{Amount(recipe[i])}{' '}
+          {i.charAt(0).toUpperCase() + i.slice(1)}
         </Text>
       )
     }

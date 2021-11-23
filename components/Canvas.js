@@ -63,7 +63,9 @@ var deltaX = 0,
   clock = new THREE.Clock(),
   timer,
   holdSpeed = 100,
-  strength = 1
+  strength = 1,
+  lastClicked = new Date().getTime(),
+  tbc = 0 //Time Between Clicks
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -581,9 +583,25 @@ function Canvas(props, ref) {
     block.object.material = material
   }
 
+  function calculateBonus(currentBlock, tbc) {
+    var bonus = 1
+    bonus = Math.ceil(250 / (tbc + 50))
+    return bonus
+  }
+
+  function calculateTBC() {
+    var timeNow = new Date().getTime()
+    var tbc = timeNow - lastClicked
+    lastClicked = timeNow
+    return tbc
+  }
+
   async function hitBlock(block) {
+    tbc = calculateTBC()
+    var bonus = calculateBonus(currentBlock, tbc)
+
     if (currentBlock.health <= 0) {
-      await props.click(currentBlock)
+      await props.click(currentBlock, bonus)
       destruction()
       await props.generate()
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -647,7 +665,7 @@ function Canvas(props, ref) {
 
   let handlePinch = (evt) => {
     let { nativeEvent } = evt
-    scale = nativeEvent.velocity
+    //scale = nativeEvent.velocity
   }
 
   return (
