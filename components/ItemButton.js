@@ -1,8 +1,15 @@
 import React from 'react'
-import { Pressable, StyleSheet, View, Text } from 'react-native'
+import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
-import { Amount } from '../components'
+import { Amount, ItemIcon } from '../components'
+import * as Haptics from 'expo-haptics'
+
+function haptics(style) {
+  if (Platform.OS === 'ios') {
+    Haptics.impactAsync(style)
+  }
+}
 
 const ItemButton = (
   { color, size, onPress, name, amount, visible, notifications, colour },
@@ -52,10 +59,17 @@ const ItemButton = (
             },
           ]
         }}
-        onPress={onPress}
+        onPress={() => {
+          onPress()
+          haptics(Haptics.ImpactFeedbackStyle.Light)
+        }}
       >
-        <Text style={{ ...props.style, marginTop: -15, color: c }}>{name}</Text>
-        <Ionicons name={'cube'} size={32} color={c} />
+        <Text
+          style={{ ...props.style, color: c, position: 'absolute', top: 1 }}
+        >
+          {name}
+        </Text>
+        <ItemIcon name={name} />
 
         <Badge
           visible={true}
@@ -65,8 +79,8 @@ const ItemButton = (
             color: c,
             backgroundColor: 'transparent',
             position: 'absolute',
-            top: 55,
-            right: 5,
+            top: 60,
+            right: 3,
             fontSize: 12,
           }}
         >

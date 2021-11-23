@@ -85,7 +85,7 @@ const CraftingButton = (
               return [
                 styles.base,
                 {
-                  opacity: 0.5,
+                  opacity: craftable ? 0.5 : 1,
                   backgroundColor: craftable ? 'green' : 'gray',
                   width: 130,
                   height: 65,
