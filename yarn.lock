@@ -6613,6 +6613,11 @@
     "querystringify" "^2.1.1"
     "requires-port" "^1.0.0"
 
+"use-state-if-mounted@^1.0.4":
+  "integrity" "sha512-odkuB5IZxABvag46XZmUyY+FrienKt+6f2JAo52pvpU5C32K99EvADg1VxjIUaVbh5eHhOVQQ6q4wWm2WEZYyg=="
+  "resolved" "https://registry.npmjs.org/use-state-if-mounted/-/use-state-if-mounted-1.0.4.tgz"
+  "version" "1.0.4"
+
 "use-subscription@^1.0.0":
   "integrity" "sha512-Xv2a1P/yReAjAbhylMfFplFKj9GssgTwN7RlcTxBujFQcloStWNDQdc4g4NRWH9xS4i/FDk04vQBptAXoF3VcA=="
   "resolved" "https://registry.npmjs.org/use-subscription/-/use-subscription-1.5.1.tgz"

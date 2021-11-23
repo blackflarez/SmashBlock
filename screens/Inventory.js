@@ -4,11 +4,12 @@ import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
 import { Button, ItemButton } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
+import { useStateIfMounted } from 'use-state-if-mounted'
 
 const auth = Firebase.auth()
 
 export default function Inventory({ navigation }, props) {
-  const [inventory, setInventory] = useState({})
+  const [inventory, setInventory] = useStateIfMounted({})
   const [modalVisible, setModalVisible] = useState(false)
   const [currentItem, setCurrentItem] = useState('')
   const { user } = useContext(AuthenticatedUserContext)
@@ -55,6 +56,8 @@ export default function Inventory({ navigation }, props) {
         })
     }
     init()
+    const interval = setInterval(() => init(), 500)
+    return () => clearInterval(interval)
   }, [])
 
   const renderItem = ({ item }) => (
@@ -108,6 +111,7 @@ export default function Inventory({ navigation }, props) {
             numColumns={3}
             scrollEnabled={false}
             contentContainerStyle={{ marginLeft: 3 }}
+            refreshing={true}
           />
         </View>
         <View style={styles.quarterHeight}></View>

@@ -34,7 +34,8 @@
     "react-native-safe-area-context": "3.3.2",
     "react-native-screens": "~3.8.0",
     "react-native-web": "0.17.1",
-    "three": "^0.133.1"
+    "three": "^0.133.1",
+    "use-state-if-mounted": "^1.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
