@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, Text, Animated } from 'react-native'
 
-const Plus = ({ currentBlockColour, currentTool, currentBlock }, props) => {
+const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const riseAnim = useRef(new Animated.Value(650)).current
   const [horizontalPosition, setHorizontalPosition] = useState(-50)
@@ -49,7 +49,7 @@ const Plus = ({ currentBlockColour, currentTool, currentBlock }, props) => {
         justifyContent: 'center',
         opacity: fadeAnim,
         bottom: riseAnim,
-        width: 200,
+        width: 300,
         position: 'absolute',
         left: horizontalPosition,
       }}
@@ -61,7 +61,7 @@ const Plus = ({ currentBlockColour, currentTool, currentBlock }, props) => {
           fontSize: 26,
         }}
       >
-        +{currentTool.efficiency} {currentBlock}
+        +{amount} {currentBlock}
       </Text>
     </Animated.View>
   )

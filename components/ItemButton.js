@@ -2,6 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, View, Text } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
+import { Amount } from '../components'
 
 const ItemButton = (
   { color, size, onPress, name, amount, visible, notifications, colour },
@@ -69,7 +70,7 @@ const ItemButton = (
             fontSize: 12,
           }}
         >
-          {amount}
+          {Amount(amount)}
         </Badge>
       </Pressable>
     </View>

@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { IconButton } from '../components'
+import { Amount } from '../components'
 
 const auth = Firebase.auth()
 
@@ -30,7 +30,10 @@ export default function Scores({ navigation }, props) {
             var scores = []
             snapshot.forEach(function (childNodes) {
               scores.push(
-                childNodes.val().name + ' - ' + childNodes.val().score + '\n'
+                childNodes.val().name +
+                  ' - ' +
+                  Amount(childNodes.val().score) +
+                  '\n'
               )
             })
             setLeaderboard(scores)
