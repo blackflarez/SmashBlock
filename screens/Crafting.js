@@ -5,43 +5,43 @@ import { Button } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { CraftingButton } from '../components'
+import { useStateIfMounted } from 'use-state-if-mounted'
 
 const auth = Firebase.auth()
 
-const craftingItems = [
-  {
-    name: 'Stone Pickaxe',
-    description: 'Mine blocks twice as fast.',
-    recipe: { wood: 5, stone: 10 },
-    strength: 2,
-    efficiency: 1,
-    health: 100,
-    equipable: true,
-  },
-  {
-    name: 'Iron Pickaxe',
-    description: 'Mine blocks twice as fast.',
-    recipe: { wood: 5, iron: 10 },
-    strength: 3,
-    efficiency: 1,
-    health: 200,
-    equipable: true,
-  },
-  {
-    name: 'Diamond Pickaxe',
-    description: 'Mine blocks twice as fast.',
-    recipe: { wood: 5, diamond: 10 },
-    strength: 3,
-    efficiency: 1,
-    health: 200,
-    equipable: true,
-  },
-]
-
 export default function Crafting({ navigation }, props) {
-  const [inventory, setInventory] = useState(null)
+  const [inventory, setInventory] = useStateIfMounted(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentItem, setCurrentItem] = useState('')
+  const [craftingItems, setCraftingItems] = useState([
+    {
+      name: 'Stone Pickaxe',
+      description: 'Mine blocks twice as fast.',
+      recipe: { wood: 5, stone: 10 },
+      strength: 2,
+      efficiency: 1,
+      health: 100,
+      equipable: true,
+    },
+    {
+      name: 'Iron Pickaxe',
+      description: 'Mine blocks twice as fast.',
+      recipe: { wood: 5, iron: 10 },
+      strength: 3,
+      efficiency: 1,
+      health: 200,
+      equipable: true,
+    },
+    {
+      name: 'Diamond Pickaxe',
+      description: 'Mine blocks twice as fast.',
+      recipe: { wood: 5, diamond: 10 },
+      strength: 3,
+      efficiency: 1,
+      health: 200,
+      equipable: true,
+    },
+  ])
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -88,22 +88,9 @@ export default function Crafting({ navigation }, props) {
         })
     }
     init()
+    const interval = setInterval(() => init(), 500)
+    return () => clearInterval(interval)
   }, [])
-
-  function getCraftable(item) {
-    try {
-      for (let i in item.recipe) {
-        let have = inventory.find((e) => e.name === i).amount
-        let required = item.recipe[i]
-        if (have < required) {
-          return false
-        }
-      }
-    } catch (err) {
-      return false
-    }
-    return true
-  }
 
   const renderItem = ({ item }) =>
     inventory !== null ? (
@@ -115,7 +102,6 @@ export default function Crafting({ navigation }, props) {
         description={item.description}
         recipe={item.recipe}
         inventory={inventory}
-        craftable={getCraftable(item)}
       />
     ) : null
 

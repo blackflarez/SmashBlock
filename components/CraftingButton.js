@@ -1,10 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Pressable, StyleSheet, View, Text } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
 import { Amount } from '../components'
-
-var recipeString
 
 const CraftingButton = (
   {
@@ -17,37 +15,42 @@ const CraftingButton = (
     notifications,
     colour,
     description,
-    craftable,
     recipe,
     inventory,
   },
   props
 ) => {
-  if (notifications > 0) {
-    visible = true
-  } else {
-    visible = false
-  }
+  const [craftable, setCraftable] = useState(false)
+  const [recipeString, setRecipeString] = useState()
 
-  function initRecipe() {
-    let list = []
-    for (let i in recipe) {
-      let total = 0
-      try {
-        total = inventory.find((e) => e.name === i).amount
-      } catch (err) {}
+  useEffect(() => {
+    function init() {
+      if (notifications > 0) {
+        visible = true
+      } else {
+        visible = false
+      }
 
-      list.push(
-        <Text style={{ color: '#fff', fontSize: 12, margin: 1 }} key={i}>
-          {Amount(total)}/{Amount(recipe[i])}{' '}
-          {i.charAt(0).toUpperCase() + i.slice(1)}
-        </Text>
-      )
+      let list = []
+      for (let i in recipe) {
+        let total = 0
+        try {
+          total = inventory.find((e) => e.name === i).amount
+        } catch (err) {}
+
+        setCraftable(total > recipe[i])
+
+        list.push(
+          <Text style={{ color: '#fff', fontSize: 12, margin: 1 }} key={i}>
+            {Amount(total)}/{Amount(recipe[i])}{' '}
+            {i.charAt(0).toUpperCase() + i.slice(1)}
+          </Text>
+        )
+      }
+      setRecipeString(list)
     }
-    recipeString = list
-  }
-
-  initRecipe()
+    init()
+  }, inventory)
 
   return (
     <View>
