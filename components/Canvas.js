@@ -23,7 +23,6 @@ import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
-import { Vector3 } from 'three'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -65,7 +64,7 @@ var deltaX = 0,
   clips = [],
   clock = new THREE.Clock(),
   timer,
-  holdSpeed = 100,
+  holdSpeed = 200,
   strength = 1,
   lastClicked = new Date().getTime(),
   tbc = 0, //Time Between Clicks
@@ -154,6 +153,15 @@ function Canvas(props, ref) {
       const destruction3Uri = Asset.fromModule(
         require('../assets/models/cubedestruction3.glb')
       ).uri
+      const destruction4Uri = Asset.fromModule(
+        require('../assets/models/wooddestruction.glb')
+      ).uri
+      const destruction5Uri = Asset.fromModule(
+        require('../assets/models/wooddestruction2.glb')
+      ).uri
+      const destruction6Uri = Asset.fromModule(
+        require('../assets/models/wooddestruction3.glb')
+      ).uri
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
       ).uri
@@ -186,9 +194,23 @@ function Canvas(props, ref) {
         cubeDestruction[2] = result.scene
         cubeDestruction[2].animations = result.animations
       })
-      let m6 = loadModel(pickUri).then((result) => {
+
+      let m6 = loadModel(destruction4Uri).then((result) => {
+        cubeDestruction[3] = result.scene
+        cubeDestruction[3].animations = result.animations
+      })
+      let m7 = loadModel(destruction5Uri).then((result) => {
+        cubeDestruction[4] = result.scene
+        cubeDestruction[4].animations = result.animations
+      })
+      let m8 = loadModel(destruction6Uri).then((result) => {
+        cubeDestruction[5] = result.scene
+        cubeDestruction[5].animations = result.animations
+      })
+      let m9 = loadModel(pickUri).then((result) => {
         pickaxe = result.scene.children[0]
       })
+
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
       })
@@ -206,141 +228,145 @@ function Canvas(props, ref) {
         })
       }
 
-      Promise.all([m1, m2, m3, m4, m5, m6, t1, ms[area - 1]]).then(() => {
-        //Pick
-        pickaxeTexture.flipY = false
-        pickaxeTexture.magFilter = THREE.NearestFilter
-        pickaxeTexture.anisotropy = 16
-        pickaxe.material = new THREE.MeshLambertMaterial({ color: 'slategrey' })
-        pickaxe.material.map = pickaxeTexture
-        pickaxe.material.transparent = true
-        pickaxe.material.opacity = 0
-        pickaxe.castShadow = true
-        pickaxe.receiveShadow = false
-        pickaxe.position.z = 0.08
-        toolContainer.add(pickaxe)
-
-        //cube
-        cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
-        cube.material.metalness = 0
-        cube.name = 'cube'
-        cube.castShadow = true
-        cube.receiveShadow = false
-        cube.material.transparent = true
-        cube.scale.x = 0.032499998807907104
-        cube.scale.y = 0.032499998807907104
-        cube.scale.z = 0.032499998807907104
-        world.add(cube)
-
-        //cubeDestruction
-        for (let i = 0; i < cubeDestruction.length; i++) {
-          cubeDestruction[i].material = new THREE.MeshLambertMaterial({
+      Promise.all([m1, m2, m3, m4, m5, m6, m7, m8, m9, t1, ms[area - 1]]).then(
+        () => {
+          //Pick
+          pickaxeTexture.flipY = false
+          pickaxeTexture.magFilter = THREE.NearestFilter
+          pickaxeTexture.anisotropy = 16
+          pickaxe.material = new THREE.MeshLambertMaterial({
             color: 'grey',
           })
+          pickaxe.material.map = pickaxeTexture
+          pickaxe.material.transparent = true
+          pickaxe.material.opacity = 0
+          pickaxe.castShadow = true
+          pickaxe.receiveShadow = false
+          pickaxe.position.z = 0.08
+          toolContainer.add(pickaxe)
 
-          cubeDestruction[i].traverse((o) => {
-            if (o.isMesh) {
-              o.material = new THREE.MeshLambertMaterial({
-                color: currentBlock.colour,
-              })
-              o.castShadow = true
-              o.material.transparent = true
-              o.material.metalness = 0
-            }
-          })
+          //cube
+          cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
+          cube.material.metalness = 0
+          cube.name = 'cube'
+          cube.castShadow = true
+          cube.receiveShadow = false
+          cube.material.transparent = true
+          cube.scale.x = 0.032499998807907104
+          cube.scale.y = 0.032499998807907104
+          cube.scale.z = 0.032499998807907104
+          world.add(cube)
 
-          cubeDestruction[i].name = 'cubeDestruction'
-          cubeDestruction[i].visible = false
-          cubeDestruction[i].scale.x = 0.032499998807907104
-          cubeDestruction[i].scale.y = 0.032499998807907104
-          cubeDestruction[i].scale.z = 0.032499998807907104
-
-          mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
-          clips[i] = cubeDestruction[i].animations
-
-          scene.add(cubeDestruction[i])
-        }
-
-        //Skybox
-        sky.name = 'sky'
-        sky.material = new THREE.MeshBasicMaterial({ color: 0xffffff })
-        sky.material.side = THREE.BackSide
-        sky.scale.x = 600
-        sky.scale.z = 600
-        sky.scale.y = 600
-        //scene.add(sky)
-
-        //Floors
-        var x = unit
-        var z = unit
-        var y = unit
-        let length = Math.sqrt(floors)
-        let map = []
-
-        function addCell(x, z) {
-          map.push([x * unit, z * unit])
-        }
-
-        function createMap(rowCount, columnCount) {
-          for (
-            let x = -Math.floor(length / 2);
-            x < rowCount - Math.floor(length / 2);
-            x++
-          ) {
-            for (
-              let z = -Math.floor(length / 2);
-              z < columnCount - Math.floor(length / 2);
-              z++
-            ) {
-              addCell(x, z)
-            }
-          }
-        }
-
-        createMap(length, length)
-        let l = 0
-        for (let level = -levels; level < 0; level++) {
-          for (let i = 0; i < floors; i++) {
-            let lev = i + l * floors
-            outerFloors[lev] = floorModels[lev]
-            outerFloors[lev].material = new THREE.MeshStandardMaterial({
-              color: 0xeeeeee,
+          //cubeDestruction
+          for (let i = 0; i < cubeDestruction.length; i++) {
+            cubeDestruction[i].material = new THREE.MeshLambertMaterial({
+              color: 'grey',
             })
-            outerFloors[lev].material.metalness = 0
-            outerFloors[lev].material.roughness = 1
-            x = map[i].slice(0, 1)
-            z = map[i].slice(1)
-            y = level * unit
 
-            outerFloors[lev].position.y = y
-            outerFloors[lev].position.x = x
-            outerFloors[lev].position.z = z
-            outerFloors[lev].scale.x = 0.032499998807907104
-            outerFloors[lev].scale.y = 0.032499998807907104
-            outerFloors[lev].scale.z = 0.032499998807907104
-            outerFloors[lev].name = `floor`
-            if (level === -1) {
-              outerFloors[lev].receiveShadow = true
-            }
+            cubeDestruction[i].traverse((o) => {
+              if (o.isMesh) {
+                o.material = new THREE.MeshLambertMaterial({
+                  color: currentBlock.colour,
+                })
+                o.castShadow = true
+                o.material.transparent = true
+                o.material.metalness = 0
+              }
+            })
 
-            outerFloors[lev].castShadow = false
-            world.add(outerFloors[lev])
+            cubeDestruction[i].name = 'cubeDestruction'
+            cubeDestruction[i].visible = false
+            cubeDestruction[i].scale.x = 0.032499998807907104
+            cubeDestruction[i].scale.y = 0.032499998807907104
+            cubeDestruction[i].scale.z = 0.032499998807907104
+
+            mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
+            clips[i] = cubeDestruction[i].animations
+
+            scene.add(cubeDestruction[i])
           }
-          l++
+
+          //Skybox
+          sky.name = 'sky'
+          sky.material = new THREE.MeshBasicMaterial({ color: 0xffffff })
+          sky.material.side = THREE.BackSide
+          sky.scale.x = 600
+          sky.scale.z = 600
+          sky.scale.y = 600
+          //scene.add(sky)
+
+          //Floors
+          var x = unit
+          var z = unit
+          var y = unit
+          let length = Math.sqrt(floors)
+          let map = []
+
+          function addCell(x, z) {
+            map.push([x * unit, z * unit])
+          }
+
+          function createMap(rowCount, columnCount) {
+            for (
+              let x = -Math.floor(length / 2);
+              x < rowCount - Math.floor(length / 2);
+              x++
+            ) {
+              for (
+                let z = -Math.floor(length / 2);
+                z < columnCount - Math.floor(length / 2);
+                z++
+              ) {
+                addCell(x, z)
+              }
+            }
+          }
+
+          createMap(length, length)
+          let l = 0
+          for (let level = -levels; level < 0; level++) {
+            for (let i = 0; i < floors; i++) {
+              let lev = i + l * floors
+              outerFloors[lev] = floorModels[lev]
+              outerFloors[lev].material = new THREE.MeshStandardMaterial({
+                color: 0xeeeeee,
+              })
+              outerFloors[lev].material.metalness = 0
+              outerFloors[lev].material.roughness = 1
+              x = map[i].slice(0, 1)
+              z = map[i].slice(1)
+              y = level * unit
+
+              outerFloors[lev].position.y = y
+              outerFloors[lev].position.x = x
+              outerFloors[lev].position.z = z
+              outerFloors[lev].scale.x = 0.032499998807907104
+              outerFloors[lev].scale.y = 0.032499998807907104
+              outerFloors[lev].scale.z = 0.032499998807907104
+              outerFloors[lev].name = `floor`
+              if (level === -1) {
+                outerFloors[lev].receiveShadow = true
+              }
+
+              outerFloors[lev].castShadow = false
+              world.add(outerFloors[lev])
+            }
+            l++
+          }
+
+          //world
+          scene.rotation.y = -0.78
+          scene.add(world)
+          scene.add(toolContainer)
+
+          animate()
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }).start()
         }
-
-        //world
-        scene.rotation.y = -0.78
-        scene.add(world)
-        scene.add(toolContainer)
-
-        animate()
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }).start()
-      })
+      )
     }
 
     async function animate() {
@@ -439,9 +465,9 @@ function Canvas(props, ref) {
     const inflate = new TWEEN.Tween(target.scale)
       .to(
         {
-          x: 0.0345,
-          y: 0.034,
-          z: 0.0345,
+          x: 0.0335,
+          y: 0.033,
+          z: 0.0335,
         },
         65
       )
@@ -451,9 +477,9 @@ function Canvas(props, ref) {
     const inflateSlow = new TWEEN.Tween(target.scale)
       .to(
         {
-          x: 0.035,
-          y: 0.034,
-          z: 0.035,
+          x: 0.0335,
+          y: 0.033,
+          z: 0.0335,
         },
         300
       )
@@ -551,7 +577,6 @@ function Canvas(props, ref) {
         },
         50
       )
-      .yoyo(true)
       .easing(TWEEN.Easing.Elastic.Out)
 
     const swingOut = new TWEEN.Tween(target.rotation)
@@ -610,7 +635,12 @@ function Canvas(props, ref) {
   }
 
   function destruction() {
-    let reference = Math.floor(Math.random() * cubeDestruction.length)
+    let reference
+    if (currentBlock.name === 'wood') {
+      reference = Math.floor(Math.random() * (6 - 3) + 3)
+    } else {
+      reference = Math.floor(Math.random() * 3)
+    }
     let target = cubeDestruction[reference]
     target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
@@ -623,9 +653,31 @@ function Canvas(props, ref) {
         color: currentBlock.colour,
       })
     }
+
     target.traverse((o) => {
       if (o.isMesh) {
         o.material = material
+        o.material.transparent = true
+        const opaque = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 100,
+            },
+            5000
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+        const fadeOut = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 0,
+            },
+            2000
+          )
+          .easing(TWEEN.Easing.Quartic.Out)
+
+          .onComplete(() => (o.castShadow = false))
+        opaque.chain(fadeOut)
+        opaque.start()
       }
     })
     target.visible = true
@@ -637,9 +689,26 @@ function Canvas(props, ref) {
   }
 
   function rotateTool(intersects) {
-    pickaxe.position.x = intersects[0].point.x
-    pickaxe.position.y = intersects[0].point.y + 0.02
-    toolContainer.rotation.y = intersects[0].point.x * 15 + 0.8
+    new TWEEN.Tween(pickaxe.position)
+      .to(
+        {
+          x: intersects[0].point.x,
+          y: intersects[0].point.y + 0.02,
+        },
+        500
+      )
+      .easing(TWEEN.Easing.Exponential.Out)
+      .start()
+
+    new TWEEN.Tween(toolContainer.rotation)
+      .to(
+        {
+          y: intersects[0].point.x * 15 + 0.8,
+        },
+        500
+      )
+      .easing(TWEEN.Easing.Exponential.Out)
+      .start()
   }
 
   async function raycast(evt) {
@@ -652,7 +721,6 @@ function Canvas(props, ref) {
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(world.children, true)
     rotateTool(intersects)
-
     return intersects[0]
   }
 
