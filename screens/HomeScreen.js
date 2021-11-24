@@ -33,7 +33,7 @@ const blocks = [
   {
     name: 'wood',
     health: 3,
-    colour: 'saddlebrown',
+    colour: '#5e4328',
     metal: false,
     probability: 50,
   },
