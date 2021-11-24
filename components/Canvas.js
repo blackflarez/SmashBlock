@@ -36,6 +36,8 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  pickaxe,
+  pickaxeTexture,
   cubeDestruction = [],
   sky,
   floors,
@@ -152,6 +154,12 @@ function Canvas(props, ref) {
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
       ).uri
+      const pickUri = Asset.fromModule(
+        require('../assets/models/pickaxe.glb')
+      ).uri
+      const pickTexUri = Asset.fromModule(
+        require('../assets/models/pickaxe.png')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
         cube = result.scene.children[0]
@@ -175,6 +183,12 @@ function Canvas(props, ref) {
         cubeDestruction[2] = result.scene
         cubeDestruction[2].animations = result.animations
       })
+      let m6 = loadModel(pickUri).then((result) => {
+        pickaxe = result.scene.children[0]
+      })
+      let t1 = loadTexture(pickTexUri).then((result) => {
+        pickaxeTexture = result
+      })
 
       let floorModels = []
       let ms = []
@@ -189,7 +203,21 @@ function Canvas(props, ref) {
         })
       }
 
-      Promise.all([m1, m2, m3, m4, m5, ms[area - 1]]).then(() => {
+      Promise.all([m1, m2, m3, m4, m5, m6, t1, ms[area - 1]]).then(() => {
+        //Pick
+        pickaxeTexture.flipY = false
+        pickaxeTexture.magFilter = THREE.NearestFilter
+        pickaxeTexture.anisotropy = 16
+        pickaxe.traverse((o) => {
+          if (o.isMesh) {
+            o.material = new THREE.MeshLambertMaterial({ color: 'slategrey' })
+            o.material.map = pickaxeTexture
+            o.castShadow = true
+            o.receiveShadow = false
+          }
+        })
+        scene.add(pickaxe)
+
         //cube
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
         cube.material.metalness = 0
@@ -727,11 +755,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 2 }],
+    transform: [{ scale: 1 }],
   },
   content: {
-    width: width / 2,
-    height: height / 2,
+    width: width,
+    height: height,
   },
   image: {
     flex: 1,
