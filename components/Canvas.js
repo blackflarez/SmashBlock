@@ -23,6 +23,7 @@ import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import { decode, encode } from 'base-64'
+import { Vector3 } from 'three'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -67,7 +68,8 @@ var deltaX = 0,
   holdSpeed = 100,
   strength = 1,
   lastClicked = new Date().getTime(),
-  tbc = 0 //Time Between Clicks
+  tbc = 0, //Time Between Clicks
+  toolContainer
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -106,6 +108,7 @@ function Canvas(props, ref) {
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
+      toolContainer = new THREE.Group()
 
       //renderer
       renderer = new Renderer({ gl, depth: false })
@@ -208,21 +211,21 @@ function Canvas(props, ref) {
         pickaxeTexture.flipY = false
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
-        pickaxe.traverse((o) => {
-          if (o.isMesh) {
-            o.material = new THREE.MeshLambertMaterial({ color: 'slategrey' })
-            o.material.map = pickaxeTexture
-            o.castShadow = true
-            o.receiveShadow = false
-          }
-        })
-        scene.add(pickaxe)
+        pickaxe.material = new THREE.MeshLambertMaterial({ color: 'slategrey' })
+        pickaxe.material.map = pickaxeTexture
+        pickaxe.material.transparent = true
+        pickaxe.material.opacity = 0
+        pickaxe.castShadow = true
+        pickaxe.receiveShadow = false
+        pickaxe.position.z = 0.08
+        toolContainer.add(pickaxe)
 
         //cube
         cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
         cube.material.metalness = 0
         cube.name = 'cube'
         cube.castShadow = true
+        cube.receiveShadow = false
         cube.material.transparent = true
         cube.scale.x = 0.032499998807907104
         cube.scale.y = 0.032499998807907104
@@ -329,6 +332,7 @@ function Canvas(props, ref) {
         //world
         scene.rotation.y = -0.78
         scene.add(world)
+        scene.add(toolContainer)
 
         animate()
         Animated.timing(fadeAnim, {
@@ -490,7 +494,7 @@ function Canvas(props, ref) {
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.In)
 
-    const destroy = new TWEEN.Tween(target.material)
+    const fadeOut = new TWEEN.Tween(target.material)
       .to(
         {
           opacity: 0,
@@ -505,18 +509,60 @@ function Canvas(props, ref) {
       })
       .onComplete(() => (target.castShadow = true))
 
-    const create = new TWEEN.Tween(target.material)
+    const fadeIn = new TWEEN.Tween(target.material)
       .to(
         {
           opacity: 100,
         },
-        20
+        50
       )
       .yoyo(true)
       .easing(TWEEN.Easing.Exponential.In)
       .onComplete(() => {
         target.visible = true
       })
+
+    const fadeOutInverse = new TWEEN.Tween(target.material)
+      .to(
+        {
+          opacity: 0,
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.Out)
+      .onComplete(() => (target.castShadow = false))
+
+    const fadeInInverse = new TWEEN.Tween(target.material)
+      .to(
+        {
+          opacity: 100,
+        },
+        100
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Exponential.In)
+      .onComplete(() => (target.castShadow = true))
+
+    const swingIn = new TWEEN.Tween(target.rotation)
+      .to(
+        {
+          x: 0.5,
+        },
+        50
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Elastic.Out)
+
+    const swingOut = new TWEEN.Tween(target.rotation)
+      .to(
+        {
+          x: -1,
+        },
+        400
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Elastic.Out)
 
     const returnRotation = new TWEEN.Tween(target.rotation)
       .to(
@@ -546,15 +592,20 @@ function Canvas(props, ref) {
       inflate.start()
       return
     } else if (type === 'destroy') {
-      destroy.chain(shrink)
-      shrink.chain(create)
-      create.chain(inflateSlow)
+      fadeOut.chain(shrink)
+      shrink.chain(fadeIn)
+      fadeIn.chain(inflateSlow)
       inflateSlow.chain(deflate)
-      destroy.start()
+      fadeOut.start()
       return
     } else if (type === 'returnRotation') {
       returnRotation.start()
       return
+    } else if (type === 'swing') {
+      fadeInInverse.chain(fadeOutInverse)
+      fadeInInverse.start()
+      swingIn.chain(swingOut)
+      swingIn.start()
     }
   }
 
@@ -585,6 +636,12 @@ function Canvas(props, ref) {
     })
   }
 
+  function rotateTool(intersects) {
+    pickaxe.position.x = intersects[0].point.x
+    pickaxe.position.y = intersects[0].point.y + 0.02
+    toolContainer.rotation.y = intersects[0].point.x * 15 + 0.8
+  }
+
   async function raycast(evt) {
     let { nativeEvent } = evt
     camera.updateProjectionMatrix()
@@ -594,6 +651,8 @@ function Canvas(props, ref) {
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(world.children, true)
+    rotateTool(intersects)
+
     return intersects[0]
   }
 
@@ -625,6 +684,7 @@ function Canvas(props, ref) {
   }
 
   async function hitBlock(block) {
+    animation('swing', pickaxe, pickaxe)
     tbc = calculateTBC()
     var bonus = calculateBonus(currentBlock, tbc)
 
@@ -669,7 +729,6 @@ function Canvas(props, ref) {
         }, holdSpeed)
       }
     } else {
-      console.log('end')
       clearInterval(timer)
       timer = null
     }
