@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Pressable, StyleSheet, View, Text } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
-import { Amount } from '../components'
+import { Amount, ItemIcon } from '../components'
 
 const CraftingButton = (
   {
@@ -65,17 +65,10 @@ const CraftingButton = (
           margin: 10,
         }}
       >
-        <AntDesign
-          name={'tool'}
-          size={32}
-          color={'black'}
-          style={{
-            position: 'absolute',
-            left: 10,
-            top: 22,
-          }}
-        />
-        <View style={{ position: 'absolute', left: 50, top: 42 }}>
+        <View style={{ position: 'absolute', top: 10, left: 3 }}>
+          <ItemIcon name={name} />
+        </View>
+        <View style={{ position: 'absolute', left: 65, top: 42 }}>
           <Text style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
             {name}
           </Text>
@@ -90,7 +83,7 @@ const CraftingButton = (
                 {
                   opacity: craftable ? 0.5 : 1,
                   backgroundColor: craftable ? 'green' : 'gray',
-                  width: 130,
+                  width: 110,
                   height: 65,
                   borderRadius: 10,
                   marginEnd: -42,
@@ -108,7 +101,7 @@ const CraftingButton = (
               {
                 opacity: 1,
                 backgroundColor: craftable ? 'green' : 'gray',
-                width: 130,
+                width: 110,
                 height: 65,
                 borderRadius: 10,
                 marginEnd: -42,
