@@ -68,7 +68,8 @@ var deltaX = 0,
   strength = 1,
   lastClicked = new Date().getTime(),
   tbc = 0, //Time Between Clicks
-  toolContainer
+  toolContainer,
+  lastDestruction
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
@@ -110,19 +111,25 @@ function Canvas(props, ref) {
       toolContainer = new THREE.Group()
 
       //renderer
-      renderer = new Renderer({ gl, depth: false })
+      renderer = new Renderer({
+        gl,
+        depth: false,
+        stencil: false,
+        alpha: false,
+      })
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
       renderer.shadowMap.enabled = true
       renderer.shadowMap.type = THREE.PCFSoftShadowMap
+      renderer.physicallyCorrectLights = true
 
       //camera
       camera = new THREE.PerspectiveCamera(
         2,
         gl.drawingBufferWidth / gl.drawingBufferHeight,
-        0.1,
-        1000
+        1,
+        10
       )
       camera.position.z = 1
       camera.position.y = 3.5
@@ -130,12 +137,12 @@ function Canvas(props, ref) {
       mouse = new THREE.Vector2()
 
       //lights
-      const light = new THREE.DirectionalLight(0xffffff, 1)
+      const light = new THREE.DirectionalLight(0xffffff, 3)
       light.position.set(-200, 200, 150)
       light.shadow.mapSize.set(2048, 2048)
       light.castShadow = true
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
 
       world.add(light)
       world.add(ambientLight)
@@ -240,7 +247,7 @@ function Canvas(props, ref) {
           pickaxe.material.map = pickaxeTexture
           pickaxe.material.transparent = true
           pickaxe.material.opacity = 0
-          pickaxe.castShadow = true
+          pickaxe.castShadow = false
           pickaxe.receiveShadow = false
           pickaxe.position.z = 0.08
           toolContainer.add(pickaxe)
@@ -635,13 +642,21 @@ function Canvas(props, ref) {
   }
 
   function destruction() {
+    let target
     let reference
     if (currentBlock.name === 'wood') {
       reference = Math.floor(Math.random() * (6 - 3) + 3)
     } else {
       reference = Math.floor(Math.random() * 3)
     }
-    let target = cubeDestruction[reference]
+
+    target = cubeDestruction[reference]
+    if (target === lastDestruction) {
+      destruction()
+    } else {
+      lastDestruction = target
+    }
+
     target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
     if (currentBlock.metal) {
@@ -663,19 +678,20 @@ function Canvas(props, ref) {
             {
               opacity: 100,
             },
-            5000
+            2000
           )
           .easing(TWEEN.Easing.Exponential.Out)
+
         const fadeOut = new TWEEN.Tween(o.material)
           .to(
             {
               opacity: 0,
             },
-            2000
+            1000
           )
-          .easing(TWEEN.Easing.Quartic.Out)
-
+          .easing(TWEEN.Easing.Cubic.Out)
           .onComplete(() => (o.castShadow = false))
+
         opaque.chain(fadeOut)
         opaque.start()
       }
@@ -688,22 +704,32 @@ function Canvas(props, ref) {
     })
   }
 
-  function rotateTool(intersects) {
-    new TWEEN.Tween(pickaxe.position)
-      .to(
-        {
-          x: intersects[0].point.x,
-          y: intersects[0].point.y + 0.02,
-        },
-        500
-      )
-      .easing(TWEEN.Easing.Exponential.Out)
-      .start()
+  function animateTool(intersects, animateY) {
+    animateY
+      ? new TWEEN.Tween(pickaxe.position)
+          .to(
+            {
+              x: intersects.point.x,
+              y: intersects.point.y + 0.02,
+            },
+            500
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+          .start()
+      : new TWEEN.Tween(pickaxe.position)
+          .to(
+            {
+              x: intersects.point.x,
+            },
+            500
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+          .start()
 
     new TWEEN.Tween(toolContainer.rotation)
       .to(
         {
-          y: intersects[0].point.x * 15 + 0.8,
+          y: intersects.point.x * 10 + 0.8,
         },
         500
       )
@@ -713,14 +739,13 @@ function Canvas(props, ref) {
 
   async function raycast(evt) {
     let { nativeEvent } = evt
-    camera.updateProjectionMatrix()
+    //camera.updateProjectionMatrix()
     mouse.x = (nativeEvent.absoluteX / width) * 2 - 1
     mouse.y = -(nativeEvent.absoluteY / height) * 2 + 1
     raycaster = new THREE.Raycaster()
     scene.updateMatrixWorld()
     raycaster.setFromCamera(mouse, camera)
     var intersects = raycaster.intersectObjects(world.children, true)
-    rotateTool(intersects)
     return intersects[0]
   }
 
@@ -757,6 +782,7 @@ function Canvas(props, ref) {
     var bonus = calculateBonus(currentBlock, tbc)
 
     if (currentBlock.health <= 0) {
+      animateTool(block, false)
       await props.click(currentBlock, bonus)
       destruction()
       await props.generate()
@@ -764,6 +790,7 @@ function Canvas(props, ref) {
       animation('destroy', block.object, block.object)
       updateMaterial(block)
     } else {
+      animateTool(block, true)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
       currentBlock.health -= strength
@@ -882,7 +909,7 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scale: 1 }],
+    transform: [{ scaleX: 1 }, { scaleY: 1 }],
   },
   content: {
     width: width,
