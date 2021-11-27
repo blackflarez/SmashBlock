@@ -22,6 +22,7 @@ import * as TWEEN from '@tweenjs/tween.js'
 import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
+import Items from './Items'
 import { decode, encode } from 'base-64'
 
 if (!global.btoa) {
@@ -56,12 +57,7 @@ var deltaX = 0,
   panning = false,
   hovering = [],
   unit = 0.065,
-  currentBlock = Object.create({
-    name: 'stone',
-    health: 5,
-    colour: 'grey',
-    metal: false,
-  }),
+  currentBlock = Object.create(Items.blocks[1]),
   rotationSpeed = 0.0005,
   mixer = [],
   clips = [],
@@ -855,7 +851,7 @@ function Canvas(props, ref) {
 
   function calculateBonus(currentBlock, tbc) {
     var bonus = 1
-    bonus = Math.ceil(250 / (tbc + 50))
+    bonus = Math.ceil(150 / (tbc + 50))
     return bonus
   }
 
@@ -873,7 +869,7 @@ function Canvas(props, ref) {
 
     if (currentBlock.health <= 0) {
       animateTool(block, false)
-      await props.click(currentBlock, bonus)
+      props.click(currentBlock, bonus)
       destruction()
       await props.generate()
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
