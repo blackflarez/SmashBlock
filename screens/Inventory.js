@@ -66,6 +66,7 @@ export default function Inventory({ navigation }, props) {
       amount={item.amount}
       onPress={() => handleOpen(item)}
       colour={item.name}
+      margin={20}
     />
   )
 
@@ -89,7 +90,7 @@ export default function Inventory({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.title}>{currentItem.name}</Text>
+              <Text style={styles.text}>{currentItem.name}</Text>
               <Button
                 title={'Close'}
                 onPress={() => {

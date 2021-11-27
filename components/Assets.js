@@ -6,10 +6,10 @@ export default {
     'break.m4a': Asset.fromModule(require(`../assets/sounds/break.m4a`)),
   },
   icons: {
-    gold: Asset.fromModule(require(`../assets/icons/gold.png`)),
-    stone: Asset.fromModule(require(`../assets/icons/stone.png`)),
-    iron: Asset.fromModule(require(`../assets/icons/iron.png`)),
-    wood: Asset.fromModule(require(`../assets/icons/wood.png`)),
+    Gold: Asset.fromModule(require(`../assets/icons/gold.png`)),
+    Stone: Asset.fromModule(require(`../assets/icons/stone.png`)),
+    Iron: Asset.fromModule(require(`../assets/icons/iron.png`)),
+    Wood: Asset.fromModule(require(`../assets/icons/wood.png`)),
     'Gold Pickaxe': Asset.fromModule(
       require(`../assets/icons/goldpickaxe.png`)
     ),

@@ -9,35 +9,10 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
 } from 'react-native'
-import { InputField, ErrorMessage, Plus, MenuBar } from '../components'
+import { InputField, ErrorMessage, Plus, MenuBar, Items } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-
-const blocks = [
-  {
-    name: 'gold',
-    health: 15,
-    colour: 'darkgoldenrod',
-    metal: true,
-    probability: 5,
-  },
-  { name: 'stone', health: 5, colour: 'gray', metal: false, probability: 80 },
-  {
-    name: 'iron',
-    health: 10,
-    colour: 'slategray',
-    metal: true,
-    probability: 50,
-  },
-  {
-    name: 'wood',
-    health: 3,
-    colour: '#5e4328',
-    metal: false,
-    probability: 50,
-  },
-]
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
@@ -50,12 +25,7 @@ export default function HomeScreen({ navigation }, props) {
   const [inventory, setInventory] = useState({})
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [currentTool, setCurrentTool] = useState({ strength: 1, efficiency: 1 })
-  const [strengthPrice, setStrengthPrice] = useState(10)
-  const [automation, setAutomation] = useState(0)
-  const [automationPrice, setAutomationPrice] = useState(5)
-  const [timeOffline, setTimeOffline] = useState(0)
-  const [currentBlock, setCurrentBlock] = useState('')
-  const [currentBlockColour, setCurrentBlockColour] = useState('gray')
+  const [blocks, setBlocks] = useState(Items.blocks)
   const [plusses, setPlusses] = useState([])
   const introFadeAnim = useRef(new Animated.Value(0)).current
 
@@ -173,15 +143,13 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  function updateBalance(block, bonus) {
+  async function updateBalance(block, bonus) {
     var amount = currentTool.efficiency * bonus
 
     setInventoryNotificaitons(
       (inventoryNotificaitons) =>
         inventoryNotificaitons + currentTool.efficiency
     )
-    setCurrentBlock(block.name)
-    setCurrentBlockColour(block.colour)
 
     setPlusses((plusses) => [
       ...plusses,
@@ -194,14 +162,13 @@ export default function HomeScreen({ navigation }, props) {
       />,
     ])
 
-    Firebase.database()
+    await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
 
-    if (block.name === 'gold') {
-      Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
-      Firebase.database().ref(`scores/${user.uid}/score`).set(inventory.gold)
+    if (block.name === 'Gold') {
+      await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
     }
   }
 

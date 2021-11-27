@@ -1,56 +1,21 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState, useEffect, useRef } from 'react'
+import React, { useContext, useState, useEffect, useRef, useMemo } from 'react'
 import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
-import { Button } from '../components'
+import { Button, ItemButton, Items } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { CraftingButton } from '../components'
 import { useStateIfMounted } from 'use-state-if-mounted'
+import _ from 'lodash'
 
 const auth = Firebase.auth()
 
 export default function Crafting({ navigation }, props) {
+  const [pending, setPending] = useState(false)
   const [inventory, setInventory] = useStateIfMounted(null)
   const [modalVisible, setModalVisible] = useState(false)
-  const [currentItem, setCurrentItem] = useState('')
-  const [craftingItems, setCraftingItems] = useState([
-    {
-      name: 'Stone Pickaxe',
-      description: 'Mine blocks fast.',
-      recipe: { wood: 5, stone: 10 },
-      strength: 2,
-      efficiency: 1,
-      health: 100,
-      equipable: true,
-    },
-    {
-      name: 'Iron Pickaxe',
-      description: 'Mine blocks faster.',
-      recipe: { wood: 5, iron: 10 },
-      strength: 4,
-      efficiency: 1,
-      health: 200,
-      equipable: true,
-    },
-    {
-      name: 'Gold Pickaxe',
-      description: 'Mine blocks even faster.',
-      recipe: { wood: 5, gold: 10 },
-      strength: 8,
-      efficiency: 1,
-      health: 150,
-      equipable: true,
-    },
-    {
-      name: 'Diamond Pickaxe',
-      description: 'Mine blocks very fast.',
-      recipe: { wood: 5, diamond: 10 },
-      strength: 16,
-      efficiency: 1,
-      health: 200,
-      equipable: true,
-    },
-  ])
+  const [currentItem, setCurrentItem] = useState()
+  const [craftingItems, setCraftingItems] = useState(Items.tools)
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -63,10 +28,34 @@ export default function Crafting({ navigation }, props) {
   }
 
   const handleOpen = async (item) => {
-    setModalVisible(true)
     setCurrentItem(item)
-    console.log(item)
+    setPending(true)
+    let amount = 1
+    for (let i in item.recipe) {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/inventory`)
+        .child(`${i}`)
+        .set(Firebase.firebase_.database.ServerValue.increment(-item.recipe[i]))
+    }
+
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(`${item.name}`)
+      .set(Firebase.firebase_.database.ServerValue.increment(amount))
+      .then(setPending(false))
   }
+
+  const debouncedMethod = useMemo(
+    () =>
+      _.debounce(
+        (item) => {
+          handleOpen(item)
+        },
+        500,
+        { leading: false }
+      ),
+    [handleOpen]
+  )
 
   useEffect(() => {
     async function init() {
@@ -97,11 +86,12 @@ export default function Crafting({ navigation }, props) {
         })
     }
     init()
+
     const interval = setInterval(() => init(), 500)
     return () => clearInterval(interval)
   }, [])
 
-  const renderItem = ({ item }) =>
+  const craftingButton = ({ item }) =>
     inventory !== null ? (
       <CraftingButton
         name={item.name}
@@ -111,6 +101,8 @@ export default function Crafting({ navigation }, props) {
         description={item.description}
         recipe={item.recipe}
         inventory={inventory}
+        pending={pending}
+        currentItem={currentItem}
       />
     ) : null
 
@@ -148,10 +140,11 @@ export default function Crafting({ navigation }, props) {
         <View style={styles.quarterHeight}>
           <Text style={styles.title}>Crafting</Text>
         </View>
+
         <View style={[styles.halfHeight]}>
           <FlatList
             data={craftingItems}
-            renderItem={renderItem}
+            renderItem={craftingButton}
             keyExtractor={(item) => item.name}
             numColumns={1}
             scrollEnabled={true}

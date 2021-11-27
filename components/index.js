@@ -8,6 +8,7 @@ import Plus from './Plus'
 import MenuBar from './MenuBar'
 import Amount from './Amount'
 import ItemIcon from './ItemIcon'
+import Items from './Items'
 
 export {
   IconButton,
@@ -20,4 +21,5 @@ export {
   MenuBar,
   Amount,
   ItemIcon,
+  Items,
 }

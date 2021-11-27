@@ -12,7 +12,17 @@ function haptics(style) {
 }
 
 const ItemButton = (
-  { color, size, onPress, name, amount, visible, notifications, colour },
+  {
+    color,
+    size,
+    onPress,
+    name,
+    amount,
+    visible,
+    notifications,
+    colour,
+    margin,
+  },
   props
 ) => {
   if (notifications > 0) {
@@ -20,25 +30,17 @@ const ItemButton = (
   } else {
     visible = false
   }
-  let c
-
-  if (colour === 'iron') {
-    c = 'slategray'
-  } else if (colour === 'stone') {
-    c = 'gray'
-  } else if (colour === 'gold') {
-    c = 'gold'
-  } else if (colour === 'wood') {
-    c = 'saddlebrown'
-  }
+  let c = 'grey'
   return (
     <View>
       <Pressable
         style={(args) => {
           if (args.pressed) {
             return [
-              styles.base,
               {
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: margin,
                 opacity: 0.5,
                 backgroundColor: '#fff',
                 borderRadius: 10,
@@ -49,8 +51,10 @@ const ItemButton = (
           }
 
           return [
-            styles.base,
             {
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: margin,
               opacity: 1,
               backgroundColor: '#fff',
               borderRadius: 10,
@@ -64,15 +68,10 @@ const ItemButton = (
           haptics(Haptics.ImpactFeedbackStyle.Light)
         }}
       >
-        <Text
-          style={{ ...props.style, color: c, position: 'absolute', top: 1 }}
-        >
-          {name}
-        </Text>
         <ItemIcon name={name} />
 
         <Badge
-          visible={true}
+          visible={isNaN(amount) ? false : true}
           size={20}
           style={{
             ...props.style,
@@ -90,13 +89,5 @@ const ItemButton = (
     </View>
   )
 }
-
-const styles = StyleSheet.create({
-  base: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 20,
-  },
-})
 
 export default ItemButton
