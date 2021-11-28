@@ -168,7 +168,11 @@ export default function HomeScreen({ navigation }, props) {
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
 
     if (block.name === 'Gold') {
+      console.log('golde')
       await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
+      await Firebase.database()
+        .ref(`scores/${user.uid}/score`)
+        .set(inventory.Gold)
     }
   }
 

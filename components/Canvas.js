@@ -70,6 +70,20 @@ var deltaX = 0,
   toolContainer,
   lastDestruction
 
+//Graphics Settings
+var renderWidth = width,
+  renderHeight = height,
+  renderScale = 1,
+  shadowSize = 4096,
+  shadowEnabled = true
+
+if (Platform.OS === 'android') {
+  renderWidth = width / 3
+  renderHeight = height / 3
+  renderScale = 3
+  shadowEnabled = false
+}
+
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const doubleTapRef = useRef(null)
@@ -119,7 +133,7 @@ function Canvas(props, ref) {
       renderer.setSize(gl.drawingBufferWidth, gl.drawingBufferHeight)
       renderer.antialias = false
       renderer.setClearColor(0x000000, 0)
-      renderer.shadowMap.enabled = true
+      renderer.shadowMap.enabled = shadowEnabled
       renderer.shadowMap.type = THREE.PCFSoftShadowMap
       renderer.physicallyCorrectLights = true
 
@@ -128,7 +142,7 @@ function Canvas(props, ref) {
         2,
         gl.drawingBufferWidth / gl.drawingBufferHeight,
         1,
-        20
+        12
       )
       camera.position.z = 1
       camera.position.y = 3.5
@@ -138,7 +152,7 @@ function Canvas(props, ref) {
       //lights
       const light = new THREE.DirectionalLight(0xffffff, 2.5)
       light.position.set(-200, 300, 150)
-      light.shadow.mapSize.set(4096, 4096)
+      light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
       const ambientLight = new THREE.AmbientLight(0xffffff, 3)
@@ -722,7 +736,7 @@ function Canvas(props, ref) {
   function destruction() {
     let target
     let reference
-    if (currentBlock.name === 'wood') {
+    if (currentBlock.name === 'Wood') {
       reference = Math.floor(Math.random() * (6 - 3) + 3)
     } else {
       reference = Math.floor(Math.random() * 3)
@@ -990,11 +1004,11 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scaleX: 1 }, { scaleY: 1 }],
+    transform: [{ scaleX: renderScale }, { scaleY: renderScale }],
   },
   content: {
-    width: width,
-    height: height,
+    width: renderWidth,
+    height: renderHeight,
   },
   image: {
     flex: 1,

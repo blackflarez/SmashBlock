@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, Text, Animated } from 'react-native'
 
 const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const riseAnim = useRef(new Animated.Value(650)).current
+  const riseAnim = useRef(new Animated.Value(600)).current
   const [horizontalPosition, setHorizontalPosition] = useState(-50)
 
   useEffect(() => {
@@ -13,7 +13,7 @@ const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
     )
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: 650,
+        toValue: 600,
         duration: 1,
         useNativeDriver: false,
       }),
