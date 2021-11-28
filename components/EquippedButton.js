@@ -1,7 +1,7 @@
 import React from 'react'
 import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
-import { Badge } from 'react-native-paper'
+import { Badge, ProgressBar } from 'react-native-paper'
 import { Amount, ItemIcon } from '../components'
 import * as Haptics from 'expo-haptics'
 
@@ -11,7 +11,7 @@ function haptics(style) {
   }
 }
 
-const ItemButton = (
+const EquippedButton = (
   {
     color,
     size,
@@ -22,7 +22,7 @@ const ItemButton = (
     notifications,
     colour,
     margin,
-    equipped,
+    health,
   },
   props
 ) => {
@@ -32,10 +32,6 @@ const ItemButton = (
     visible = false
   }
   let c = 'grey'
-  let borderWidth = 0
-  if (equipped === name) {
-    borderWidth = 1.15
-  }
   return (
     <View>
       <Pressable
@@ -47,12 +43,10 @@ const ItemButton = (
                 justifyContent: 'center',
                 margin: margin,
                 opacity: 0.5,
-                backgroundColor: '#fff',
+                backgroundColor: '#eee',
                 borderRadius: 10,
-                borderColor: '#818181',
-                borderWidth: borderWidth,
-                width: 80,
-                height: 80,
+                width: 70,
+                height: 70,
               },
             ]
           }
@@ -63,12 +57,10 @@ const ItemButton = (
               justifyContent: 'center',
               margin: margin,
               opacity: 1,
-              backgroundColor: '#fff',
+              backgroundColor: '#eee',
               borderRadius: 10,
-              borderColor: '#818181',
-              borderWidth: borderWidth,
-              width: 80,
-              height: 80,
+              width: 70,
+              height: 70,
             },
           ]
         }}
@@ -94,9 +86,15 @@ const ItemButton = (
         >
           {Amount(amount)}
         </Badge>
+        <ProgressBar
+          progress={health}
+          color={'green'}
+          style={{ width: 60, borderRadius: 10 }}
+          visible={false}
+        />
       </Pressable>
     </View>
   )
 }
 
-export default ItemButton
+export default EquippedButton

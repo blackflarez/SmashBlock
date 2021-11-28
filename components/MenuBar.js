@@ -9,6 +9,7 @@ const MenuBar = (
     onHandleInventory,
     onHandleCrafting,
     inventoryNotificaitons,
+    equippedName,
   },
   props
 ) => {
@@ -22,28 +23,28 @@ const MenuBar = (
       }}
     >
       <IconButton
-        name="user"
+        name="account-outline"
         size={32}
         color="#000"
         onPress={onHandleProfile}
         visible={false}
       />
       <IconButton
-        name="linechart"
+        name="trophy-variant-outline"
         size={32}
         color="#000"
         onPress={onHandleScores}
         visible={false}
       />
       <IconButton
-        name="appstore-o"
+        name="view-grid-outline"
         size={32}
         color="#000"
         onPress={onHandleInventory}
         notifications={inventoryNotificaitons}
       />
       <IconButton
-        name="plussquareo"
+        name="pickaxe"
         size={32}
         color="#000"
         onPress={onHandleCrafting}

@@ -15,7 +15,9 @@ export default function Crafting({ navigation }, props) {
   const [inventory, setInventory] = useStateIfMounted(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentItem, setCurrentItem] = useState()
-  const [craftingItems, setCraftingItems] = useState(Items.tools)
+  const [craftingItems, setCraftingItems] = useState(
+    Items.filter((data) => data.recipe)
+  )
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -44,18 +46,6 @@ export default function Crafting({ navigation }, props) {
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
       .then(setPending(false))
   }
-
-  const debouncedMethod = useMemo(
-    () =>
-      _.debounce(
-        (item) => {
-          handleOpen(item)
-        },
-        500,
-        { leading: false }
-      ),
-    [handleOpen]
-  )
 
   useEffect(() => {
     async function init() {

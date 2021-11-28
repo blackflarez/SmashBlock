@@ -1,19 +1,35 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
-import { Button, ItemButton } from '../components'
+import {
+  StyleSheet,
+  Text,
+  View,
+  Animated,
+  FlatList,
+  Modal,
+  Platform,
+} from 'react-native'
+import { Button, Items, ItemButton, ItemIcon } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
+import * as Haptics from 'expo-haptics'
 
 const auth = Firebase.auth()
 
+function haptics(style) {
+  if (Platform.OS === 'ios') {
+    Haptics.impactAsync(style)
+  }
+}
+
 export default function Inventory({ navigation }, props) {
-  const [inventory, setInventory] = useStateIfMounted({})
-  const [modalVisible, setModalVisible] = useState(false)
-  const [currentItem, setCurrentItem] = useState('')
+  const [inventory, setInventory] = useStateIfMounted(null)
+  const [modalVisible, setModalVisible] = useStateIfMounted(false)
+  const [currentItem, setCurrentItem] = useState(Items[0])
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const [equipped, setEquipped] = useStateIfMounted()
 
   const handleBack = async () => {
     try {
@@ -23,13 +39,65 @@ export default function Inventory({ navigation }, props) {
     }
   }
 
+  function getAmount() {
+    try {
+      return inventory.find((o) => o.name === currentItem.name).amount
+    } catch (e) {}
+  }
+
+  const handleEquip = async (item) => {
+    haptics(Haptics.ImpactFeedbackStyle.Light)
+    setModalVisible(false)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/equipped`)
+      .set(item)
+      .then(setModalVisible(false))
+  }
+
+  const handleDestroy = async (item) => {
+    haptics(Haptics.ImpactFeedbackStyle.Light)
+    setModalVisible(false)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(item)
+      .set(Firebase.firebase_.database.ServerValue.increment(-1))
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(item)
+      .get()
+      .then(async (snapshot) => {
+        if (snapshot.val() === 0) {
+          handleUnequip()
+        }
+      })
+  }
+
+  const handleUnequip = async () => {
+    haptics(Haptics.ImpactFeedbackStyle.Light)
+    setModalVisible(false)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/equipped`)
+      .set(null)
+      .then(setModalVisible(false))
+  }
+
   const handleOpen = async (item) => {
+    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(true)
-    setCurrentItem(item)
+    setCurrentItem(Items.find((o) => item.name === o.name))
   }
 
   useEffect(() => {
     async function init() {
+      await Firebase.database()
+        .ref(`users/${user.uid}`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            setEquipped(snapshot.val().userData.equipped)
+          }
+        })
+
       await Firebase.database()
         .ref(`users/${user.uid}/userData/inventory`)
         .get()
@@ -67,6 +135,7 @@ export default function Inventory({ navigation }, props) {
       onPress={() => handleOpen(item)}
       colour={item.name}
       margin={20}
+      equipped={equipped}
     />
   )
 
@@ -90,13 +159,75 @@ export default function Inventory({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
+              <ItemIcon name={currentItem.name} size={120} />
               <Text style={styles.text}>{currentItem.name}</Text>
-              <Button
-                title={'Close'}
-                onPress={() => {
-                  setModalVisible(false)
+              <Text style={styles.textLight}>{currentItem.description}</Text>
+              <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
+                {currentItem.type === 'tool' ? (
+                  <Text style={styles.textLight}>
+                    {`\n`}
+                    Efficiency: {currentItem.efficiency}
+                    {`\n`}
+                    Strength: {currentItem.strength}
+                  </Text>
+                ) : null}
+                {currentItem.type === 'block' ? (
+                  <Text style={styles.textLight}>
+                    {`\n`}
+                    Rarity: {currentItem.probability}%
+                  </Text>
+                ) : null}
+
+                {inventory !== null ? (
+                  <Text style={styles.textLight}>Quantity: {getAmount()}</Text>
+                ) : null}
+              </View>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
                 }}
-              ></Button>
+              >
+                {currentItem.type === 'tool' &&
+                currentItem.name !== equipped ? (
+                  <Button
+                    title={'Equip'}
+                    backgroundColor={'#eee'}
+                    containerStyle={{ marginTop: 10, alignSelf: 'center' }}
+                    onPress={() => {
+                      handleEquip(currentItem.name)
+                    }}
+                  ></Button>
+                ) : null}
+
+                {currentItem.name === equipped ? (
+                  <Button
+                    title={'Unequip'}
+                    backgroundColor={'#eee'}
+                    containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                    onPress={() => {
+                      handleUnequip(currentItem.name)
+                    }}
+                  ></Button>
+                ) : null}
+                <Button
+                  title={'Destroy'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    handleDestroy(currentItem.name)
+                  }}
+                ></Button>
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setModalVisible(false)
+                  }}
+                ></Button>
+              </View>
             </View>
           </View>
         </Modal>
@@ -158,6 +289,11 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     color: '#000',
   },
+  textLight: {
+    fontSize: 12,
+    fontWeight: '200',
+    color: '#000',
+  },
   button: {
     backgroundColor: '#fff',
     padding: 30,
@@ -181,8 +317,8 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   modalView: {
-    width: 200,
-    height: 300,
+    width: 300,
+    height: 475,
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 10,

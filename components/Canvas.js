@@ -57,7 +57,7 @@ var deltaX = 0,
   panning = false,
   hovering = [],
   unit = 0.065,
-  currentBlock = Object.create(Items.blocks[1]),
+  currentBlock = Object.create(Items[1]),
   rotationSpeed = 0.0005,
   mixer = [],
   clips = [],
@@ -93,6 +93,16 @@ function Canvas(props, ref) {
     () => ({
       setFromOutside(block) {
         currentBlock = Object.create(block)
+      },
+
+      setTool(tool) {
+        pickaxe.material = new THREE.MeshLambertMaterial({
+          color: tool.colour,
+          map: pickaxeTexture,
+          transparent: true,
+          opacity: 0,
+        })
+        strength = tool.strength
       },
     }),
     []
@@ -290,11 +300,12 @@ function Canvas(props, ref) {
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
         pickaxe.material = new THREE.MeshLambertMaterial({
-          color: 'grey',
+          color: props.equipped.colour,
+          map: pickaxeTexture,
+          transparent: true,
+          opacity: 0,
         })
-        pickaxe.material.map = pickaxeTexture
-        pickaxe.material.transparent = true
-        pickaxe.material.opacity = 0
+        strength = props.equipped.strength
         pickaxe.castShadow = false
         pickaxe.receiveShadow = false
         pickaxe.position.z = 0.08
@@ -865,7 +876,9 @@ function Canvas(props, ref) {
 
   function calculateBonus(currentBlock, tbc) {
     var bonus = 1
-    bonus = Math.ceil(150 / (tbc + 50))
+    if (tbc < 100) {
+      bonus = 1.5
+    }
     return bonus
   }
 

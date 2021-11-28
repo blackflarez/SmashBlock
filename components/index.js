@@ -9,6 +9,7 @@ import MenuBar from './MenuBar'
 import Amount from './Amount'
 import ItemIcon from './ItemIcon'
 import Items from './Items'
+import EquippedButton from './EquippedButton'
 
 export {
   IconButton,
@@ -22,4 +23,5 @@ export {
   Amount,
   ItemIcon,
   Items,
+  EquippedButton,
 }
