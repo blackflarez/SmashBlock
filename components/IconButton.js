@@ -1,6 +1,6 @@
 import React from 'react'
 import { Pressable, StyleSheet, View, Platform } from 'react-native'
-import { AntDesign } from '@expo/vector-icons'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
 import * as Haptics from 'expo-haptics'
 
@@ -49,7 +49,7 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
           haptics(Haptics.ImpactFeedbackStyle.Light)
         }}
       >
-        <AntDesign name={name} size={size} color={color} />
+        <MaterialCommunityIcons name={name} size={size} color={color} />
         <Badge
           visible={visible}
           size={20}

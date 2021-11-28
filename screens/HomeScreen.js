@@ -9,10 +9,18 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
 } from 'react-native'
-import { InputField, ErrorMessage, Plus, MenuBar, Items } from '../components'
+import {
+  InputField,
+  ErrorMessage,
+  Plus,
+  MenuBar,
+  Items,
+  EquippedButton,
+} from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
+import { useFocusEffect } from '@react-navigation/native'
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
@@ -24,10 +32,50 @@ export default function HomeScreen({ navigation }, props) {
   const [name, setName] = useState('')
   const [inventory, setInventory] = useState({})
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
-  const [currentTool, setCurrentTool] = useState({ strength: 1, efficiency: 1 })
-  const [blocks, setBlocks] = useState(Items.blocks)
+  const [equipped, setEquipped] = useState()
+  const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
   const introFadeAnim = useRef(new Animated.Value(0)).current
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let isActive = true
+
+      const fetchEquipped = async () => {
+        let item
+        try {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/equipped`)
+            .get()
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                item = Items.find((data) => data.name === snapshot.val())
+              } else {
+                item = {
+                  name: 'Wood Pickaxe',
+                  strength: 1,
+                  efficiency: 1,
+                  colour: '#322111',
+                }
+              }
+            })
+
+          if (isActive) {
+            setEquipped(item)
+            canvas.current.setTool(item)
+          }
+        } catch (e) {
+          console.log(e)
+        }
+      }
+
+      fetchEquipped()
+
+      return () => {
+        isActive = false
+      }
+    }, [inventory])
+  )
 
   const handleSignOut = async () => {
     try {
@@ -110,8 +158,8 @@ export default function HomeScreen({ navigation }, props) {
 
   async function setDatabase() {
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/currentTool`)
-      .set(currentTool)
+      .ref(`users/${user.uid}/userData/equipped`)
+      .set(equipped)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .set(inventory)
@@ -125,7 +173,6 @@ export default function HomeScreen({ navigation }, props) {
         .get()
         .then((snapshot) => {
           if (snapshot.exists()) {
-            setCurrentTool(snapshot.val().userData.currentTool)
             setInventory(snapshot.val().userData.inventory)
             setName(snapshot.val().userData.name)
             setFirstTimeDialog(false)
@@ -135,20 +182,21 @@ export default function HomeScreen({ navigation }, props) {
           setIsLoading(false)
           Animated.timing(introFadeAnim, {
             toValue: 1,
-            duration: 500,
+            duration: 700,
             useNativeDriver: true,
           }).start()
         })
     }
     init()
+    const interval = setInterval(() => init(), 5000)
+    return () => clearInterval(interval)
   }, [])
 
   async function updateBalance(block, bonus) {
-    var amount = currentTool.efficiency * bonus
+    var amount = Math.ceil(equipped.efficiency * bonus)
 
     setInventoryNotificaitons(
-      (inventoryNotificaitons) =>
-        inventoryNotificaitons + currentTool.efficiency
+      (inventoryNotificaitons) => inventoryNotificaitons + equipped.efficiency
     )
 
     setPlusses((plusses) => [
@@ -168,7 +216,6 @@ export default function HomeScreen({ navigation }, props) {
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
 
     if (block.name === 'Gold') {
-      console.log('golde')
       await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
       await Firebase.database()
         .ref(`scores/${user.uid}/score`)
@@ -260,7 +307,6 @@ export default function HomeScreen({ navigation }, props) {
 
       <Animated.View
         style={{
-          ...props.style,
           opacity: introFadeAnim,
           position: 'absolute',
           bottom: 50,
@@ -272,12 +318,27 @@ export default function HomeScreen({ navigation }, props) {
           onHandleProfile={handleProfile}
           onHandleScores={handleScores}
           inventoryNotificaitons={inventoryNotificaitons}
-        ></MenuBar>
+        />
+      </Animated.View>
+      <Animated.View
+        style={{
+          opacity: introFadeAnim,
+          position: 'absolute',
+          top: 60,
+          left: 20,
+        }}
+      >
+        <EquippedButton name={equipped.name} onPress={handleInventory} />
       </Animated.View>
       <View style={{ flex: 1 }}>{plusses}</View>
 
       <View style={styles.canvas}>
-        <Canvas click={updateBalance} generate={generateBlock} ref={canvas} />
+        <Canvas
+          equipped={equipped}
+          click={updateBalance}
+          generate={generateBlock}
+          ref={canvas}
+        />
       </View>
     </View>
   )

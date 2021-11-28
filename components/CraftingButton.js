@@ -84,7 +84,7 @@ const CraftingButton = (
           }}
         >
           <View style={{ position: 'absolute', top: 10, left: 3 }}>
-            <ItemIcon name={name} />
+            <ItemIcon name={name} size={60} />
           </View>
           <View style={{ position: 'absolute', left: 65, top: 42 }}>
             <Text style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
@@ -151,7 +151,7 @@ const CraftingButton = (
         }}
       >
         <View style={{ position: 'absolute', top: 10, left: 3 }}>
-          <ItemIcon name={name} />
+          <ItemIcon name={name} size={60} />
         </View>
         <View style={{ position: 'absolute', left: 65, top: 42 }}>
           <Text style={{ ...props.style, marginTop: -20, fontSize: 18 }}>

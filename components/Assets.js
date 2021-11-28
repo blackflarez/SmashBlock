@@ -22,5 +22,8 @@ export default {
     'Diamond Pickaxe': Asset.fromModule(
       require(`../assets/icons/diamondpickaxe.png`)
     ),
+    'Wood Pickaxe': Asset.fromModule(
+      require(`../assets/icons/woodpickaxe.png`)
+    ),
   },
 }

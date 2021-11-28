@@ -2,17 +2,21 @@ import React from 'react'
 import { Image, StyleSheet } from 'react-native'
 import Assets from '../components/Assets'
 
-export default function ItemIcon(name) {
-  return <Image source={Assets.icons[name.name]} style={styles.image} />
+const ItemIcon = ({ name, size }, props) => {
+  return (
+    <Image
+      source={Assets.icons[name]}
+      style={{
+        ...props.style,
+        width: size,
+        height: size,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+      }}
+    />
+  )
 }
 
-const styles = StyleSheet.create({
-  image: {
-    width: 60,
-    height: 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-})
+export default ItemIcon
