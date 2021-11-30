@@ -62,7 +62,7 @@ export default [
     name: 'Gold Pickaxe',
     description: 'Mine blocks super fast.',
     recipe: { Wood: 5, Gold: 10 },
-    strength: 3,
+    strength: 2,
     efficiency: 6,
     health: 150,
     type: 'tool',
