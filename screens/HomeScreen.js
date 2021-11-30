@@ -188,8 +188,6 @@ export default function HomeScreen({ navigation }, props) {
         })
     }
     init()
-    const interval = setInterval(() => init(), 5000)
-    return () => clearInterval(interval)
   }, [])
 
   async function updateBalance(block, bonus) {

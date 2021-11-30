@@ -24,6 +24,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
 import Items from './Items'
 import { decode, encode } from 'base-64'
+import { Vector2 } from 'three'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -37,9 +38,12 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  blankNormalMap,
+  cubeNormalMap,
   pickaxe,
   pickaxeTexture,
   cubeDestruction = [],
+  particles = [],
   sky,
   floors,
   plane,
@@ -59,8 +63,10 @@ var deltaX = 0,
   unit = 0.065,
   currentBlock = Object.create(Items[1]),
   rotationSpeed = 0.0005,
-  mixer = [],
-  clips = [],
+  destructionMixer = [],
+  destructionClips = [],
+  particleMixer = [],
+  particleClips = [],
   clock = new THREE.Clock(),
   timer,
   holdSpeed = 200,
@@ -204,11 +210,20 @@ function Canvas(props, ref) {
       const planeUri = Asset.fromModule(
         require('../assets/models/plane.glb')
       ).uri
+      const particlesUri = Asset.fromModule(
+        require('../assets/models/particles.glb')
+      ).uri
       const shadowPlaneUri = Asset.fromModule(
         require('../assets/models/shadowplane.glb')
       ).uri
       const planeTexUri = Asset.fromModule(
         require('../assets/models/planebake.png')
+      ).uri
+      const blankNormalMapUri = Asset.fromModule(
+        require('../assets/models/blanknormalmap.png')
+      ).uri
+      const cubeNormalMapUri = Asset.fromModule(
+        require('../assets/models/cubenormalmap.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -258,12 +273,22 @@ function Canvas(props, ref) {
         shadowPlane = result.scene.children[0]
       })
 
+      let m12 = loadModel(particlesUri).then((result) => {
+        particles[0] = result.scene.children[0]
+      })
+
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
       })
 
       let t2 = loadTexture(planeTexUri).then((result) => {
         planeTexture = result
+      })
+      let t3 = loadTexture(blankNormalMapUri).then((result) => {
+        blankNormalMap = result
+      })
+      let t4 = loadTexture(cubeNormalMapUri).then((result) => {
+        cubeNormalMap = result
       })
 
       let floorModels = []
@@ -291,15 +316,18 @@ function Canvas(props, ref) {
         m9,
         m10,
         m11,
+        m12,
         t1,
         t2,
+        t3,
+        t4,
         ms[area - 1],
       ]).then(() => {
         //Pick
         pickaxeTexture.flipY = false
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
-        pickaxe.material = new THREE.MeshLambertMaterial({
+        pickaxe.material = new THREE.MeshStandardMaterial({
           color: props.equipped.colour,
           map: pickaxeTexture,
           transparent: true,
@@ -329,7 +357,14 @@ function Canvas(props, ref) {
         world.add(plane)
 
         //cube
-        cube.material = new THREE.MeshLambertMaterial({ color: 'grey' })
+        cubeNormalMap.flipY = false
+        blankNormalMap.flipY = false
+        cube.material = new THREE.MeshStandardMaterial({
+          color: 'grey',
+          normalMap: blankNormalMap,
+          normalScale: new Vector2(0, 0),
+        })
+
         cube.material.metalness = 0
         cube.name = 'cube'
         cube.castShadow = false
@@ -338,6 +373,7 @@ function Canvas(props, ref) {
         cube.scale.x = 0.032499998807907104
         cube.scale.y = 0.032499998807907104
         cube.scale.z = 0.032499998807907104
+
         world.add(cube)
 
         //cubeDestruction
@@ -363,10 +399,38 @@ function Canvas(props, ref) {
           cubeDestruction[i].scale.y = 0.032499998807907104
           cubeDestruction[i].scale.z = 0.032499998807907104
 
-          mixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
-          clips[i] = cubeDestruction[i].animations
+          destructionMixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
+          destructionClips[i] = cubeDestruction[i].animations
 
           scene.add(cubeDestruction[i])
+        }
+
+        //particles
+        for (let i = 0; i < particles.length; i++) {
+          particles[i].material = new THREE.MeshLambertMaterial({
+            color: 'grey',
+          })
+
+          particles[i].traverse((o) => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshLambertMaterial({
+                color: currentBlock.colour,
+              })
+              o.castShadow = false
+              o.material.transparent = true
+              o.material.metalness = 0
+            }
+          })
+
+          particles[i].name = 'particles'
+          particles[i].visible = false
+          particles[i].scale.x = 0.032499998807907104
+          particles[i].scale.y = 0.032499998807907104
+          particles[i].scale.z = 0.032499998807907104
+          particleMixer[i] = new THREE.AnimationMixer(particles[i])
+          particleClips[i] = particles[i].animations
+
+          scene.add(particles[i])
         }
 
         //Skybox
@@ -505,8 +569,11 @@ function Canvas(props, ref) {
 
       //Animation
       var dt = clock.getDelta()
-      for (let i = 0; i < mixer.length; i++) {
-        mixer[i].update(dt)
+      for (let i = 0; i < destructionMixer.length; i++) {
+        destructionMixer[i].update(dt)
+      }
+      for (let i = 0; i < particleMixer.length; i++) {
+        particleMixer[i].update(dt)
       }
 
       TWEEN.update()
@@ -808,10 +875,10 @@ function Canvas(props, ref) {
         hide.start()
       }
     })
-    clips[reference].forEach(function (clip) {
-      mixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
-      mixer[reference].clipAction(clip).clampWhenFinished = true
-      mixer[reference].clipAction(clip).play().reset()
+    destructionClips[reference].forEach(function (clip) {
+      destructionMixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
+      destructionMixer[reference].clipAction(clip).clampWhenFinished = true
+      destructionMixer[reference].clipAction(clip).play().reset()
     })
   }
 
@@ -846,6 +913,11 @@ function Canvas(props, ref) {
       )
       .easing(TWEEN.Easing.Exponential.Out)
       .start()
+    particleClips[0].forEach(function (clip) {
+      particleMixer[0].clipAction(clip).setLoop(THREE.LoopOnce)
+      particleMixer[0].clipAction(clip).clampWhenFinished = true
+      particleMixer[0].clipAction(clip).play().reset()
+    })
   }
 
   async function raycast(evt) {
@@ -861,14 +933,21 @@ function Canvas(props, ref) {
   }
 
   function updateMaterial(block) {
+    cube.rotation.x += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    cube.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    cube.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
     if (currentBlock.metal) {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
       })
     } else {
-      material = new THREE.MeshLambertMaterial({
+      material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
       })
     }
     block.object.material = material
@@ -903,6 +982,12 @@ function Canvas(props, ref) {
       animation('destroy', block.object, block.object)
       updateMaterial(block)
     } else {
+      cube.material.normalMap = cubeNormalMap
+      cube.material.normalScale = new Vector2(
+        Math.pow(4 / (currentBlock.health + strength), 4.15),
+        Math.pow(4 / (currentBlock.health + strength), 4.15)
+      )
+      console.log(cube.material.normalScale.x)
       animateTool(block, true)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
