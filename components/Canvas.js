@@ -74,6 +74,7 @@ var deltaX = 0,
   lastClicked = new Date().getTime(),
   tbc = 0, //Time Between Clicks
   toolContainer,
+  particleContainer = [],
   lastDestruction
 
 //Graphics Settings
@@ -213,6 +214,15 @@ function Canvas(props, ref) {
       const particlesUri = Asset.fromModule(
         require('../assets/models/particles.glb')
       ).uri
+      const particles2Uri = Asset.fromModule(
+        require('../assets/models/particles2.glb')
+      ).uri
+      const particles3Uri = Asset.fromModule(
+        require('../assets/models/particles3.glb')
+      ).uri
+      const particles4Uri = Asset.fromModule(
+        require('../assets/models/particles4.glb')
+      ).uri
       const shadowPlaneUri = Asset.fromModule(
         require('../assets/models/shadowplane.glb')
       ).uri
@@ -274,7 +284,23 @@ function Canvas(props, ref) {
       })
 
       let m12 = loadModel(particlesUri).then((result) => {
-        particles[0] = result.scene.children[0]
+        particles[0] = result.scene
+        particles[0].animations = result.animations
+      })
+
+      let m13 = loadModel(particles2Uri).then((result) => {
+        particles[1] = result.scene
+        particles[1].animations = result.animations
+      })
+
+      let m14 = loadModel(particles3Uri).then((result) => {
+        particles[2] = result.scene
+        particles[2].animations = result.animations
+      })
+
+      let m15 = loadModel(particles4Uri).then((result) => {
+        particles[3] = result.scene
+        particles[3].animations = result.animations
       })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
@@ -317,6 +343,9 @@ function Canvas(props, ref) {
         m10,
         m11,
         m12,
+        m13,
+        m14,
+        m15,
         t1,
         t2,
         t3,
@@ -411,17 +440,6 @@ function Canvas(props, ref) {
             color: 'grey',
           })
 
-          particles[i].traverse((o) => {
-            if (o.isMesh) {
-              o.material = new THREE.MeshLambertMaterial({
-                color: currentBlock.colour,
-              })
-              o.castShadow = false
-              o.material.transparent = true
-              o.material.metalness = 0
-            }
-          })
-
           particles[i].name = 'particles'
           particles[i].visible = false
           particles[i].scale.x = 0.032499998807907104
@@ -429,8 +447,9 @@ function Canvas(props, ref) {
           particles[i].scale.z = 0.032499998807907104
           particleMixer[i] = new THREE.AnimationMixer(particles[i])
           particleClips[i] = particles[i].animations
-
-          scene.add(particles[i])
+          particleContainer[i] = new THREE.Group()
+          particleContainer[i].add(particles[i])
+          scene.add(particleContainer[i])
         }
 
         //Skybox
@@ -835,7 +854,7 @@ function Canvas(props, ref) {
         color: currentBlock.colour,
       })
     } else {
-      material = new THREE.MeshLambertMaterial({
+      material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
       })
     }
@@ -882,6 +901,79 @@ function Canvas(props, ref) {
     })
   }
 
+  function animateParticle(intersects, animateY) {
+    let reference = Math.floor(Math.random() * particles.length)
+
+    animateY
+      ? new TWEEN.Tween(particles[reference].position)
+          .to(
+            {
+              x: intersects.point.x,
+              y: intersects.point.y,
+            },
+            1
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+          .start()
+      : new TWEEN.Tween(particles[reference].position)
+          .to(
+            {
+              x: intersects.point.x,
+            },
+            1
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+          .start()
+
+    particles[reference].visible = true
+
+    particles[reference].traverse((o) => {
+      if (o.isMesh) {
+        o.material = new THREE.MeshStandardMaterial({
+          color: currentBlock.colour,
+          transparent: true,
+        })
+
+        const opaque = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 100,
+            },
+            100
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+
+        const fadeOut = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 0,
+            },
+            900
+          )
+          .easing(TWEEN.Easing.Cubic.Out)
+
+        opaque.chain(fadeOut)
+        opaque.start()
+      }
+    })
+
+    new TWEEN.Tween(particleContainer[reference].rotation)
+      .to(
+        {
+          y: intersects.point.x * 10 + 0.8,
+        },
+        1
+      )
+      .easing(TWEEN.Easing.Exponential.Out)
+      .start()
+
+    particleClips[reference].forEach(function (clip) {
+      particleMixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
+      particleMixer[reference].clipAction(clip).clampWhenFinished = true
+      particleMixer[reference].clipAction(clip).play().reset()
+    })
+  }
+
   function animateTool(intersects, animateY) {
     animateY
       ? new TWEEN.Tween(pickaxe.position)
@@ -913,11 +1005,6 @@ function Canvas(props, ref) {
       )
       .easing(TWEEN.Easing.Exponential.Out)
       .start()
-    particleClips[0].forEach(function (clip) {
-      particleMixer[0].clipAction(clip).setLoop(THREE.LoopOnce)
-      particleMixer[0].clipAction(clip).clampWhenFinished = true
-      particleMixer[0].clipAction(clip).play().reset()
-    })
   }
 
   async function raycast(evt) {
@@ -975,6 +1062,7 @@ function Canvas(props, ref) {
 
     if (currentBlock.health <= 0) {
       animateTool(block, false)
+      animateParticle(block, false)
       props.click(currentBlock, bonus)
       destruction()
       await props.generate()
@@ -987,8 +1075,8 @@ function Canvas(props, ref) {
         Math.pow(4 / (currentBlock.health + strength), 4.15),
         Math.pow(4 / (currentBlock.health + strength), 4.15)
       )
-      console.log(cube.material.normalScale.x)
       animateTool(block, true)
+      animateParticle(block, true)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
       currentBlock.health -= strength
