@@ -67,6 +67,8 @@ var deltaX = 0,
   destructionClips = [],
   particleMixer = [],
   particleClips = [],
+  smokeTexture,
+  smoke = [],
   clock = new THREE.Clock(),
   timer,
   holdSpeed = 200,
@@ -75,6 +77,7 @@ var deltaX = 0,
   tbc = 0, //Time Between Clicks
   toolContainer,
   particleContainer = [],
+  smokeContainer = [],
   lastDestruction
 
 //Graphics Settings
@@ -235,6 +238,12 @@ function Canvas(props, ref) {
       const cubeNormalMapUri = Asset.fromModule(
         require('../assets/models/cubenormalmap.png')
       ).uri
+      const smokeTexUri = Asset.fromModule(
+        require('../assets/models/smoke.png')
+      ).uri
+      const smokeUri = Asset.fromModule(
+        require('../assets/models/smoke.glb')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
         cube = result.scene.children[0]
@@ -316,6 +325,17 @@ function Canvas(props, ref) {
       let t4 = loadTexture(cubeNormalMapUri).then((result) => {
         cubeNormalMap = result
       })
+      let t5 = loadTexture(smokeTexUri).then((result) => {
+        smokeTexture = result
+      })
+
+      let msmoke = []
+      let smokeParticlesLength = 50
+      for (let i = 0; i < smokeParticlesLength; i++) {
+        msmoke[i] = loadModel(smokeUri).then((result) => {
+          smoke[i] = result.scene
+        })
+      }
 
       let floorModels = []
       let ms = []
@@ -346,10 +366,12 @@ function Canvas(props, ref) {
         m13,
         m14,
         m15,
+        msmoke[smokeParticlesLength - 1],
         t1,
         t2,
         t3,
         t4,
+        t5,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -434,7 +456,7 @@ function Canvas(props, ref) {
           scene.add(cubeDestruction[i])
         }
 
-        //particles
+        //Particles
         for (let i = 0; i < particles.length; i++) {
           particles[i].material = new THREE.MeshLambertMaterial({
             color: 'grey',
@@ -450,6 +472,33 @@ function Canvas(props, ref) {
           particleContainer[i] = new THREE.Group()
           particleContainer[i].add(particles[i])
           scene.add(particleContainer[i])
+        }
+
+        //Smoke
+        smokeTexture.flipY = false
+        for (let i = 0; i < smoke.length; i++) {
+          smoke[i].traverse((o) => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshLambertMaterial({
+                color: 'grey',
+                transparent: true,
+                side: THREE.DoubleSide,
+                map: smokeTexture,
+                blending: THREE.AdditiveBlending,
+                opacity: 10,
+                visible: false,
+              })
+            }
+          })
+          smoke[i].scale.x = 0
+          smoke[i].scale.y = 0
+          smoke[i].scale.z = 0
+          smoke[i].rotation.z = Math.random() * 360
+
+          smokeContainer[i] = new THREE.Group()
+          smokeContainer[i].add(smoke[i])
+
+          scene.add(smokeContainer[i])
         }
 
         //Skybox
@@ -832,14 +881,14 @@ function Canvas(props, ref) {
 
   function destruction() {
     let target
-    let reference
+    let index
     if (currentBlock.name === 'Wood') {
-      reference = Math.floor(Math.random() * (6 - 3) + 3)
+      index = Math.floor(Math.random() * (6 - 3) + 3)
     } else {
-      reference = Math.floor(Math.random() * 3)
+      index = Math.floor(Math.random() * 3)
     }
 
-    target = cubeDestruction[reference]
+    target = cubeDestruction[index]
     if (target === lastDestruction) {
       destruction()
       return
@@ -894,18 +943,18 @@ function Canvas(props, ref) {
         hide.start()
       }
     })
-    destructionClips[reference].forEach(function (clip) {
-      destructionMixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
-      destructionMixer[reference].clipAction(clip).clampWhenFinished = true
-      destructionMixer[reference].clipAction(clip).play().reset()
+    destructionClips[index].forEach(function (clip) {
+      destructionMixer[index].clipAction(clip).setLoop(THREE.LoopOnce)
+      destructionMixer[index].clipAction(clip).clampWhenFinished = true
+      destructionMixer[index].clipAction(clip).play().reset()
     })
   }
 
   function animateParticle(intersects, animateY) {
-    let reference = Math.floor(Math.random() * particles.length)
+    let index = Math.floor(Math.random() * particles.length)
 
     animateY
-      ? new TWEEN.Tween(particles[reference].position)
+      ? new TWEEN.Tween(particles[index].position)
           .to(
             {
               x: intersects.point.x,
@@ -915,7 +964,7 @@ function Canvas(props, ref) {
           )
           .easing(TWEEN.Easing.Exponential.Out)
           .start()
-      : new TWEEN.Tween(particles[reference].position)
+      : new TWEEN.Tween(particles[index].position)
           .to(
             {
               x: intersects.point.x,
@@ -925,9 +974,9 @@ function Canvas(props, ref) {
           .easing(TWEEN.Easing.Exponential.Out)
           .start()
 
-    particles[reference].visible = true
+    particles[index].visible = true
 
-    particles[reference].traverse((o) => {
+    particles[index].traverse((o) => {
       if (o.isMesh) {
         o.material = new THREE.MeshStandardMaterial({
           color: currentBlock.colour,
@@ -957,7 +1006,7 @@ function Canvas(props, ref) {
       }
     })
 
-    new TWEEN.Tween(particleContainer[reference].rotation)
+    new TWEEN.Tween(particleContainer[index].rotation)
       .to(
         {
           y: intersects.point.x * 10 + 0.8,
@@ -967,10 +1016,78 @@ function Canvas(props, ref) {
       .easing(TWEEN.Easing.Exponential.Out)
       .start()
 
-    particleClips[reference].forEach(function (clip) {
-      particleMixer[reference].clipAction(clip).setLoop(THREE.LoopOnce)
-      particleMixer[reference].clipAction(clip).clampWhenFinished = true
-      particleMixer[reference].clipAction(clip).play().reset()
+    particleClips[index].forEach(function (clip) {
+      particleMixer[index].clipAction(clip).setLoop(THREE.LoopOnce)
+      particleMixer[index].clipAction(clip).clampWhenFinished = true
+      particleMixer[index].clipAction(clip).play().reset()
+    })
+  }
+
+  function animateSmoke(intersects, animateY) {
+    let index = Math.floor(Math.random() * smoke.length)
+
+    smoke[index].scale.set(0, 0, 0)
+    smoke[index].traverse((o) => {
+      if (o.isMesh) {
+        o.position.set(
+          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1),
+          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1),
+          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1)
+        )
+        o.material = new THREE.MeshBasicMaterial({
+          color: currentBlock.colour,
+          transparent: true,
+          map: smokeTexture,
+          blending: THREE.AdditiveBlending,
+          opacity: 2,
+        })
+        const scaleUp = new TWEEN.Tween(smoke[index].scale)
+          .to(
+            {
+              x: 0.04,
+              y: 0.04,
+              z: 0.04,
+            },
+            600
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+
+        new TWEEN.Tween(o.rotation)
+          .to(
+            {
+              y: 100,
+            },
+            200000
+          )
+          .easing(TWEEN.Easing.Linear.None)
+          .start()
+        const opaque = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 2,
+            },
+            50
+          )
+          .easing(TWEEN.Easing.Exponential.Out)
+
+        const fadeOut = new TWEEN.Tween(o.material)
+          .to(
+            {
+              opacity: 0,
+            },
+            700
+          )
+          .easing(TWEEN.Easing.Cubic.Out)
+        const hide = new TWEEN.Tween(o.material)
+          .to({}, 750)
+          .onUpdate(() => (o.visible = true))
+          .onComplete(() => (o.visible = false))
+
+        scaleUp.start()
+        hide.start()
+        opaque.chain(fadeOut)
+        opaque.start()
+      }
     })
   }
 
@@ -1063,6 +1180,7 @@ function Canvas(props, ref) {
     if (currentBlock.health <= 0) {
       animateTool(block, false)
       animateParticle(block, false)
+      animateSmoke(block, false)
       props.click(currentBlock, bonus)
       destruction()
       await props.generate()
