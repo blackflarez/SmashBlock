@@ -384,6 +384,7 @@ function Canvas(props, ref) {
           transparent: true,
           opacity: 0,
         })
+
         strength = props.equipped.strength
         pickaxe.castShadow = false
         pickaxe.receiveShadow = false
@@ -487,6 +488,7 @@ function Canvas(props, ref) {
                 blending: THREE.AdditiveBlending,
                 opacity: 10,
                 visible: false,
+                depthWrite: false,
               })
             }
           })
@@ -1040,6 +1042,7 @@ function Canvas(props, ref) {
           map: smokeTexture,
           blending: THREE.AdditiveBlending,
           opacity: 2,
+          depthWrite: false,
         })
         const scaleUp = new TWEEN.Tween(smoke[index].scale)
           .to(
