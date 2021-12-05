@@ -40,6 +40,7 @@ var deltaX = 0,
   cube,
   blankNormalMap,
   cubeNormalMap,
+  cubeTexture,
   pickaxe,
   pickaxeTexture,
   cubeDestruction = [],
@@ -244,6 +245,9 @@ function Canvas(props, ref) {
       const smokeUri = Asset.fromModule(
         require('../assets/models/smoke.glb')
       ).uri
+      const cubeTex = Asset.fromModule(
+        require('../assets/models/cubetexture.png')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
         cube = result.scene.children[0]
@@ -328,6 +332,9 @@ function Canvas(props, ref) {
       let t5 = loadTexture(smokeTexUri).then((result) => {
         smokeTexture = result
       })
+      let t6 = loadTexture(cubeTex).then((result) => {
+        cubeTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -372,6 +379,7 @@ function Canvas(props, ref) {
         t3,
         t4,
         t5,
+        t6,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -395,6 +403,7 @@ function Canvas(props, ref) {
         shadowPlane.material = new THREE.MeshStandardMaterial({
           color: 0xeeeeee,
         })
+        shadowPlane.scale.set(0.2855, 0.2855, 0.2855)
         shadowPlane.material.map = planeTexture
         shadowPlane.receiveShadow = true
         shadowPlane.material.polygonOffset = true
@@ -415,6 +424,7 @@ function Canvas(props, ref) {
           color: 'grey',
           normalMap: blankNormalMap,
           normalScale: new Vector2(0, 0),
+          map: cubeTexture,
         })
 
         cube.material.metalness = 0
@@ -696,9 +706,9 @@ function Canvas(props, ref) {
     const inflateShadow = new TWEEN.Tween(shadowPlane.scale)
       .to(
         {
-          x: 0.3,
-          y: 0.3,
-          z: 0.3,
+          x: 0.29,
+          y: 0.29,
+          z: 0.29,
         },
         65
       )
@@ -708,9 +718,9 @@ function Canvas(props, ref) {
     const deflateShadow = new TWEEN.Tween(shadowPlane.scale)
       .to(
         {
-          x: 0.28713423013687134,
-          y: 0.28713423013687134,
-          z: 0.28713423013687134,
+          x: 0.2855,
+          y: 0.2855,
+          z: 0.2855,
         },
         40
       )
@@ -903,10 +913,12 @@ function Canvas(props, ref) {
     if (currentBlock.metal) {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
+        map: cubeTexture,
       })
     } else {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
+        map: cubeTexture,
       })
     }
 
@@ -1047,9 +1059,9 @@ function Canvas(props, ref) {
         const scaleUp = new TWEEN.Tween(smoke[index].scale)
           .to(
             {
-              x: 0.04,
-              y: 0.04,
-              z: 0.04,
+              x: 0.045,
+              y: 0.045,
+              z: 0.045,
             },
             600
           )
@@ -1149,12 +1161,14 @@ function Canvas(props, ref) {
         color: currentBlock.colour,
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
+        map: cubeTexture,
       })
     } else {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
+        map: cubeTexture,
       })
     }
     block.object.material = material
@@ -1175,7 +1189,7 @@ function Canvas(props, ref) {
     return tbc
   }
 
-  async function hitBlock(block) {
+  async function hitBlock(block, coordinates) {
     animation('swing', pickaxe, pickaxe)
     tbc = calculateTBC()
     var bonus = calculateBonus(currentBlock, tbc)
@@ -1184,9 +1198,9 @@ function Canvas(props, ref) {
       animateTool(block, false)
       animateParticle(block, false)
       animateSmoke(block, false)
-      props.click(currentBlock, bonus)
+      props.updateBalance(currentBlock, bonus, true, coordinates)
       destruction()
-      await props.generate()
+      props.generateBlock()
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
       animation('destroy', block.object, block.object)
       updateMaterial(block)
@@ -1198,6 +1212,7 @@ function Canvas(props, ref) {
       )
       animateTool(block, true)
       animateParticle(block, true)
+      //props.updateBalance(currentBlock, bonus, false, coordinates)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
       currentBlock.health -= strength
@@ -1209,7 +1224,7 @@ function Canvas(props, ref) {
     if (nativeEvent.state === State.BEGAN) {
       let block = await raycast(evt)
       if (block.object.name === 'cube') {
-        hitBlock(block)
+        hitBlock(block, { x: nativeEvent.absoluteX, y: nativeEvent.absoluteY })
       }
     }
   }
@@ -1222,7 +1237,10 @@ function Canvas(props, ref) {
     if (nativeEvent.state === State.ACTIVE) {
       if (block.object.name === 'cube') {
         timer = setInterval(async () => {
-          hitBlock(block)
+          hitBlock(block, {
+            x: nativeEvent.absoluteX,
+            y: nativeEvent.absoluteY,
+          })
         }, holdSpeed)
       }
     } else {

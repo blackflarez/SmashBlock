@@ -33,6 +33,20 @@ export default function Crafting({ navigation }, props) {
     setCurrentItem(item)
     setPending(true)
     let amount = 1
+
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(`${item.name}`)
+      .get()
+      .then(async (snapshot) => {
+        if (!snapshot.exists()) {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/newItems`)
+            .child(`${item.name}`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+        }
+      })
+
     for (let i in item.recipe) {
       await Firebase.database()
         .ref(`users/${user.uid}/userData/inventory`)

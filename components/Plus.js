@@ -1,35 +1,30 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, Text, Animated } from 'react-native'
 
-const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
+const Plus = (
+  { currentBlockColour, amount, currentBlock, bonus, coordinates },
+  props
+) => {
   const fadeAnim = useRef(new Animated.Value(0)).current
-  const riseAnim = useRef(new Animated.Value(600)).current
-  const [horizontalPosition, setHorizontalPosition] = useState(-50)
+  const riseAnim = useRef(new Animated.Value(coordinates.y)).current
+  const [horizontalPosition, setHorizontalPosition] = useState(coordinates.x)
 
   useEffect(() => {
-    setHorizontalPosition(
-      (horizontalPosition) =>
-        (horizontalPosition = Math.random() * (-55 - -60) + -55)
-    )
+    setHorizontalPosition(coordinates.x)
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: 600,
+        toValue: coordinates.y - 175,
         duration: 1,
         useNativeDriver: false,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 50,
-        useNativeDriver: false,
-      }),
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 250,
+        duration: 150,
         useNativeDriver: false,
       }),
       Animated.parallel([
         Animated.timing(riseAnim, {
-          toValue: 700,
+          toValue: 0,
           duration: 800,
           useNativeDriver: false,
         }),
@@ -48,10 +43,10 @@ const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
         ...props.style,
         justifyContent: 'center',
         opacity: fadeAnim,
-        bottom: riseAnim,
+        top: riseAnim,
         width: 300,
         position: 'absolute',
-        left: horizontalPosition,
+        left: horizontalPosition - 250,
       }}
     >
       <Text
@@ -59,6 +54,7 @@ const Plus = ({ currentBlockColour, amount, currentBlock, bonus }, props) => {
           ...props.style,
           color: currentBlockColour,
           fontSize: 26,
+          fontWeight: '400',
         }}
       >
         +{amount} {currentBlock}

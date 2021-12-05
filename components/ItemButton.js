@@ -23,6 +23,7 @@ const ItemButton = (
     colour,
     margin,
     equipped,
+    newItem,
   },
   props
 ) => {
@@ -77,6 +78,17 @@ const ItemButton = (
           haptics(Haptics.ImpactFeedbackStyle.Light)
         }}
       >
+        <Badge
+          visible={newItem}
+          size={20}
+          style={{
+            position: 'absolute',
+            top: -4,
+            right: -4,
+          }}
+        >
+          New!
+        </Badge>
         <ItemIcon name={name} size={60} />
 
         <Badge
