@@ -9,7 +9,7 @@ const MenuBar = (
     onHandleInventory,
     onHandleCrafting,
     inventoryNotificaitons,
-    equippedName,
+    newItems,
   },
   props
 ) => {

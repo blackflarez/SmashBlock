@@ -32,6 +32,7 @@ export default function HomeScreen({ navigation }, props) {
   const [name, setName] = useState('')
   const [inventory, setInventory] = useState({})
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
+  const [newItems, setNewItems] = useState([])
   const [equipped, setEquipped] = useState()
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
@@ -41,7 +42,8 @@ export default function HomeScreen({ navigation }, props) {
     React.useCallback(() => {
       let isActive = true
 
-      const fetchEquipped = async () => {
+      const onFocus = async () => {
+        setNotifications()
         let item
         try {
           await Firebase.database()
@@ -64,12 +66,12 @@ export default function HomeScreen({ navigation }, props) {
             setEquipped(item)
             canvas.current.setTool(item)
           }
-        } catch (e) {
-          console.log(e)
+        } catch (error) {
+          console.log(error)
         }
       }
 
-      fetchEquipped()
+      onFocus()
 
       return () => {
         isActive = false
@@ -95,7 +97,6 @@ export default function HomeScreen({ navigation }, props) {
 
   const handleInventory = async () => {
     try {
-      setInventoryNotificaitons(0)
       navigation.navigate('Inventory')
     } catch (error) {
       console.log(error)
@@ -165,6 +166,23 @@ export default function HomeScreen({ navigation }, props) {
       .set(inventory)
   }
 
+  async function setNotifications() {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/newItems`)
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          var notifications = 0
+          snapshot.forEach(function (childNodes) {
+            notifications += 1
+          })
+          setInventoryNotificaitons(notifications)
+        } else {
+          setInventoryNotificaitons(0)
+        }
+      })
+  }
+
   useEffect(() => {
     async function init() {
       //AudioManager.setupAsync()
@@ -190,23 +208,34 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  async function updateBalance(block, bonus) {
+  async function updateBalance(block, bonus, destroy, coordinates) {
     var amount = Math.ceil(equipped.efficiency * bonus)
 
-    setInventoryNotificaitons(
-      (inventoryNotificaitons) => inventoryNotificaitons + equipped.efficiency
-    )
-
     setPlusses((plusses) => [
-      ...plusses,
+      ...(plusses.length > 15 ? plusses.splice(plusses.length - 10) : plusses),
       <Plus
         currentBlockColour={block.colour}
         amount={amount}
         bonus={bonus}
         currentBlock={block.name}
         key={Math.random(1000)}
+        coordinates={coordinates}
       />,
     ])
+
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/inventory`)
+      .child(`${block.name}`)
+      .get()
+      .then(async (snapshot) => {
+        if (!snapshot.exists()) {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/newItems`)
+            .child(`${block.name}`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+          setNotifications()
+        }
+      })
 
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
@@ -326,15 +355,18 @@ export default function HomeScreen({ navigation }, props) {
           left: 20,
         }}
       >
-        <EquippedButton name={equipped.name} onPress={handleInventory} />
+        <EquippedButton
+          name={equipped ? equipped.name : null}
+          onPress={handleInventory}
+        />
       </Animated.View>
       <View style={{ flex: 1 }}>{plusses}</View>
 
       <View style={styles.canvas}>
         <Canvas
           equipped={equipped}
-          click={updateBalance}
-          generate={generateBlock}
+          updateBalance={updateBalance}
+          generateBlock={generateBlock}
           ref={canvas}
         />
       </View>
@@ -348,6 +380,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   title: {
     fontSize: 24,

@@ -30,6 +30,7 @@ export default function Inventory({ navigation }, props) {
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const [equipped, setEquipped] = useStateIfMounted()
+  const [newItems, setNewItems] = useStateIfMounted([])
 
   const handleBack = async () => {
     try {
@@ -85,6 +86,11 @@ export default function Inventory({ navigation }, props) {
     haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(true)
     setCurrentItem(Items.find((o) => item.name === o.name))
+    try {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/newItems/${item.name}`)
+        .set(null)
+    } catch (error) {}
   }
 
   useEffect(() => {
@@ -95,6 +101,21 @@ export default function Inventory({ navigation }, props) {
         .then((snapshot) => {
           if (snapshot.exists()) {
             setEquipped(snapshot.val().userData.equipped)
+          }
+        })
+
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/newItems`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            var items = []
+            snapshot.forEach(function (childNodes) {
+              items.push(childNodes.key)
+            })
+            setNewItems(items)
+          } else {
+            setNewItems([])
           }
         })
 
@@ -136,6 +157,7 @@ export default function Inventory({ navigation }, props) {
       colour={item.name}
       margin={20}
       equipped={equipped}
+      newItem={newItems.includes(item.name)}
     />
   )
 
