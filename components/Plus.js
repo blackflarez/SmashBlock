@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, Text, Animated } from 'react-native'
+import { Font } from '../components'
 
 const Plus = (
   { currentBlockColour, amount, currentBlock, bonus, coordinates },
@@ -49,16 +50,14 @@ const Plus = (
         left: horizontalPosition - 250,
       }}
     >
-      <Text
+      <Font
         style={{
-          ...props.style,
           color: currentBlockColour,
           fontSize: 26,
-          fontWeight: '400',
         }}
       >
         +{amount} {currentBlock}
-      </Text>
+      </Font>
     </Animated.View>
   )
 }

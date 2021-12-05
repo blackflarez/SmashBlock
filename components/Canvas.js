@@ -45,6 +45,7 @@ var deltaX = 0,
   pickaxeTexture,
   cubeDestruction = [],
   particles = [],
+  lastParticle,
   sky,
   floors,
   plane,
@@ -63,7 +64,7 @@ var deltaX = 0,
   hovering = [],
   unit = 0.065,
   currentBlock = Object.create(Items[1]),
-  rotationSpeed = 0.0005,
+  rotationSpeed = 0.0002,
   destructionMixer = [],
   destructionClips = [],
   particleMixer = [],
@@ -966,6 +967,12 @@ function Canvas(props, ref) {
 
   function animateParticle(intersects, animateY) {
     let index = Math.floor(Math.random() * particles.length)
+    if (index === lastParticle) {
+      animateParticle(intersects, animateY)
+      return
+    } else {
+      lastParticle = index
+    }
 
     animateY
       ? new TWEEN.Tween(particles[index].position)
@@ -1112,7 +1119,7 @@ function Canvas(props, ref) {
           .to(
             {
               x: intersects.point.x,
-              y: intersects.point.y + 0.02,
+              y: intersects.point.y + 0.04,
             },
             500
           )
@@ -1131,7 +1138,7 @@ function Canvas(props, ref) {
     new TWEEN.Tween(toolContainer.rotation)
       .to(
         {
-          y: intersects.point.x * 10 + 0.8,
+          y: intersects.point.x * 6 + 0.8,
         },
         500
       )

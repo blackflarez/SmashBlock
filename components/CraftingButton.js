@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Badge } from 'react-native-paper'
-import { Amount, ItemIcon } from '../components'
+import { Amount, ItemIcon, Font } from '../components'
 import * as Haptics from 'expo-haptics'
 
 function haptics(style) {
@@ -59,9 +59,9 @@ const CraftingButton = (
         }
 
         list.push(
-          <Text style={{ color: '#fff', fontSize: 12, margin: 1 }} key={i}>
+          <Font style={{ color: '#fff', fontSize: 12, margin: 1 }} key={i}>
             {Amount(amount)}/{Amount(recipe[i])} {i}
-          </Text>
+          </Font>
         )
       }
       setRecipeString(list)
@@ -87,10 +87,10 @@ const CraftingButton = (
             <ItemIcon name={name} size={60} />
           </View>
           <View style={{ position: 'absolute', left: 65, top: 42 }}>
-            <Text style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
+            <Font style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
               {name}
-            </Text>
-            <Text style={{ fontSize: 10 }}>{description}</Text>
+            </Font>
+            <Font style={{ fontSize: 10 }}>{description}</Font>
           </View>
           <View style={{ position: 'absolute', left: 20, top: 50 }}></View>
           <Pressable
@@ -154,10 +154,10 @@ const CraftingButton = (
           <ItemIcon name={name} size={60} />
         </View>
         <View style={{ position: 'absolute', left: 65, top: 42 }}>
-          <Text style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
+          <Font style={{ ...props.style, marginTop: -20, fontSize: 16 }}>
             {name}
-          </Text>
-          <Text style={{ fontSize: 10 }}>{description}</Text>
+          </Font>
+          <Font style={{ fontSize: 10 }}>{description}</Font>
         </View>
         <View style={{ position: 'absolute', left: 20, top: 50 }}></View>
         <Pressable

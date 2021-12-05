@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { Button } from '../components'
+import { Button, Font } from '../components'
 
 const auth = Firebase.auth()
 
@@ -63,10 +63,10 @@ export default function Profile({ navigation }, props) {
         <StatusBar style="light" />
 
         <View style={styles.quarterHeight}>
-          <Text style={styles.title}>{username}</Text>
+          <Font style={styles.title}>{username}</Font>
         </View>
         <View style={styles.halfHeight}>
-          <Text style={styles.title}>Friends</Text>
+          <Font style={styles.title}>Friends</Font>
         </View>
         <View style={styles.quarterHeight}>
           <Button

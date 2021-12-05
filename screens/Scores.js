@@ -1,14 +1,14 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef } from 'react'
-import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
+import { StyleSheet, Text, View, Animated, FlatList } from 'react-native'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { Amount } from '../components'
+import { Amount, Font } from '../components'
 
 const auth = Firebase.auth()
 
 export default function Scores({ navigation }, props) {
-  const [leaderboard, setLeaderboard] = useState([])
+  const [leaderboard, setLeaderboard] = useState()
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -28,14 +28,16 @@ export default function Scores({ navigation }, props) {
         .then((snapshot) => {
           if (snapshot.exists()) {
             var scores = []
+            var string = ''
             snapshot.forEach(function (childNodes) {
-              scores.push(
-                childNodes.val().name +
-                  ' - ' +
-                  Amount(childNodes.val().score) +
-                  '\n'
-              )
+              scores.push({
+                name: childNodes.val().name,
+                score: childNodes.val().score,
+              })
             })
+            scores.sort((a, b) =>
+              a.score < b.score ? 1 : b.score < a.score ? -1 : 0
+            )
             setLeaderboard(scores)
             Animated.timing(fadeAnim, {
               toValue: 1,
@@ -50,37 +52,56 @@ export default function Scores({ navigation }, props) {
     init()
   }, [])
 
+  const leaderboardButton = ({ item }) =>
+    leaderboard !== null ? (
+      <Font style={{ fontSize: 18 }}>
+        {item.score} - {item.name}
+      </Font>
+    ) : null
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
       <Animated.View
         style={{
           ...props.style,
-          opacity: fadeAnim, // Bind opacity to animated value
+          opacity: fadeAnim,
+          flex: 1,
         }}
       >
-        <Text style={styles.title}>Leaderboard</Text>
-        <Text> </Text>
-        <Text style={styles.text}>{leaderboard}</Text>
+        <StatusBar style="light" />
+
+        <View style={styles.quarterHeight}>
+          <Font style={styles.title}>Levels</Font>
+        </View>
+        <View style={styles.halfHeight}>
+          <Font style={styles.title}>Leaderboard</Font>
+          <FlatList
+            data={leaderboard}
+            renderItem={leaderboardButton}
+            keyExtractor={(item) => item.name}
+            numColumns={1}
+            scrollEnabled={false}
+            contentContainerStyle={{
+              marginVertical: 20,
+            }}
+          />
+        </View>
+        <View style={styles.quarterHeight}></View>
       </Animated.View>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
+  halfHeight: {
+    flex: 3,
+    backgroundColor: '#fff',
+    margin: 24,
+  },
+  quarterHeight: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingBottom: 250,
-    paddingHorizontal: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
+    margin: 24,
   },
   title: {
     fontSize: 24,
@@ -92,20 +113,8 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     color: '#000',
   },
-  button: {
-    backgroundColor: '#fff',
-    padding: 30,
-    borderColor: '#000',
-    borderWidth: 1,
-    margin: 10,
-  },
   buttonText: {
     color: '#000',
     fontSize: 16,
-  },
-  canvas: {
-    width: 250,
-    height: 400,
-    margin: 50,
   },
 })

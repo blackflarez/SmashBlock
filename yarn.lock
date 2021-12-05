@@ -1062,6 +1062,11 @@
   dependencies:
     "@types/hammerjs" "^2.0.36"
 
+"@expo-google-fonts/mclaren@^0.2.0":
+  "integrity" "sha512-rpXepFNNOTplLif3USn7Hhwde+juoD7SzYYsMcP49uFXaC0gOzEghUf40v/2HaCT1tmoVhP6g7LYDkm5xZO1Ow=="
+  "resolved" "https://registry.npmjs.org/@expo-google-fonts/mclaren/-/mclaren-0.2.0.tgz"
+  "version" "0.2.0"
+
 "@expo/browser-polyfill@^0.1.1":
   "integrity" "sha512-PuG+1ZJUUACqWjyCe/pDq9YS8CsNsf08Ir1iftydvjCDqQjXmzQcZSffCeamTdHhIzFr9KA/ICg8+Z22+EeNvQ=="
   "resolved" "https://registry.npmjs.org/@expo/browser-polyfill/-/browser-polyfill-0.1.1.tgz"

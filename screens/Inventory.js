@@ -9,7 +9,7 @@ import {
   Modal,
   Platform,
 } from 'react-native'
-import { Button, Items, ItemButton, ItemIcon } from '../components'
+import { Button, Items, ItemButton, ItemIcon, Font } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
@@ -52,7 +52,7 @@ export default function Inventory({ navigation }, props) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/equipped`)
       .set(item)
-      .then(setModalVisible(false))
+      .then(setModalVisible(false), handleBack())
   }
 
   const handleDestroy = async (item) => {
@@ -171,7 +171,7 @@ export default function Inventory({ navigation }, props) {
         }}
       >
         <Modal
-          animationType="fade"
+          animationType="slide"
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -182,26 +182,26 @@ export default function Inventory({ navigation }, props) {
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
               <ItemIcon name={currentItem.name} size={120} />
-              <Text style={styles.text}>{currentItem.name}</Text>
-              <Text style={styles.textLight}>{currentItem.description}</Text>
+              <Font style={styles.text}>{currentItem.name}</Font>
+              <Font style={styles.textLight}>{currentItem.description}</Font>
               <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
                 {currentItem.type === 'tool' ? (
-                  <Text style={styles.textLight}>
+                  <Font style={styles.textLight}>
                     {`\n`}
                     Efficiency: {currentItem.efficiency}
                     {`\n`}
                     Strength: {currentItem.strength}
-                  </Text>
+                  </Font>
                 ) : null}
                 {currentItem.type === 'block' ? (
-                  <Text style={styles.textLight}>
+                  <Font style={styles.textLight}>
                     {`\n`}
                     Rarity: {currentItem.probability}%
-                  </Text>
+                  </Font>
                 ) : null}
 
                 {inventory !== null ? (
-                  <Text style={styles.textLight}>Quantity: {getAmount()}</Text>
+                  <Font style={styles.textLight}>Quantity: {getAmount()}</Font>
                 ) : null}
               </View>
               <View
@@ -255,7 +255,7 @@ export default function Inventory({ navigation }, props) {
         </Modal>
         <StatusBar style="light" />
         <View style={styles.quarterHeight}>
-          <Text style={styles.title}>Inventory</Text>
+          <Font style={styles.title}>Inventory</Font>
         </View>
         <View style={[styles.halfHeight]}>
           <FlatList
@@ -314,7 +314,6 @@ const styles = StyleSheet.create({
   textLight: {
     fontSize: 12,
     fontWeight: '200',
-    color: '#000',
   },
   button: {
     backgroundColor: '#fff',
