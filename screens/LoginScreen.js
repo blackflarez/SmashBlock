@@ -10,7 +10,7 @@ import {
   View,
   Platform,
 } from 'react-native'
-import { InputField, ErrorMessage } from '../components'
+import { InputField, ErrorMessage, Font, Button } from '../components'
 import Firebase from '../config/firebase'
 
 const auth = Firebase.auth()
@@ -48,6 +48,7 @@ export default function LoginScreen({ navigation }) {
       style={{ flex: 1 }}
     >
       <ScrollView
+        scrollEnabled={false}
         contentContainerStyle={{
           flex: 1,
           backgroundColor: '#fff',
@@ -59,7 +60,18 @@ export default function LoginScreen({ navigation }) {
       >
         <StatusBar style="dark" />
         <View>
-          <Text style={styles.title}>Login</Text>
+          <Font
+            style={{
+              fontSize: 24,
+              fontWeight: '600',
+              color: '#000',
+              alignSelf: 'center',
+              paddingBottom: 24,
+              margin: 10,
+            }}
+          >
+            Login
+          </Font>
 
           <InputField
             inputStyle={{
@@ -70,6 +82,7 @@ export default function LoginScreen({ navigation }) {
               marginBottom: 20,
               borderWidth: 1,
               borderColor: '#000',
+              borderRadius: 10,
             }}
             leftIcon="email"
             placeholder="Enter email"
@@ -89,6 +102,7 @@ export default function LoginScreen({ navigation }) {
               marginBottom: 20,
               borderWidth: 1,
               borderColor: '#000',
+              borderRadius: 10,
             }}
             leftIcon="lock"
             placeholder="Enter password"
@@ -104,17 +118,25 @@ export default function LoginScreen({ navigation }) {
         </View>
         {loginError ? <ErrorMessage error={loginError} visible={true} /> : null}
 
-        <TouchableOpacity onPress={onLogin} style={styles.button}>
-          <Text style={styles.buttonText}>LOGIN</Text>
-        </TouchableOpacity>
+        <Button
+          title={'LOGIN'}
+          onPress={onLogin}
+          backgroundColor={'#eee'}
+          width={300}
+        ></Button>
 
         <TouchableOpacity
-          style={styles.subButton}
+          style={{ position: 'absolute', alignSelf: 'center', bottom: 50 }}
           onPress={() => navigation.navigate('Signup')}
         >
-          <Text style={styles.subButtonText}>
+          <Font
+            style={{
+              color: '#000',
+              textDecorationLine: 'underline',
+            }}
+          >
             Don't have an account? Sign Up
-          </Text>
+          </Font>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -122,14 +144,6 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#000',
-    alignSelf: 'center',
-    paddingBottom: 24,
-    margin: 10,
-  },
   button: {
     backgroundColor: '#fff',
     padding: 10,

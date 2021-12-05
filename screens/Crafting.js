@@ -4,7 +4,7 @@ import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
 import { Button, ItemButton, Items } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { CraftingButton } from '../components'
+import { CraftingButton, Font } from '../components'
 import { useStateIfMounted } from 'use-state-if-mounted'
 import _ from 'lodash'
 
@@ -130,7 +130,7 @@ export default function Crafting({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Text style={styles.title}>{currentItem}</Text>
+              <Font style={styles.title}>{currentItem}</Font>
               <Button
                 title={'Close'}
                 onPress={() => {
@@ -142,7 +142,7 @@ export default function Crafting({ navigation }, props) {
         </Modal>
         <StatusBar style="light" />
         <View style={styles.quarterHeight}>
-          <Text style={styles.title}>Crafting</Text>
+          <Font style={styles.title}>Crafting</Font>
         </View>
 
         <View style={[styles.halfHeight]}>

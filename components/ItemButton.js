@@ -2,7 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
-import { Amount, ItemIcon } from '../components'
+import { Amount, ItemIcon, Font } from '../components'
 import * as Haptics from 'expo-haptics'
 
 function haptics(style) {
@@ -104,7 +104,7 @@ const ItemButton = (
             fontSize: 12,
           }}
         >
-          {Amount(amount)}
+          <Font>{Amount(amount)}</Font>
         </Badge>
       </Pressable>
     </View>

@@ -10,6 +10,7 @@ import Amount from './Amount'
 import ItemIcon from './ItemIcon'
 import Items from './Items'
 import EquippedButton from './EquippedButton'
+import Font from './Font'
 
 export {
   IconButton,
@@ -24,4 +25,5 @@ export {
   ItemIcon,
   Items,
   EquippedButton,
+  Font,
 }

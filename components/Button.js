@@ -1,5 +1,6 @@
 import React from 'react'
 import { StyleSheet, Pressable, Text } from 'react-native'
+import { Font } from '../components'
 
 const Button = ({
   title,
@@ -39,17 +40,12 @@ const Button = ({
         ]
       }}
     >
-      <Text style={[styles.text, { color: titleColor, fontSize: titleSize }]}>
-        {title}
-      </Text>
+      <Font style={{ color: titleColor, fontSize: titleSize }}>{title}</Font>
     </Pressable>
   )
 }
 
 const styles = StyleSheet.create({
-  text: {
-    fontWeight: '600',
-  },
   base: {
     alignItems: 'center',
     justifyContent: 'center',
