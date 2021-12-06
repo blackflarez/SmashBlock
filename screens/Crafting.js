@@ -1,20 +1,37 @@
 import { StatusBar } from 'expo-status-bar'
 import React, { useContext, useState, useEffect, useRef, useMemo } from 'react'
-import { StyleSheet, Text, View, Animated, FlatList, Modal } from 'react-native'
+import {
+  StyleSheet,
+  View,
+  Animated,
+  FlatList,
+  Modal,
+  Platform,
+} from 'react-native'
+import Slider from '@react-native-community/slider'
 import { Button, ItemButton, Items } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { CraftingButton, Font } from '../components'
+import { CraftingButton, Font, ItemIcon, Amount } from '../components'
 import { useStateIfMounted } from 'use-state-if-mounted'
+import * as Haptics from 'expo-haptics'
 import _ from 'lodash'
 
 const auth = Firebase.auth()
 
+function haptics(style) {
+  if (Platform.OS === 'ios') {
+    Haptics.impactAsync(style)
+  }
+}
+
 export default function Crafting({ navigation }, props) {
   const [pending, setPending] = useState(false)
   const [inventory, setInventory] = useStateIfMounted(null)
+  const [craftingAmount, setCraftingAmount] = useState(1)
   const [modalVisible, setModalVisible] = useState(false)
-  const [currentItem, setCurrentItem] = useState()
+  const [currentItem, setCurrentItem] = useState(Items[0])
+  const [recipeString, setRecipeString] = useState()
   const [craftingItems, setCraftingItems] = useState(
     Items.filter((data) => data.recipe)
   )
@@ -29,10 +46,25 @@ export default function Crafting({ navigation }, props) {
     }
   }
 
-  const handleOpen = async (item) => {
-    setCurrentItem(item)
+  function getAmount() {
+    let have = 0
+    let minimums = []
+    for (let i in currentItem.recipe) {
+      try {
+        have = inventory.find((e) => e.name === i).amount
+        minimums.push(Math.floor(have / currentItem.recipe[i]))
+      } catch (err) {}
+    }
+    let amount = Math.min.apply(null, minimums)
+    if (craftingAmount > amount) {
+      setCraftingAmount(amount)
+    }
+    return amount
+  }
+
+  const handleCraft = async (item) => {
+    haptics(Haptics.ImpactFeedbackStyle.Light)
     setPending(true)
-    let amount = 1
 
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
@@ -51,14 +83,26 @@ export default function Crafting({ navigation }, props) {
       await Firebase.database()
         .ref(`users/${user.uid}/userData/inventory`)
         .child(`${i}`)
-        .set(Firebase.firebase_.database.ServerValue.increment(-item.recipe[i]))
+        .set(
+          Firebase.firebase_.database.ServerValue.increment(
+            -item.recipe[i] * craftingAmount
+          )
+        )
     }
 
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${item.name}`)
-      .set(Firebase.firebase_.database.ServerValue.increment(amount))
+      .set(Firebase.firebase_.database.ServerValue.increment(craftingAmount))
       .then(setPending(false))
+
+    setModalVisible(false)
+    setCraftingAmount(1)
+  }
+
+  const handleOpen = async (item) => {
+    setCurrentItem(item)
+    setModalVisible(true)
   }
 
   useEffect(() => {
@@ -105,7 +149,6 @@ export default function Crafting({ navigation }, props) {
         description={item.description}
         recipe={item.recipe}
         inventory={inventory}
-        pending={pending}
         currentItem={currentItem}
       />
     ) : null
@@ -130,13 +173,84 @@ export default function Crafting({ navigation }, props) {
         >
           <View style={styles.centeredView}>
             <View style={styles.modalView}>
-              <Font style={styles.title}>{currentItem}</Font>
-              <Button
-                title={'Close'}
-                onPress={() => {
-                  setModalVisible(false)
+              <ItemIcon name={currentItem.name} size={120} />
+
+              <Font style={styles.text}>{currentItem.name}</Font>
+              <Font
+                style={[
+                  styles.textLight,
+                  { marginBottom: 20, color: '#757575' },
+                ]}
+              >
+                {currentItem.description}
+              </Font>
+              <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
+                {currentItem.type === 'tool' ? (
+                  <Font style={styles.textLight}>
+                    Efficiency: {currentItem.efficiency}
+                    {`\n`}
+                    Strength: {currentItem.strength}
+                  </Font>
+                ) : null}
+                {currentItem.type === 'block' ? (
+                  <Font style={styles.textLight}>
+                    Rarity: {currentItem.probability}%
+                  </Font>
+                ) : null}
+
+                {inventory !== null ? (
+                  <Font style={styles.textLight}>
+                    Quantity:{' '}
+                    {inventory.find((o) => o.name === currentItem.name).amount}
+                  </Font>
+                ) : null}
+              </View>
+              <Font
+                style={[
+                  styles.textLight,
+                  { marginBottom: 20, color: '#757575' },
+                ]}
+              >
+                {recipeString}
+              </Font>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
                 }}
-              ></Button>
+              >
+                <Font style={{ alignSelf: 'center' }}>
+                  {craftingAmount + '/' + getAmount(currentItem)}
+                </Font>
+                <Slider
+                  style={{ width: 200, height: 40, alignSelf: 'center' }}
+                  minimumValue={1}
+                  maximumValue={getAmount(currentItem)}
+                  minimumTrackTintColor="#eee"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#6DA34D"
+                  step={1}
+                  onValueChange={(value) => setCraftingAmount(value)}
+                />
+                <Button
+                  title={'Craft'}
+                  pending={pending}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    handleCraft(currentItem)
+                  }}
+                ></Button>
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setModalVisible(false), setCraftingAmount(1)
+                  }}
+                ></Button>
+              </View>
             </View>
           </View>
         </Modal>
@@ -203,6 +317,10 @@ const styles = StyleSheet.create({
     fontWeight: 'normal',
     color: '#000',
   },
+  textLight: {
+    fontSize: 12,
+    fontWeight: '200',
+  },
   button: {
     backgroundColor: '#fff',
     padding: 30,
@@ -226,8 +344,8 @@ const styles = StyleSheet.create({
     marginTop: 22,
   },
   modalView: {
-    width: 200,
-    height: 300,
+    width: 300,
+    height: 500,
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 10,

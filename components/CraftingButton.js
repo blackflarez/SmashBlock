@@ -87,7 +87,7 @@ const CraftingButton = (
             <ItemIcon name={name} size={60} />
           </View>
           <View style={{ position: 'absolute', left: 65, top: 42 }}>
-            <Font style={{ ...props.style, marginTop: -20, fontSize: 18 }}>
+            <Font style={{ ...props.style, marginTop: -20, fontSize: 16 }}>
               {name}
             </Font>
             <Font style={{ fontSize: 10 }}>{description}</Font>
@@ -99,7 +99,7 @@ const CraftingButton = (
                 styles.base,
                 {
                   opacity: 1,
-                  backgroundColor: craftable ? 'green' : 'gray',
+                  backgroundColor: craftable ? '#6DA34D' : 'gray',
                   width: 110,
                   height: 65,
                   borderRadius: 10,
@@ -167,7 +167,7 @@ const CraftingButton = (
                 styles.base,
                 {
                   opacity: craftable ? 0.5 : 1,
-                  backgroundColor: craftable ? 'green' : 'gray',
+                  backgroundColor: craftable ? '#6DA34D' : 'gray',
                   width: 110,
                   height: 65,
                   borderRadius: 10,
@@ -185,7 +185,7 @@ const CraftingButton = (
               styles.base,
               {
                 opacity: 1,
-                backgroundColor: craftable ? 'green' : 'gray',
+                backgroundColor: craftable ? '#6DA34D' : 'gray',
                 width: 110,
                 height: 65,
                 borderRadius: 10,

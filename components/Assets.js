@@ -25,5 +25,6 @@ export default {
     'Wood Pickaxe': Asset.fromModule(
       require(`../assets/icons/woodpickaxe.png`)
     ),
+    Stick: Asset.fromModule(require(`../assets/icons/stick.png`)),
   },
 }

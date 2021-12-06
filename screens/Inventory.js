@@ -171,7 +171,7 @@ export default function Inventory({ navigation }, props) {
         }}
       >
         <Modal
-          animationType="slide"
+          animationType="fade"
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -183,11 +183,17 @@ export default function Inventory({ navigation }, props) {
             <View style={styles.modalView}>
               <ItemIcon name={currentItem.name} size={120} />
               <Font style={styles.text}>{currentItem.name}</Font>
-              <Font style={styles.textLight}>{currentItem.description}</Font>
+              <Font
+                style={[
+                  styles.textLight,
+                  { marginBottom: 20, color: '#757575' },
+                ]}
+              >
+                {currentItem.description}
+              </Font>
               <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
                 {currentItem.type === 'tool' ? (
                   <Font style={styles.textLight}>
-                    {`\n`}
                     Efficiency: {currentItem.efficiency}
                     {`\n`}
                     Strength: {currentItem.strength}
@@ -195,7 +201,6 @@ export default function Inventory({ navigation }, props) {
                 ) : null}
                 {currentItem.type === 'block' ? (
                   <Font style={styles.textLight}>
-                    {`\n`}
                     Rarity: {currentItem.probability}%
                   </Font>
                 ) : null}
@@ -339,7 +344,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     width: 300,
-    height: 475,
+    height: 500,
     margin: 20,
     backgroundColor: 'white',
     borderRadius: 10,

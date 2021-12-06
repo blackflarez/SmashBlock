@@ -37,17 +37,17 @@ const MenuBar = (
         visible={false}
       />
       <IconButton
+        name="pickaxe"
+        size={32}
+        color="#000"
+        onPress={onHandleCrafting}
+      />
+      <IconButton
         name="view-grid-outline"
         size={32}
         color="#000"
         onPress={onHandleInventory}
         notifications={inventoryNotificaitons}
-      />
-      <IconButton
-        name="pickaxe"
-        size={32}
-        color="#000"
-        onPress={onHandleCrafting}
       />
     </View>
   )

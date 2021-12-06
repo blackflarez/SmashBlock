@@ -39,7 +39,7 @@ export default [
   {
     name: 'Stone Pickaxe',
     description: 'Mine blocks faster.',
-    recipe: { Wood: 5, Stone: 10 },
+    recipe: { Stick: 2, Stone: 10 },
     strength: 1,
     efficiency: 2,
     health: 100,
@@ -50,7 +50,7 @@ export default [
   {
     name: 'Iron Pickaxe',
     description: 'Mine blocks even faster.',
-    recipe: { Wood: 5, Iron: 10 },
+    recipe: { Stick: 2, Iron: 10 },
     strength: 1.25,
     efficiency: 3,
     health: 200,
@@ -61,7 +61,7 @@ export default [
   {
     name: 'Gold Pickaxe',
     description: 'Mine blocks super fast.',
-    recipe: { Wood: 5, Gold: 10 },
+    recipe: { Stick: 2, Gold: 10 },
     strength: 1.95,
     efficiency: 6,
     health: 150,
@@ -72,12 +72,19 @@ export default [
   {
     name: 'Diamond Pickaxe',
     description: 'Mine blocks very fast.',
-    recipe: { Wood: 5, Diamond: 10 },
+    recipe: { Stick: 2, Diamond: 10 },
     strength: 16,
     efficiency: 1,
     health: 200,
     type: 'tool',
     colour: 'blue',
     metal: true,
+  },
+
+  {
+    name: 'Stick',
+    description: 'Useful for crafting.',
+    recipe: { Wood: 5 },
+    type: 'resource',
   },
 ]
