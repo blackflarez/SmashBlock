@@ -668,213 +668,118 @@ function Canvas(props, ref) {
   }
 
   function animation(type, target, reference) {
-    const place = new TWEEN.Tween(target.position)
-      .to(
-        {
-          x: reference.position.x,
-          y: reference.position.y + unit,
-          z: reference.position.z,
-        },
-        300
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.Out)
+    if (type === 'click') {
+      const inflate = new TWEEN.Tween(target.scale)
+        .to(
+          {
+            x: 0.0335,
+            y: 0.033,
+            z: 0.0335,
+          },
+          65
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
+      const deflate = new TWEEN.Tween(target.scale)
+        .to(
+          {
+            x: 0.032499998807907104,
+            y: 0.032499998807907104,
+            z: 0.032499998807907104,
+          },
+          40
+        )
+        .yoyo(true)
+      const inflateShadow = new TWEEN.Tween(shadowPlane.scale)
+        .to(
+          {
+            x: 0.29,
+            y: 0.29,
+            z: 0.29,
+          },
+          65
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
 
-    const cancel = new TWEEN.Tween(target.position)
-      .to(
-        {
-          x: reference.position.x,
-          y: reference.position.y - unit,
-          z: reference.position.z,
-        },
-        300
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.Out)
-
-    const inflate = new TWEEN.Tween(target.scale)
-      .to(
-        {
-          x: 0.0335,
-          y: 0.033,
-          z: 0.0335,
-        },
-        65
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    const inflateShadow = new TWEEN.Tween(shadowPlane.scale)
-      .to(
-        {
-          x: 0.29,
-          y: 0.29,
-          z: 0.29,
-        },
-        65
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    const deflateShadow = new TWEEN.Tween(shadowPlane.scale)
-      .to(
-        {
-          x: 0.2855,
-          y: 0.2855,
-          z: 0.2855,
-        },
-        40
-      )
-      .yoyo(true)
-
-    const inflateSlow = new TWEEN.Tween(target.scale)
-      .to(
-        {
-          x: 0.0335,
-          y: 0.033,
-          z: 0.0335,
-        },
-        300
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    const shrink = new TWEEN.Tween(target.scale)
-      .to(
-        {
-          x: 0.032499998807907104 / 2,
-          y: 0.032499998807907104 / 2,
-          z: 0.032499998807907104 / 2,
-        },
-        1
-      )
-      .yoyo(true)
-
-    const deflate = new TWEEN.Tween(target.scale)
-      .to(
-        {
-          x: 0.032499998807907104,
-          y: 0.032499998807907104,
-          z: 0.032499998807907104,
-        },
-        40
-      )
-      .yoyo(true)
-
-    const rise = new TWEEN.Tween(target.position)
-      .to(
-        {
-          x: reference.position.x,
-          y: reference.position.y + unit,
-          z: reference.position.z,
-        },
-        100
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.In)
-
-    const fadeOut = new TWEEN.Tween(target.material)
-      .to(
-        {
-          opacity: 0,
-        },
-        150
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.Out)
-      .onUpdate(() => {
-        target.castShadow = false
-        shadowPlane.visible = false
-        target.visible = false
-      })
-      .onComplete(
-        () => ((target.castShadow = false), (shadowPlane.visible = true))
-      )
-
-    const fadeIn = new TWEEN.Tween(target.material)
-      .to(
-        {
-          opacity: 100,
-        },
-        50
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.In)
-      .onComplete(() => {
-        target.visible = true
-      })
-
-    const fadeOutInverse = new TWEEN.Tween(target.material)
-      .to(
-        {
-          opacity: 0,
-        },
-        300
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.Out)
-      .onComplete(() => (target.castShadow = false))
-
-    const fadeInInverse = new TWEEN.Tween(target.material)
-      .to(
-        {
-          opacity: 100,
-        },
-        100
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Exponential.In)
-      .onUpdate(() => (target.castShadow = true))
-
-    const swingIn = new TWEEN.Tween(target.rotation)
-      .to(
-        {
-          x: 0.5,
-        },
-        50
-      )
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    const swingOut = new TWEEN.Tween(target.rotation)
-      .to(
-        {
-          x: -1,
-        },
-        400
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    const returnRotation = new TWEEN.Tween(target.rotation)
-      .to(
-        {
-          x: 0,
-          y: -0.78,
-          z: 0,
-        },
-        750
-      )
-      .yoyo(true)
-      .easing(TWEEN.Easing.Elastic.Out)
-
-    if (type === 'place') {
-      place.start()
-      return
-    } else if (type === 'cancel') {
-      cancel.start()
-      return
-    } else if (type === 'rise') {
-      inflate.chain(deflate)
-      inflate.start()
-      rise.start()
-      return
-    } else if (type === 'click') {
+      const deflateShadow = new TWEEN.Tween(shadowPlane.scale)
+        .to(
+          {
+            x: 0.2855,
+            y: 0.2855,
+            z: 0.2855,
+          },
+          40
+        )
+        .yoyo(true)
       inflate.chain(deflate)
       inflate.start()
       inflateShadow.chain(deflateShadow)
       inflateShadow.start()
       return
     } else if (type === 'destroy') {
+      const fadeOut = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          150
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onUpdate(() => {
+          target.castShadow = false
+          shadowPlane.visible = false
+          target.visible = false
+        })
+        .onComplete(
+          () => ((target.castShadow = false), (shadowPlane.visible = true))
+        )
+
+      const fadeIn = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 100,
+          },
+          50
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.In)
+        .onComplete(() => {
+          target.visible = true
+        })
+
+      const shrink = new TWEEN.Tween(target.scale)
+        .to(
+          {
+            x: 0.032499998807907104 / 2,
+            y: 0.032499998807907104 / 2,
+            z: 0.032499998807907104 / 2,
+          },
+          1
+        )
+        .yoyo(true)
+      const inflateSlow = new TWEEN.Tween(target.scale)
+        .to(
+          {
+            x: 0.0335,
+            y: 0.033,
+            z: 0.0335,
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
+      const deflate = new TWEEN.Tween(target.scale)
+        .to(
+          {
+            x: 0.032499998807907104,
+            y: 0.032499998807907104,
+            z: 0.032499998807907104,
+          },
+          40
+        )
+        .yoyo(true)
       fadeOut.chain(shrink)
       shrink.chain(fadeIn)
       fadeIn.chain(inflateSlow)
@@ -882,17 +787,70 @@ function Canvas(props, ref) {
       fadeOut.start()
       return
     } else if (type === 'returnRotation') {
+      const returnRotation = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 0,
+            y: -0.78,
+            z: 0,
+          },
+          750
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
       returnRotation.start()
       return
     } else if (type === 'swing') {
+      const fadeOutInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onComplete(() => (target.castShadow = false))
+
+      const fadeInInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 100,
+          },
+          100
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.In)
+        .onUpdate(() => (target.castShadow = true))
+
+      const swingIn = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 0.5,
+          },
+          50
+        )
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const swingOut = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: -1,
+          },
+          400
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
+
       fadeInInverse.chain(fadeOutInverse)
       fadeInInverse.start()
       swingIn.chain(swingOut)
       swingIn.start()
+      return
     }
   }
 
-  function destruction() {
+  async function destruction() {
     let target
     let index
     if (currentBlock.name === 'Wood') {
@@ -933,7 +891,7 @@ function Canvas(props, ref) {
             {
               opacity: 100,
             },
-            2000
+            1000
           )
           .easing(TWEEN.Easing.Exponential.Out)
           .onUpdate(() => (o.castShadow = true))
@@ -949,7 +907,7 @@ function Canvas(props, ref) {
           .onComplete(() => (o.castShadow = false))
 
         const hide = new TWEEN.Tween(o.material)
-          .to({}, 4000)
+          .to({}, 2000)
           .onUpdate(() => (target.visible = true))
           .onComplete(() => (target.visible = false))
 
@@ -995,8 +953,6 @@ function Canvas(props, ref) {
           .easing(TWEEN.Easing.Exponential.Out)
           .start()
 
-    particles[index].visible = true
-
     particles[index].traverse((o) => {
       if (o.isMesh) {
         o.material = new THREE.MeshStandardMaterial({
@@ -1009,7 +965,7 @@ function Canvas(props, ref) {
             {
               opacity: 100,
             },
-            100
+            50
           )
           .easing(TWEEN.Easing.Exponential.Out)
 
@@ -1022,8 +978,14 @@ function Canvas(props, ref) {
           )
           .easing(TWEEN.Easing.Cubic.Out)
 
+        const hide = new TWEEN.Tween(o.material)
+          .to({}, 950)
+          .onUpdate(() => (particles[index].visible = true))
+          .onComplete(() => (particles[index].visible = false))
+
         opaque.chain(fadeOut)
         opaque.start()
+        hide.start()
       }
     })
 
