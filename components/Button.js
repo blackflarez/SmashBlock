@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, Pressable, Text } from 'react-native'
+import { StyleSheet, Pressable, View, ActivityIndicator } from 'react-native'
 import { Font } from '../components'
 
 const Button = ({
@@ -11,7 +11,43 @@ const Button = ({
   onPress,
   width = '100%',
   containerStyle,
+  pending,
 }) => {
+  if (pending) {
+    return (
+      <Pressable
+        style={(args) => {
+          if (args.pressed) {
+            return [
+              styles.base,
+              {
+                opacity: 0.5,
+                backgroundColor,
+                width,
+              },
+              containerStyle,
+            ]
+          }
+
+          return [
+            styles.base,
+            {
+              opacity: 1,
+              backgroundColor,
+              width,
+              borderRadius,
+            },
+            containerStyle,
+          ]
+        }}
+      >
+        <View>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      </Pressable>
+    )
+  }
+
   return (
     <Pressable
       onPress={onPress}
