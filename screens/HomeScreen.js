@@ -97,7 +97,11 @@ export default function HomeScreen({ navigation }, props) {
 
   const handleInventory = async (f) => {
     let filter
-    f ? (filter = f) : (filter = 'all')
+    if (f) {
+      filter = f
+    } else {
+      filter = 'all'
+    }
     try {
       navigation.navigate('Inventory', { filter: filter })
     } catch (error) {
@@ -225,13 +229,13 @@ export default function HomeScreen({ navigation }, props) {
       />,
     ])
 
-    await Firebase.database()
+    Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
       .get()
       .then(async (snapshot) => {
         if (!snapshot.exists()) {
-          await Firebase.database()
+          Firebase.database()
             .ref(`users/${user.uid}/userData/newItems`)
             .child(`${block.name}`)
             .set(Firebase.firebase_.database.ServerValue.increment(1))
@@ -239,16 +243,14 @@ export default function HomeScreen({ navigation }, props) {
         }
       })
 
-    await Firebase.database()
+    Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
 
     if (block.name === 'Gold') {
-      await Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
-      await Firebase.database()
-        .ref(`scores/${user.uid}/score`)
-        .set(inventory.Gold)
+      Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
+      Firebase.database().ref(`scores/${user.uid}/score`).set(inventory.Gold)
     }
   }
 

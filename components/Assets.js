@@ -9,6 +9,7 @@ export default {
     Gold: Asset.fromModule(require(`../assets/icons/gold.png`)),
     Stone: Asset.fromModule(require(`../assets/icons/stone.png`)),
     Iron: Asset.fromModule(require(`../assets/icons/iron.png`)),
+    Diamond: Asset.fromModule(require(`../assets/icons/diamond.png`)),
     Wood: Asset.fromModule(require(`../assets/icons/wood.png`)),
     'Gold Pickaxe': Asset.fromModule(
       require(`../assets/icons/goldpickaxe.png`)

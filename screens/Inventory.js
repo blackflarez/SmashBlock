@@ -351,7 +351,7 @@ export default function Inventory({ navigation, route }, props) {
             renderItem={renderItem}
             keyExtractor={(item) => item.name}
             numColumns={3}
-            scrollEnabled={false}
+            scrollEnabled={true}
             contentContainerStyle={{ marginLeft: 3 }}
             refreshing={true}
           />
