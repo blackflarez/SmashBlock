@@ -95,9 +95,11 @@ export default function HomeScreen({ navigation }, props) {
     }
   }
 
-  const handleInventory = async () => {
+  const handleInventory = async (f) => {
+    let filter
+    f ? (filter = f) : (filter = 'all')
     try {
-      navigation.navigate('Inventory')
+      navigation.navigate('Inventory', { filter: filter })
     } catch (error) {
       console.log(error)
     }
@@ -357,7 +359,7 @@ export default function HomeScreen({ navigation }, props) {
       >
         <EquippedButton
           name={equipped ? equipped.name : null}
-          onPress={handleInventory}
+          onPress={() => handleInventory('tool')}
         />
       </Animated.View>
       <View style={{ flex: 1 }}>{plusses}</View>

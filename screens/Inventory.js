@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState, useEffect, useRef } from 'react'
+import React, { useContext, useState, useEffect, useRef, useMemo } from 'react'
 import {
   StyleSheet,
   Text,
@@ -24,8 +24,12 @@ function haptics(style) {
   }
 }
 
-export default function Inventory({ navigation }, props) {
+export default function Inventory({ navigation, route }, props) {
+  const { filter } = route.params
+  const [loading, setLoading] = useStateIfMounted(true)
   const [inventory, setInventory] = useStateIfMounted(null)
+  const [inventoryFiltered, setInventoryFiltered] = useStateIfMounted(null)
+  const [filterType, setFilterType] = useStateIfMounted(filter)
   const [modalVisible, setModalVisible] = useStateIfMounted(false)
   const [destroyModalVisible, setDestroyModalVisible] = useStateIfMounted(false)
   const [currentItem, setCurrentItem] = useState(Items[0])
@@ -42,6 +46,23 @@ export default function Inventory({ navigation }, props) {
       console.log(error)
     }
   }
+
+  useMemo(() => {
+    if (!loading) {
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: false,
+      }).start()
+      if (filterType === 'all') {
+        setInventoryFiltered(inventory)
+      } else {
+        setInventoryFiltered(
+          inventory.filter((data) => data.type === filterType)
+        )
+      }
+    }
+  }, [inventory, filterType])
 
   function getAmount() {
     try {
@@ -93,7 +114,7 @@ export default function Inventory({ navigation }, props) {
   const handleOpen = async (item) => {
     haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(true)
-    setCurrentItem(Items.find((o) => item.name === o.name))
+    setCurrentItem(item)
     try {
       await Firebase.database()
         .ref(`users/${user.uid}/userData/newItems/${item.name}`)
@@ -103,7 +124,7 @@ export default function Inventory({ navigation }, props) {
 
   useEffect(() => {
     async function init() {
-      await Firebase.database()
+      Firebase.database()
         .ref(`users/${user.uid}`)
         .get()
         .then((snapshot) => {
@@ -112,7 +133,7 @@ export default function Inventory({ navigation }, props) {
           }
         })
 
-      await Firebase.database()
+      Firebase.database()
         .ref(`users/${user.uid}/userData/newItems`)
         .get()
         .then((snapshot) => {
@@ -135,21 +156,17 @@ export default function Inventory({ navigation }, props) {
             var items = []
             snapshot.forEach(function (childNodes) {
               if (childNodes.val() > 0) {
-                let item = childNodes.key
+                let name = childNodes.key
                 let amount = childNodes.val()
-                items.push({ name: item, amount: amount })
+                let stats = Items.find((o) => name === o.name)
+                items.push({ ...stats, amount: amount })
               }
             })
             setInventory(items)
+            setLoading(false)
           } else {
             console.log('No data available')
           }
-
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: false,
-          }).start()
         })
     }
     init()
@@ -330,7 +347,7 @@ export default function Inventory({ navigation }, props) {
         </View>
         <View style={[styles.halfHeight]}>
           <FlatList
-            data={inventory}
+            data={inventoryFiltered}
             renderItem={renderItem}
             keyExtractor={(item) => item.name}
             numColumns={3}
@@ -338,6 +355,52 @@ export default function Inventory({ navigation }, props) {
             contentContainerStyle={{ marginLeft: 3 }}
             refreshing={true}
           />
+        </View>
+        <View style={styles.row}>
+          <Button
+            title={'All'}
+            titleSize={12}
+            width={90}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setFilterType('all')
+            }}
+            enabled={filterType === 'all'}
+          ></Button>
+          <Button
+            title={'Tools'}
+            titleSize={12}
+            width={90}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setFilterType('tool')
+            }}
+            enabled={filterType === 'tool'}
+          ></Button>
+          <Button
+            title={'Resources'}
+            titleSize={12}
+            width={90}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setFilterType('resource')
+            }}
+            enabled={filterType === 'resource'}
+          ></Button>
+          <Button
+            title={'Blocks'}
+            titleSize={12}
+            width={90}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setFilterType('block')
+            }}
+            enabled={filterType === 'block'}
+          ></Button>
         </View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
@@ -360,6 +423,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignSelf: 'center',
+    margin: 20,
+    width: 363,
   },
   quarterHeight: {
     flex: 1,
@@ -370,6 +435,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    alignSelf: 'center',
     marginBottom: 24,
   },
   title: {
