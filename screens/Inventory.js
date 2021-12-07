@@ -9,6 +9,7 @@ import {
   Modal,
   Platform,
 } from 'react-native'
+import Slider from '@react-native-community/slider'
 import { Button, Items, ItemButton, ItemIcon, Font } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
@@ -26,7 +27,9 @@ function haptics(style) {
 export default function Inventory({ navigation }, props) {
   const [inventory, setInventory] = useStateIfMounted(null)
   const [modalVisible, setModalVisible] = useStateIfMounted(false)
+  const [destroyModalVisible, setDestroyModalVisible] = useStateIfMounted(false)
   const [currentItem, setCurrentItem] = useState(Items[0])
+  const [destroyAmount, setDestroyAmount] = useState(1)
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
   const [equipped, setEquipped] = useStateIfMounted()
@@ -42,7 +45,11 @@ export default function Inventory({ navigation }, props) {
 
   function getAmount() {
     try {
-      return inventory.find((o) => o.name === currentItem.name).amount
+      let amount = inventory.find((o) => o.name === currentItem.name).amount
+      if (destroyAmount > amount && amount > 0) {
+        setDestroyAmount(amount)
+      }
+      return amount
     } catch (e) {}
   }
 
@@ -61,7 +68,7 @@ export default function Inventory({ navigation }, props) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(item)
-      .set(Firebase.firebase_.database.ServerValue.increment(-1))
+      .set(Firebase.firebase_.database.ServerValue.increment(-destroyAmount))
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .child(item)
@@ -71,6 +78,7 @@ export default function Inventory({ navigation }, props) {
           handleUnequip()
         }
       })
+    setDestroyAmount(1)
   }
 
   const handleUnequip = async () => {
@@ -173,6 +181,60 @@ export default function Inventory({ navigation }, props) {
         <Modal
           animationType="fade"
           transparent={true}
+          visible={destroyModalVisible}
+          onRequestClose={() => {
+            Alert.alert('Modal has been closed.')
+            setDestroyModalVisible(false), setDestroyAmount(1)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 400 }]}>
+              <ItemIcon name={currentItem.name} size={120} />
+              <Font style={styles.text}>Destroy {currentItem.name}</Font>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Font style={{ alignSelf: 'center' }}>{destroyAmount}</Font>
+
+                <Slider
+                  style={{ width: 200, height: 40, alignSelf: 'center' }}
+                  minimumValue={1}
+                  maximumValue={getAmount()}
+                  minimumTrackTintColor="#eee"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#6DA34D"
+                  step={Math.ceil(getAmount() / 100)}
+                  onValueChange={(value) => setDestroyAmount(value)}
+                />
+
+                <Button
+                  title={'Destroy'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    handleDestroy(currentItem.name),
+                      setDestroyModalVisible(false)
+                  }}
+                ></Button>
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setDestroyModalVisible(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.')
@@ -191,6 +253,7 @@ export default function Inventory({ navigation }, props) {
               >
                 {currentItem.description}
               </Font>
+
               <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
                 {currentItem.type === 'tool' ? (
                   <Font style={styles.textLight}>
@@ -243,9 +306,12 @@ export default function Inventory({ navigation }, props) {
                   backgroundColor={'#eee'}
                   containerStyle={{ marginTop: 20, alignSelf: 'center' }}
                   onPress={() => {
-                    handleDestroy(currentItem.name)
+                    setModalVisible(false),
+                      setDestroyAmount(1),
+                      setDestroyModalVisible(true)
                   }}
                 ></Button>
+
                 <Button
                   title={'Close'}
                   backgroundColor={'#eee'}

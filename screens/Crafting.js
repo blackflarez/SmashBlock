@@ -30,8 +30,7 @@ export default function Crafting({ navigation }, props) {
   const [inventory, setInventory] = useStateIfMounted(null)
   const [craftingAmount, setCraftingAmount] = useState(1)
   const [modalVisible, setModalVisible] = useState(false)
-  const [currentItem, setCurrentItem] = useState(Items[0])
-  const [recipeString, setRecipeString] = useState()
+  const [currentItem, setCurrentItem] = useState(Items[4])
   const [craftingItems, setCraftingItems] = useState(
     Items.filter((data) => data.recipe)
   )
@@ -46,6 +45,24 @@ export default function Crafting({ navigation }, props) {
     }
   }
 
+  function getRecipe() {
+    let list = []
+    for (let i in currentItem.recipe) {
+      let amount = 0
+      try {
+        amount =
+          inventory.find((e) => e.name === i).amount -
+          craftingAmount * currentItem.recipe[i]
+      } catch (err) {}
+      list.push(
+        <Font style={styles.textLight} key={i}>
+          {Amount(amount)}/{Amount(currentItem.recipe[i])} {i}
+        </Font>
+      )
+    }
+    return list
+  }
+
   function getAmount() {
     let have = 0
     let minimums = []
@@ -53,10 +70,10 @@ export default function Crafting({ navigation }, props) {
       try {
         have = inventory.find((e) => e.name === i).amount
         minimums.push(Math.floor(have / currentItem.recipe[i]))
-      } catch (err) {}
+      } catch (error) {}
     }
     let amount = Math.min.apply(null, minimums)
-    if (craftingAmount > amount) {
+    if (craftingAmount > amount && amount > 0) {
       setCraftingAmount(amount)
     }
     return amount
@@ -184,35 +201,9 @@ export default function Crafting({ navigation }, props) {
               >
                 {currentItem.description}
               </Font>
-              <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
-                {currentItem.type === 'tool' ? (
-                  <Font style={styles.textLight}>
-                    Efficiency: {currentItem.efficiency}
-                    {`\n`}
-                    Strength: {currentItem.strength}
-                  </Font>
-                ) : null}
-                {currentItem.type === 'block' ? (
-                  <Font style={styles.textLight}>
-                    Rarity: {currentItem.probability}%
-                  </Font>
-                ) : null}
 
-                {inventory !== null ? (
-                  <Font style={styles.textLight}>
-                    Quantity:{' '}
-                    {inventory.find((o) => o.name === currentItem.name).amount}
-                  </Font>
-                ) : null}
-              </View>
-              <Font
-                style={[
-                  styles.textLight,
-                  { marginBottom: 20, color: '#757575' },
-                ]}
-              >
-                {recipeString}
-              </Font>
+              {getRecipe()}
+
               <View
                 style={{
                   position: 'absolute',
@@ -221,16 +212,16 @@ export default function Crafting({ navigation }, props) {
                 }}
               >
                 <Font style={{ alignSelf: 'center' }}>
-                  {craftingAmount + '/' + getAmount(currentItem)}
+                  {craftingAmount + '/' + getAmount()}
                 </Font>
                 <Slider
                   style={{ width: 200, height: 40, alignSelf: 'center' }}
                   minimumValue={1}
-                  maximumValue={getAmount(currentItem)}
+                  maximumValue={getAmount()}
                   minimumTrackTintColor="#eee"
                   maximumTrackTintColor="#eee"
                   thumbTintColor="#6DA34D"
-                  step={1}
+                  step={Math.ceil(getAmount() / 100)}
                   onValueChange={(value) => setCraftingAmount(value)}
                 />
                 <Button
