@@ -43,6 +43,8 @@ var deltaX = 0,
   cubeTexture,
   pickaxe,
   pickaxeTexture,
+  glassPickaxeTexture,
+  pickaxeOpacity,
   cubeDestruction = [],
   particles = [],
   lastParticle,
@@ -108,17 +110,37 @@ function Canvas(props, ref) {
       },
 
       setTool(tool) {
-        pickaxe.material = new THREE.MeshLambertMaterial({
-          color: tool.colour,
-          map: pickaxeTexture,
-          transparent: true,
-          opacity: 0,
-        })
+        try {
+          setToolMaterial(tool)
+        } catch (error) {}
+
         strength = tool.strength
       },
     }),
     []
   )
+
+  function setToolMaterial(tool) {
+    if (tool.material === 'glass') {
+      pickaxe.material = new THREE.MeshPhongMaterial({
+        color: tool.colour,
+        map: glassPickaxeTexture,
+        transparent: true,
+        opacity: 0,
+        visible: false,
+      })
+      pickaxeOpacity = 3
+    } else {
+      pickaxe.material = new THREE.MeshStandardMaterial({
+        color: tool.colour,
+        map: pickaxeTexture,
+        transparent: true,
+        opacity: 0,
+        visible: false,
+      })
+      pickaxeOpacity = 100
+    }
+  }
 
   function haptics(style) {
     if (Platform.OS === 'ios') {
@@ -212,6 +234,9 @@ function Canvas(props, ref) {
       ).uri
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxe.png')
+      ).uri
+      const glassPickTex = Asset.fromModule(
+        require('../assets/models/glasspickaxe.png')
       ).uri
       const planeUri = Asset.fromModule(
         require('../assets/models/plane.glb')
@@ -336,6 +361,9 @@ function Canvas(props, ref) {
       let t6 = loadTexture(cubeTex).then((result) => {
         cubeTexture = result
       })
+      let t7 = loadTexture(glassPickTex).then((result) => {
+        glassPickaxeTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -381,19 +409,15 @@ function Canvas(props, ref) {
         t4,
         t5,
         t6,
+        t7,
         ms[area - 1],
       ]).then(() => {
         //Pick
         pickaxeTexture.flipY = false
+        glassPickaxeTexture.flipY = false
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
-        pickaxe.material = new THREE.MeshStandardMaterial({
-          color: props.equipped.colour,
-          map: pickaxeTexture,
-          transparent: true,
-          opacity: 0,
-        })
-
+        setToolMaterial(props.equipped)
         strength = props.equipped.strength
         pickaxe.castShadow = false
         pickaxe.receiveShadow = false
@@ -739,7 +763,7 @@ function Canvas(props, ref) {
       const fadeIn = new TWEEN.Tween(target.material)
         .to(
           {
-            opacity: 100,
+            opacity: 1,
           },
           50
         )
@@ -798,6 +822,7 @@ function Canvas(props, ref) {
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Elastic.Out)
+
       returnRotation.start()
       return
     } else if (type === 'swing') {
@@ -815,7 +840,7 @@ function Canvas(props, ref) {
       const fadeInInverse = new TWEEN.Tween(target.material)
         .to(
           {
-            opacity: 100,
+            opacity: pickaxeOpacity,
           },
           100
         )
@@ -842,10 +867,16 @@ function Canvas(props, ref) {
         .yoyo(true)
         .easing(TWEEN.Easing.Elastic.Out)
 
+      const hide = new TWEEN.Tween(target.material)
+        .to({}, 400)
+        .onUpdate(() => (target.material.visible = true))
+        .onComplete(() => (target.material.visible = false))
+
       fadeInInverse.chain(fadeOutInverse)
       fadeInInverse.start()
       swingIn.chain(swingOut)
       swingIn.start()
+      hide.start()
       return
     }
   }
@@ -869,27 +900,35 @@ function Canvas(props, ref) {
 
     target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
-    if (currentBlock.metal) {
+    let opacity = 100
+    if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
         map: cubeTexture,
       })
-    } else {
+    } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
         map: cubeTexture,
       })
+    } else if (currentBlock.material === 'glass') {
+      material = new THREE.MeshPhongMaterial({
+        color: currentBlock.colour,
+        map: cubeTexture,
+      })
+      opacity = 0.8
     }
 
     target.traverse((o) => {
       if (o.isMesh) {
         o.material = material
         o.material.transparent = true
+        o.material.opacity = opacity
 
         const opaque = new TWEEN.Tween(o.material)
           .to(
             {
-              opacity: 100,
+              opacity: opacity,
             },
             1000
           )
@@ -1125,19 +1164,28 @@ function Canvas(props, ref) {
     cube.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     cube.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
-    if (currentBlock.metal) {
+    if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
         map: cubeTexture,
       })
-    } else {
+    } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
         map: cubeTexture,
+      })
+    } else if (currentBlock.material === 'glass') {
+      material = new THREE.MeshStandardMaterial({
+        color: currentBlock.colour,
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
+        map: cubeTexture,
+        transparent: true,
+        opacity: 0.95,
       })
     }
     block.object.material = material
