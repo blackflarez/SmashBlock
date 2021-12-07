@@ -12,6 +12,7 @@ const Button = ({
   width = '100%',
   containerStyle,
   pending,
+  enabled,
 }) => {
   if (pending) {
     return (
@@ -24,6 +25,7 @@ const Button = ({
                 opacity: 0.5,
                 backgroundColor,
                 width,
+                borderRadius,
               },
               containerStyle,
             ]
@@ -48,6 +50,41 @@ const Button = ({
     )
   }
 
+  if (enabled) {
+    return (
+      <Pressable
+        onPress={onPress}
+        style={(args) => {
+          if (args.pressed) {
+            return [
+              styles.base,
+              {
+                opacity: 0.5,
+                backgroundColor: '#C3C3C3',
+                width,
+                borderRadius,
+              },
+              containerStyle,
+            ]
+          }
+
+          return [
+            styles.base,
+            {
+              opacity: 1,
+              backgroundColor: '#C3C3C3',
+              width,
+              borderRadius,
+            },
+            containerStyle,
+          ]
+        }}
+      >
+        <Font style={{ color: titleColor, fontSize: titleSize }}>{title}</Font>
+      </Pressable>
+    )
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -59,6 +96,7 @@ const Button = ({
               opacity: 0.5,
               backgroundColor,
               width,
+              borderRadius,
             },
             containerStyle,
           ]

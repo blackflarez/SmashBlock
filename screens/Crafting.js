@@ -28,6 +28,7 @@ function haptics(style) {
 export default function Crafting({ navigation }, props) {
   const [pending, setPending] = useState(false)
   const [inventory, setInventory] = useStateIfMounted(null)
+  const [filterType, setFilterType] = useState('all')
   const [craftingAmount, setCraftingAmount] = useState(1)
   const [modalVisible, setModalVisible] = useState(false)
   const [currentItem, setCurrentItem] = useState(Items[4])
@@ -263,6 +264,45 @@ export default function Crafting({ navigation }, props) {
             }}
           />
         </View>
+        <View style={styles.row}>
+          <Button
+            title={'All'}
+            width={100}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setCraftingItems(Items.filter((data) => data.recipe)),
+                setFilterType('all')
+            }}
+            enabled={filterType === 'all'}
+          ></Button>
+          <Button
+            title={'Tools'}
+            width={100}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setCraftingItems(
+                Items.filter((data) => data.recipe && data.type === 'tool'),
+                setFilterType('tool')
+              )
+            }}
+            enabled={filterType === 'tool'}
+          ></Button>
+          <Button
+            title={'Resources'}
+            width={100}
+            backgroundColor={'#eee'}
+            containerStyle={{ alignSelf: 'center', margin: 5 }}
+            onPress={() => {
+              setCraftingItems(
+                Items.filter((data) => data.recipe && data.type === 'resource'),
+                setFilterType('resource')
+              )
+            }}
+            enabled={filterType === 'resource'}
+          ></Button>
+        </View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
     </View>
@@ -296,6 +336,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    alignSelf: 'center',
     marginBottom: 24,
   },
   title: {
