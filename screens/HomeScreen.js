@@ -8,6 +8,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   TouchableOpacity,
+  SafeAreaView,
 } from 'react-native'
 import {
   InputField,
@@ -333,14 +334,38 @@ export default function HomeScreen({ navigation }, props) {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       <StatusBar style="dark" />
 
       <Animated.View
         style={{
           opacity: introFadeAnim,
           position: 'absolute',
-          bottom: 50,
+          flex: 1,
+          top: 75,
+          left: 20,
+        }}
+      >
+        <EquippedButton
+          name={equipped ? equipped.name : null}
+          onPress={() => handleInventory('tool')}
+        />
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          opacity: introFadeAnim,
+          position: 'absolute',
+          flex: 1,
+          bottom: 75,
+          alignSelf: 'center',
         }}
       >
         <MenuBar
@@ -349,19 +374,7 @@ export default function HomeScreen({ navigation }, props) {
           onHandleProfile={handleProfile}
           onHandleScores={handleScores}
           inventoryNotificaitons={inventoryNotificaitons}
-        />
-      </Animated.View>
-      <Animated.View
-        style={{
-          opacity: introFadeAnim,
-          position: 'absolute',
-          top: 60,
-          left: 20,
-        }}
-      >
-        <EquippedButton
-          name={equipped ? equipped.name : null}
-          onPress={() => handleInventory('tool')}
+          style={{ flex: 1, alignSelf: 'center' }}
         />
       </Animated.View>
       <View style={{ flex: 1 }}>{plusses}</View>
@@ -374,18 +387,11 @@ export default function HomeScreen({ navigation }, props) {
           ref={canvas}
         />
       </View>
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
   title: {
     fontSize: 24,
     fontWeight: '600',
@@ -414,8 +420,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   canvas: {
-    width: '100%',
-    height: '100%',
     zIndex: -1,
     position: 'absolute',
   },

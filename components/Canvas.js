@@ -44,7 +44,6 @@ var deltaX = 0,
   pickaxe,
   pickaxeTexture,
   glassPickaxeTexture,
-  pickaxeOpacity,
   cubeDestruction = [],
   particles = [],
   lastParticle,
@@ -53,6 +52,7 @@ var deltaX = 0,
   plane,
   shadowPlane,
   planeTexture,
+  planeColour,
   outerFloors = [],
   world,
   renderer,
@@ -129,7 +129,6 @@ function Canvas(props, ref) {
         opacity: 0,
         visible: false,
       })
-      pickaxeOpacity = 3
     } else {
       pickaxe.material = new THREE.MeshStandardMaterial({
         color: tool.colour,
@@ -138,7 +137,6 @@ function Canvas(props, ref) {
         opacity: 0,
         visible: false,
       })
-      pickaxeOpacity = 100
     }
   }
 
@@ -167,6 +165,8 @@ function Canvas(props, ref) {
       world = new THREE.Group()
       toolContainer = new THREE.Group()
 
+      scene.background = new THREE.Color(0xbde0fe)
+
       //renderer
       renderer = new Renderer({
         gl,
@@ -194,12 +194,12 @@ function Canvas(props, ref) {
       mouse = new THREE.Vector2()
 
       //lights
-      const light = new THREE.DirectionalLight(0xffffff, 2.5)
+      const light = new THREE.DirectionalLight(0xffffff, 3)
       light.position.set(-200, 300, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 3)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
 
       world.add(light)
       world.add(ambientLight)
@@ -425,8 +425,10 @@ function Canvas(props, ref) {
         toolContainer.add(pickaxe)
 
         //shadowPlane
+        planeColour = 0xb08968
+
         shadowPlane.material = new THREE.MeshStandardMaterial({
-          color: 0xeeeeee,
+          color: planeColour,
         })
         shadowPlane.scale.set(0.2855, 0.2855, 0.2855)
         shadowPlane.material.map = planeTexture
@@ -437,7 +439,7 @@ function Canvas(props, ref) {
 
         //plane
         plane.material = new THREE.MeshStandardMaterial({
-          color: 0xeeeeee,
+          color: planeColour,
         })
         plane.receiveShadow = true
         world.add(plane)
@@ -630,8 +632,8 @@ function Canvas(props, ref) {
       if (scene.rotation.x > 0.6) {
         scene.rotation.x = 0.6
       }
-      if (scene.rotation.x < -0.35) {
-        scene.rotation.x = -0.35
+      if (scene.rotation.x < -0.3) {
+        scene.rotation.x = -0.3
       }
 
       if (deltaX > 0) {
@@ -840,7 +842,7 @@ function Canvas(props, ref) {
       const fadeInInverse = new TWEEN.Tween(target.material)
         .to(
           {
-            opacity: pickaxeOpacity,
+            opacity: 10,
           },
           100
         )

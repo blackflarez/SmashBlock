@@ -19,33 +19,32 @@ const MenuBar = (
     <View
       style={{
         flexDirection: 'row',
-        marginTop: 'auto',
       }}
     >
       <IconButton
         name="account-outline"
         size={32}
-        color="#000"
+        color="#212529"
         onPress={onHandleProfile}
         visible={false}
       />
       <IconButton
         name="trophy-variant-outline"
         size={32}
-        color="#000"
+        color="#212529"
         onPress={onHandleScores}
         visible={false}
       />
       <IconButton
         name="pickaxe"
         size={32}
-        color="#000"
+        color="#212529"
         onPress={onHandleCrafting}
       />
       <IconButton
         name="view-grid-outline"
         size={32}
-        color="#000"
+        color="#212529"
         onPress={onHandleInventory}
         notifications={inventoryNotificaitons}
       />
