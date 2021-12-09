@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { Button, Font } from '../components'
+import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
 
@@ -52,7 +53,14 @@ export default function Profile({ navigation }, props) {
   }, [])
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
+    <BlurView
+      intensity={100}
+      tint="light"
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+      }}
+    >
       <Animated.View
         style={{
           ...props.style,
@@ -62,7 +70,7 @@ export default function Profile({ navigation }, props) {
       >
         <StatusBar style="light" />
 
-        <View style={styles.quarterHeight}>
+        <View style={[styles.quarterHeight, { marginTop: 72 }]}>
           <Font style={styles.title}>{username}</Font>
         </View>
         <View style={styles.halfHeight}>
@@ -74,24 +82,21 @@ export default function Profile({ navigation }, props) {
             onPress={handleSignOut}
             width={120}
             titleSize={18}
-            backgroundColor={'#eee'}
             containerStyle={{ marginBottom: 48, alignSelf: 'center' }}
           />
         </View>
       </Animated.View>
-    </View>
+    </BlurView>
   )
 }
 
 const styles = StyleSheet.create({
   halfHeight: {
     flex: 3,
-    backgroundColor: '#fff',
     margin: 24,
   },
   quarterHeight: {
     flex: 1,
-    backgroundColor: '#fff',
     margin: 24,
   },
   title: {

@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Animated, FlatList } from 'react-native'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { Amount, Font } from '../components'
+import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
 
@@ -60,7 +61,14 @@ export default function Scores({ navigation }, props) {
     ) : null
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
+    <BlurView
+      intensity={100}
+      tint="light"
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+      }}
+    >
       <Animated.View
         style={{
           ...props.style,
@@ -69,8 +77,7 @@ export default function Scores({ navigation }, props) {
         }}
       >
         <StatusBar style="light" />
-
-        <View style={styles.quarterHeight}>
+        <View style={[styles.quarterHeight, { marginTop: 72 }]}>
           <Font style={styles.title}>Levels</Font>
         </View>
         <View style={styles.halfHeight}>
@@ -88,19 +95,17 @@ export default function Scores({ navigation }, props) {
         </View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
-    </View>
+    </BlurView>
   )
 }
 
 const styles = StyleSheet.create({
   halfHeight: {
     flex: 3,
-    backgroundColor: '#fff',
     margin: 24,
   },
   quarterHeight: {
     flex: 1,
-    backgroundColor: '#fff',
     margin: 24,
   },
   title: {

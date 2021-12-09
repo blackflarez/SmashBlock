@@ -36,7 +36,7 @@ const MenuBar = (
         visible={false}
       />
       <IconButton
-        name="pickaxe"
+        name="toolbox-outline"
         size={32}
         color="#212529"
         onPress={onHandleCrafting}
