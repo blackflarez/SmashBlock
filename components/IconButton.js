@@ -25,7 +25,7 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
               styles.base,
               {
                 opacity: 0.5,
-                backgroundColor: '#eee',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 borderRadius: 50,
                 width: 50,
                 height: 50,
@@ -37,7 +37,7 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
             styles.base,
             {
               opacity: 1,
-              backgroundColor: '#eee',
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
               borderRadius: 50,
               width: 50,
               height: 50,

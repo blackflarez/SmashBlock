@@ -57,9 +57,17 @@ export default function Inventory({ navigation, route }, props) {
       if (filterType === 'all') {
         setInventoryFiltered(inventory)
       } else {
-        setInventoryFiltered(
-          inventory.filter((data) => data.type === filterType)
-        )
+        if (filterType === 'resource') {
+          setInventoryFiltered(
+            inventory.filter(
+              (data) => data.type === 'resource' || data.type === 'block'
+            )
+          )
+        } else {
+          setInventoryFiltered(
+            inventory.filter((data) => data.type === filterType)
+          )
+        }
       }
     }
   }, [inventory, filterType])
@@ -342,7 +350,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={styles.quarterHeight}>
+        <View style={{ margin: 24 }}>
           <Font style={styles.title}>Inventory</Font>
         </View>
         <View style={[styles.halfHeight]}>
@@ -389,17 +397,6 @@ export default function Inventory({ navigation, route }, props) {
               setFilterType('resource')
             }}
             enabled={filterType === 'resource'}
-          ></Button>
-          <Button
-            title={'Blocks'}
-            titleSize={12}
-            width={90}
-            backgroundColor={'#eee'}
-            containerStyle={{ alignSelf: 'center', margin: 5 }}
-            onPress={() => {
-              setFilterType('block')
-            }}
-            enabled={filterType === 'block'}
           ></Button>
         </View>
         <View style={styles.quarterHeight}></View>

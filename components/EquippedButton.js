@@ -13,7 +13,6 @@ function haptics(style) {
 
 const EquippedButton = (
   {
-    color,
     size,
     onPress,
     name,
@@ -43,7 +42,7 @@ const EquippedButton = (
                 justifyContent: 'center',
                 margin: margin,
                 opacity: 0.5,
-                backgroundColor: '#eee',
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 borderRadius: 10,
                 width: 70,
                 height: 70,
@@ -57,7 +56,7 @@ const EquippedButton = (
               justifyContent: 'center',
               margin: margin,
               opacity: 1,
-              backgroundColor: '#eee',
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
               borderRadius: 10,
               width: 70,
               height: 70,

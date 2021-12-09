@@ -247,7 +247,7 @@ export default function Crafting({ navigation }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={styles.quarterHeight}>
+        <View style={{ margin: 24 }}>
           <Font style={styles.title}>Crafting</Font>
         </View>
 
@@ -267,7 +267,8 @@ export default function Crafting({ navigation }, props) {
         <View style={styles.row}>
           <Button
             title={'All'}
-            width={100}
+            titleSize={12}
+            width={90}
             backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
@@ -278,7 +279,8 @@ export default function Crafting({ navigation }, props) {
           ></Button>
           <Button
             title={'Tools'}
-            width={100}
+            titleSize={12}
+            width={90}
             backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
@@ -291,7 +293,8 @@ export default function Crafting({ navigation }, props) {
           ></Button>
           <Button
             title={'Resources'}
-            width={100}
+            titleSize={12}
+            width={90}
             backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
