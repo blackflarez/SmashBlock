@@ -12,8 +12,12 @@ import Crafting from '../screens/Crafting'
 import { AntDesign } from '@expo/vector-icons'
 
 const Stack = createStackNavigator()
+var transparent = 'transparent'
 var animation = true
 
+if (Platform.OS === 'android') {
+  transparent = '#fff'
+}
 if (Platform.OS === 'web') {
   animation = false
 }
@@ -23,9 +27,10 @@ export default function HomeStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
+        headerTransparent: true,
         gestureEnabled: true,
-        animationEnabled: animation,
         gestureDirection: 'vertical',
+        animationEnabled: animation,
         gestureResponseDistance: 800,
         title: '',
         headerBackTitleVisible: false,
@@ -43,6 +48,7 @@ export default function HomeStack() {
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+          cardStyle: { backgroundColor: transparent },
         }}
       />
       <Stack.Screen
@@ -51,6 +57,7 @@ export default function HomeStack() {
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+          cardStyle: { backgroundColor: transparent },
         }}
       />
       <Stack.Screen
@@ -59,6 +66,7 @@ export default function HomeStack() {
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+          cardStyle: { backgroundColor: transparent },
         }}
       />
       <Stack.Screen
@@ -67,6 +75,7 @@ export default function HomeStack() {
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+          cardStyle: { backgroundColor: transparent },
         }}
       />
     </Stack.Navigator>

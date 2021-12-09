@@ -92,9 +92,6 @@ var renderWidth = width,
   shadowEnabled = true
 
 if (Platform.OS === 'android') {
-  renderWidth = width / 3
-  renderHeight = height / 3
-  renderScale = 3
   shadowEnabled = false
 }
 
@@ -195,7 +192,7 @@ function Canvas(props, ref) {
 
       //lights
       const light = new THREE.DirectionalLight(0xffffff, 3)
-      light.position.set(-200, 300, 150)
+      light.position.set(-120, 300, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
@@ -425,7 +422,7 @@ function Canvas(props, ref) {
         toolContainer.add(pickaxe)
 
         //shadowPlane
-        planeColour = 0xb08968
+        planeColour = 0x997b66
 
         shadowPlane.material = new THREE.MeshStandardMaterial({
           color: planeColour,
@@ -1053,25 +1050,19 @@ function Canvas(props, ref) {
     smoke[index].scale.set(0, 0, 0)
     smoke[index].traverse((o) => {
       if (o.isMesh) {
-        o.position.set(
-          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1),
-          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1),
-          Math.random() * 0.02 * (Math.round(Math.random()) ? 1 : -1)
-        )
         o.material = new THREE.MeshBasicMaterial({
           color: currentBlock.colour,
           transparent: true,
           map: smokeTexture,
           blending: THREE.AdditiveBlending,
-          opacity: 2,
           depthWrite: false,
         })
         const scaleUp = new TWEEN.Tween(smoke[index].scale)
           .to(
             {
-              x: 0.045,
-              y: 0.045,
-              z: 0.045,
+              x: 1.55,
+              y: 1.55,
+              z: 1.55,
             },
             600
           )
@@ -1089,7 +1080,7 @@ function Canvas(props, ref) {
         const opaque = new TWEEN.Tween(o.material)
           .to(
             {
-              opacity: 2,
+              opacity: 0.75,
             },
             50
           )

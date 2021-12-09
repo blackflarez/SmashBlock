@@ -99,7 +99,9 @@ const CraftingButton = (
                 styles.base,
                 {
                   opacity: 1,
-                  backgroundColor: craftable ? '#6DA34D' : 'gray',
+                  backgroundColor: craftable
+                    ? 'rgba(109, 163, 77, 0.8)'
+                    : 'rgba(128, 128, 128, 0.8)',
                   width: 110,
                   height: 65,
                   borderRadius: 10,
@@ -142,7 +144,7 @@ const CraftingButton = (
       <View
         style={{
           opacity: 1,
-          backgroundColor: '#fff',
+          backgroundColor: 'rgba(256, 256, 256, 0.5)',
           borderRadius: 10,
           width: 340,
           height: 80,
@@ -167,7 +169,9 @@ const CraftingButton = (
                 styles.base,
                 {
                   opacity: craftable ? 0.5 : 1,
-                  backgroundColor: craftable ? '#6DA34D' : 'gray',
+                  backgroundColor: craftable
+                    ? 'rgba(109, 163, 77, 0.8)'
+                    : 'rgba(128, 128, 128, 0.8)',
                   width: 110,
                   height: 65,
                   borderRadius: 10,
@@ -185,7 +189,9 @@ const CraftingButton = (
               styles.base,
               {
                 opacity: 1,
-                backgroundColor: craftable ? '#6DA34D' : 'gray',
+                backgroundColor: craftable
+                  ? 'rgba(109, 163, 77, 0.8)'
+                  : 'rgba(128, 128, 128, 0.8)',
                 width: 110,
                 height: 65,
                 borderRadius: 10,

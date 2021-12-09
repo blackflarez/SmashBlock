@@ -4,7 +4,7 @@ import { Font } from '../components'
 
 const Button = ({
   title,
-  backgroundColor = '#fff',
+  backgroundColor = 'rgba(256, 256, 256, 0.5)',
   borderRadius = 10,
   titleColor = '#000',
   titleSize = 14,
@@ -60,7 +60,7 @@ const Button = ({
               styles.base,
               {
                 opacity: 0.5,
-                backgroundColor: '#C3C3C3',
+                backgroundColor: 'rgba(52, 52, 52, 0.5)',
                 width,
                 borderRadius,
               },
@@ -72,7 +72,7 @@ const Button = ({
             styles.base,
             {
               opacity: 1,
-              backgroundColor: '#C3C3C3',
+              backgroundColor: 'rgba(52, 52, 52, 0.5)',
               width,
               borderRadius,
             },

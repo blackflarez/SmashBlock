@@ -364,7 +364,7 @@ export default function HomeScreen({ navigation }, props) {
           opacity: introFadeAnim,
           position: 'absolute',
           flex: 1,
-          bottom: 75,
+          bottom: 50,
           alignSelf: 'center',
         }}
       >

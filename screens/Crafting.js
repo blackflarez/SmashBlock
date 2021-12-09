@@ -16,6 +16,7 @@ import { CraftingButton, Font, ItemIcon, Amount } from '../components'
 import { useStateIfMounted } from 'use-state-if-mounted'
 import * as Haptics from 'expo-haptics'
 import _ from 'lodash'
+import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
 
@@ -172,7 +173,14 @@ export default function Crafting({ navigation }, props) {
     ) : null
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
+    <BlurView
+      intensity={100}
+      tint="light"
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+      }}
+    >
       <Animated.View
         style={{
           ...props.style,
@@ -247,7 +255,7 @@ export default function Crafting({ navigation }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={{ margin: 24 }}>
+        <View style={{ margin: 24, marginTop: 72 }}>
           <Font style={styles.title}>Crafting</Font>
         </View>
 
@@ -269,7 +277,6 @@ export default function Crafting({ navigation }, props) {
             title={'All'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setCraftingItems(Items.filter((data) => data.recipe)),
@@ -281,7 +288,6 @@ export default function Crafting({ navigation }, props) {
             title={'Tools'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setCraftingItems(
@@ -295,7 +301,6 @@ export default function Crafting({ navigation }, props) {
             title={'Resources'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setCraftingItems(
@@ -308,14 +313,13 @@ export default function Crafting({ navigation }, props) {
         </View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
-    </View>
+    </BlurView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingBottom: 250,
     paddingHorizontal: 12,
     justifyContent: 'center',
@@ -323,7 +327,7 @@ const styles = StyleSheet.create({
   },
   halfHeight: {
     flex: 6,
-    backgroundColor: '#eee',
+    backgroundColor: 'rgba(52, 52, 52, 0.1)',
     margin: 20,
     borderRadius: 10,
     justifyContent: 'center',
@@ -332,7 +336,6 @@ const styles = StyleSheet.create({
   },
   quarterHeight: {
     flex: 1,
-    backgroundColor: '#fff',
     margin: 24,
   },
   row: {

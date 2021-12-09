@@ -15,6 +15,7 @@ import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
 import * as Haptics from 'expo-haptics'
+import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
 
@@ -195,7 +196,14 @@ export default function Inventory({ navigation, route }, props) {
   )
 
   return (
-    <View style={{ flex: 1, flexDirection: 'column', backgroundColor: '#fff' }}>
+    <BlurView
+      intensity={100}
+      tint="light"
+      style={{
+        flex: 1,
+        flexDirection: 'column',
+      }}
+    >
       <Animated.View
         style={{
           ...props.style,
@@ -350,7 +358,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={{ margin: 24 }}>
+        <View style={{ margin: 24, marginTop: 72 }}>
           <Font style={styles.title}>Inventory</Font>
         </View>
         <View style={[styles.halfHeight]}>
@@ -369,7 +377,6 @@ export default function Inventory({ navigation, route }, props) {
             title={'All'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setFilterType('all')
@@ -380,7 +387,6 @@ export default function Inventory({ navigation, route }, props) {
             title={'Tools'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setFilterType('tool')
@@ -391,7 +397,6 @@ export default function Inventory({ navigation, route }, props) {
             title={'Resources'}
             titleSize={12}
             width={90}
-            backgroundColor={'#eee'}
             containerStyle={{ alignSelf: 'center', margin: 5 }}
             onPress={() => {
               setFilterType('resource')
@@ -401,14 +406,13 @@ export default function Inventory({ navigation, route }, props) {
         </View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
-    </View>
+    </BlurView>
   )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingBottom: 250,
     paddingHorizontal: 12,
     justifyContent: 'center',
@@ -416,7 +420,7 @@ const styles = StyleSheet.create({
   },
   halfHeight: {
     flex: 6,
-    backgroundColor: '#eee',
+    backgroundColor: 'rgba(52, 52, 52, 0.1)',
     borderRadius: 10,
     justifyContent: 'center',
     alignSelf: 'center',
@@ -425,7 +429,6 @@ const styles = StyleSheet.create({
   },
   quarterHeight: {
     flex: 1,
-    backgroundColor: '#fff',
     margin: 24,
   },
   row: {
