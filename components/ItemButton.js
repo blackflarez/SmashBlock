@@ -37,6 +37,7 @@ const ItemButton = (
   if (equipped === name) {
     borderWidth = 1.15
   }
+
   return (
     <View>
       <Pressable
@@ -73,10 +74,14 @@ const ItemButton = (
             },
           ]
         }}
-        onPress={() => {
-          onPress()
-          haptics(Haptics.ImpactFeedbackStyle.Light)
-        }}
+        onPress={
+          isNaN(amount) || amount === 0 || amount === null
+            ? null
+            : () => {
+                onPress()
+                haptics(Haptics.ImpactFeedbackStyle.Light)
+              }
+        }
       >
         <Badge
           visible={newItem}
@@ -89,10 +94,12 @@ const ItemButton = (
         >
           New!
         </Badge>
-        <ItemIcon name={name} size={60} />
+        {name !== null ? <ItemIcon name={name} size={60} /> : null}
 
         <Badge
-          visible={isNaN(amount) ? false : true}
+          visible={
+            isNaN(amount) || amount === 0 || amount === null ? false : true
+          }
           size={20}
           style={{
             ...props.style,

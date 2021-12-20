@@ -6,11 +6,12 @@ export default {
     'break.m4a': Asset.fromModule(require(`../assets/sounds/break.m4a`)),
   },
   icons: {
-    Gold: Asset.fromModule(require(`../assets/icons/gold.png`)),
+    'Gold Ore': Asset.fromModule(require(`../assets/icons/gold.png`)),
     Stone: Asset.fromModule(require(`../assets/icons/stone.png`)),
-    Iron: Asset.fromModule(require(`../assets/icons/iron.png`)),
+    'Iron Ore': Asset.fromModule(require(`../assets/icons/iron.png`)),
     Diamond: Asset.fromModule(require(`../assets/icons/diamond.png`)),
     Wood: Asset.fromModule(require(`../assets/icons/wood.png`)),
+    Coal: Asset.fromModule(require(`../assets/icons/coal.png`)),
     'Gold Pickaxe': Asset.fromModule(
       require(`../assets/icons/goldpickaxe.png`)
     ),
@@ -27,5 +28,7 @@ export default {
       require(`../assets/icons/woodpickaxe.png`)
     ),
     Stick: Asset.fromModule(require(`../assets/icons/stick.png`)),
+    'Gold Ingot': Asset.fromModule(require(`../assets/icons/goldingot.png`)),
+    'Iron Ingot': Asset.fromModule(require(`../assets/icons/ironingot.png`)),
   },
 }

@@ -25,6 +25,7 @@ import { useFocusEffect } from '@react-navigation/native'
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
+  const [canvasLoading, setCanvasLoading] = useState(true)
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
   const [firstTimeDialog, setFirstTimeDialog] = useState(true)
@@ -55,14 +56,12 @@ export default function HomeScreen({ navigation }, props) {
                 item = Items.find((data) => data.name === snapshot.val())
               } else {
                 item = {
-                  name: 'Wood Pickaxe',
+                  name: 'Fists',
                   strength: 1,
                   efficiency: 1,
-                  colour: '#322111',
                 }
               }
             })
-
           if (isActive) {
             setEquipped(item)
             canvas.current.setTool(item)
@@ -71,13 +70,11 @@ export default function HomeScreen({ navigation }, props) {
           console.log(error)
         }
       }
-
       onFocus()
-
       return () => {
         isActive = false
       }
-    }, [inventory])
+    }, [inventory, canvasLoading])
   )
 
   const handleSignOut = async () => {
@@ -105,6 +102,14 @@ export default function HomeScreen({ navigation }, props) {
     }
     try {
       navigation.navigate('Inventory', { filter: filter })
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleFurnace = async () => {
+    try {
+      navigation.navigate('Furnace')
     } catch (error) {
       console.log(error)
     }
@@ -196,11 +201,17 @@ export default function HomeScreen({ navigation }, props) {
       await Firebase.database()
         .ref(`users/${user.uid}`)
         .get()
-        .then((snapshot) => {
+        .then(async (snapshot) => {
           if (snapshot.exists()) {
             setInventory(snapshot.val().userData.inventory)
             setName(snapshot.val().userData.name)
             setFirstTimeDialog(false)
+            await Firebase.database()
+              .ref(`scores/${user.uid}/name`)
+              .set(snapshot.val().userData.name)
+            await Firebase.database()
+              .ref(`scores/${user.uid}/score`)
+              .set(snapshot.val().userData.inventory['Gold Ore'])
           } else {
             setDatabase()
           }
@@ -215,15 +226,18 @@ export default function HomeScreen({ navigation }, props) {
     init()
   }, [])
 
-  async function updateBalance(block, bonus, destroy, coordinates) {
-    var amount = Math.ceil(equipped.efficiency * bonus)
+  async function updateBalance(block, destroy, coordinates, damage) {
+    var amount = Math.ceil(equipped.efficiency * damage)
+    if (destroy) {
+      amount *= Math.ceil(Math.random() * (4 - 2) + 2)
+    }
 
     setPlusses((plusses) => [
       ...(plusses.length > 15 ? plusses.splice(plusses.length - 10) : plusses),
       <Plus
         currentBlockColour={block.colour}
         amount={amount}
-        bonus={bonus}
+        bonus={destroy}
         currentBlock={block.name}
         key={Math.random(1000)}
         coordinates={coordinates}
@@ -248,11 +262,6 @@ export default function HomeScreen({ navigation }, props) {
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${block.name}`)
       .set(Firebase.firebase_.database.ServerValue.increment(amount))
-
-    if (block.name === 'Gold') {
-      Firebase.database().ref(`scores/${user.uid}/name`).set(`${name}`)
-      Firebase.database().ref(`scores/${user.uid}/score`).set(inventory.Gold)
-    }
   }
 
   function generateBlock() {
@@ -373,6 +382,7 @@ export default function HomeScreen({ navigation }, props) {
           onHandleCrafting={handleCrafting}
           onHandleProfile={handleProfile}
           onHandleScores={handleScores}
+          onHandleFurnace={handleFurnace}
           inventoryNotificaitons={inventoryNotificaitons}
           style={{ flex: 1, alignSelf: 'center' }}
         />
@@ -384,6 +394,7 @@ export default function HomeScreen({ navigation }, props) {
           equipped={equipped}
           updateBalance={updateBalance}
           generateBlock={generateBlock}
+          setLoading={() => setCanvasLoading(false)}
           ref={canvas}
         />
       </View>

@@ -9,6 +9,7 @@ import Scores from '../screens/Scores'
 import Inventory from '../screens/Inventory'
 import Profile from '../screens/Profile'
 import Crafting from '../screens/Crafting'
+import Furnace from '../screens/Furnace'
 import { AntDesign } from '@expo/vector-icons'
 
 const Stack = createStackNavigator()
@@ -72,6 +73,15 @@ export default function HomeStack() {
       <Stack.Screen
         name="Crafting"
         component={Crafting}
+        options={{
+          headerShown: true,
+          cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
+          cardStyle: { backgroundColor: transparent },
+        }}
+      />
+      <Stack.Screen
+        name="Furnace"
+        component={Furnace}
         options={{
           headerShown: true,
           cardStyleInterpolator: CardStyleInterpolators.forModalPresentationIOS,
