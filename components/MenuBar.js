@@ -8,8 +8,9 @@ const MenuBar = (
     onHandleScores,
     onHandleInventory,
     onHandleCrafting,
+    onHandleFurnace,
     inventoryNotificaitons,
-    newItems,
+    furnaceNotifications,
   },
   props
 ) => {
@@ -34,6 +35,13 @@ const MenuBar = (
         color="#212529"
         onPress={onHandleScores}
         visible={false}
+      />
+      <IconButton
+        name="fire"
+        size={32}
+        color="#212529"
+        onPress={onHandleFurnace}
+        notifications={furnaceNotifications}
       />
       <IconButton
         name="toolbox-outline"

@@ -14,7 +14,7 @@ const Plus = (
     setHorizontalPosition(coordinates.x)
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: coordinates.y - 175,
+        toValue: coordinates.y - 100,
         duration: 1,
         useNativeDriver: false,
       }),
@@ -41,22 +41,25 @@ const Plus = (
   return (
     <Animated.View
       style={{
-        ...props.style,
-        justifyContent: 'center',
         opacity: fadeAnim,
         top: riseAnim,
-        width: 300,
+        width: '100%',
         position: 'absolute',
-        left: horizontalPosition - 250,
+        left: horizontalPosition - 260,
       }}
     >
       <Font
         style={{
           color: currentBlockColour,
           fontSize: 26,
+          paddingLeft: 30,
+          paddingRight: 30,
+          textShadowColor: '#fff',
+          textShadowOffset: { width: 1, height: 1 },
+          textShadowRadius: 1,
         }}
       >
-        +{amount} {currentBlock}
+        +{amount}
       </Font>
     </Animated.View>
   )

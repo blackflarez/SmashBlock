@@ -44,6 +44,7 @@ var deltaX = 0,
   pickaxe,
   pickaxeTexture,
   glassPickaxeTexture,
+  toolVisible = false,
   cubeDestruction = [],
   particles = [],
   lastParticle,
@@ -107,9 +108,14 @@ function Canvas(props, ref) {
       },
 
       setTool(tool) {
-        try {
-          setToolMaterial(tool)
-        } catch (error) {}
+        if (tool.category === 'pickaxe') {
+          try {
+            toolVisible = true
+            setToolMaterial(tool)
+          } catch (error) {}
+        } else {
+          toolVisible = false
+        }
 
         strength = tool.strength
       },
@@ -191,12 +197,12 @@ function Canvas(props, ref) {
       mouse = new THREE.Vector2()
 
       //lights
-      const light = new THREE.DirectionalLight(0xffffff, 3)
+      const light = new THREE.DirectionalLight(0xffffff, 2.5)
       light.position.set(-120, 300, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 2)
 
       world.add(light)
       world.add(ambientLight)
@@ -422,7 +428,7 @@ function Canvas(props, ref) {
         toolContainer.add(pickaxe)
 
         //shadowPlane
-        planeColour = 0x997b66
+        planeColour = 0xc2a878
 
         shadowPlane.material = new THREE.MeshStandardMaterial({
           color: planeColour,
@@ -688,6 +694,7 @@ function Canvas(props, ref) {
     }
 
     init()
+    props.setLoading()
   }
 
   function animation(type, target, reference) {
@@ -868,7 +875,7 @@ function Canvas(props, ref) {
 
       const hide = new TWEEN.Tween(target.material)
         .to({}, 400)
-        .onUpdate(() => (target.material.visible = true))
+        .onUpdate(() => (target.material.visible = toolVisible))
         .onComplete(() => (target.material.visible = false))
 
       fadeInInverse.chain(fadeOutInverse)
@@ -975,7 +982,7 @@ function Canvas(props, ref) {
           .to(
             {
               x: intersects.point.x,
-              y: intersects.point.y,
+              y: intersects.point.y - 0.01,
             },
             1
           )
@@ -1199,16 +1206,17 @@ function Canvas(props, ref) {
     return tbc
   }
 
-  async function hitBlock(block, coordinates) {
+  async function hitBlock(block, coordinates, longPress) {
     animation('swing', pickaxe, pickaxe)
-    tbc = calculateTBC()
-    var bonus = calculateBonus(currentBlock, tbc)
-
-    if (currentBlock.health <= 0) {
+    let damage = strength
+    if (longPress) {
+      damage = strength + Math.log(longPress)
+    }
+    if (currentBlock.health <= 0 || damage > currentBlock.health) {
       animateTool(block, false)
       animateParticle(block, false)
       animateSmoke(block, false)
-      props.updateBalance(currentBlock, bonus, true, coordinates)
+      props.updateBalance(currentBlock, true, coordinates, damage)
       destruction()
       props.generateBlock()
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -1217,12 +1225,12 @@ function Canvas(props, ref) {
     } else {
       cube.material.normalMap = cubeNormalMap
       cube.material.normalScale = new Vector2(
-        Math.pow(4 / (currentBlock.health + strength), 4.15),
-        Math.pow(4 / (currentBlock.health + strength), 4.15)
+        Math.pow(10 / (currentBlock.health + strength), 2),
+        Math.pow(10 / (currentBlock.health + strength), 2)
       )
       animateTool(block, true)
       animateParticle(block, true)
-      //props.updateBalance(currentBlock, bonus, false, coordinates)
+      props.updateBalance(currentBlock, false, coordinates, damage)
       haptics(Haptics.ImpactFeedbackStyle.Light)
       animation('click', block.object, block.object)
       currentBlock.health -= strength
