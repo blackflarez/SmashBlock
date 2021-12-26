@@ -25,6 +25,7 @@ import { Asset } from 'expo-asset'
 import Items from './Items'
 import { decode, encode } from 'base-64'
 import { Vector2 } from 'three'
+import { repeat } from 'lodash'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -38,13 +39,16 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  ores,
   blankNormalMap,
   cubeNormalMap,
   cubeTexture,
+  sandTexture,
   pickaxe,
   pickaxeTexture,
   glassPickaxeTexture,
   toolVisible = false,
+  oresDestruction = [],
   cubeDestruction = [],
   particles = [],
   lastParticle,
@@ -72,6 +76,8 @@ var deltaX = 0,
   destructionClips = [],
   particleMixer = [],
   particleClips = [],
+  oresDestructionMixer = [],
+  oresDestructionClips = [],
   smokeTexture,
   smoke = [],
   clock = new THREE.Clock(),
@@ -80,6 +86,7 @@ var deltaX = 0,
   strength = 1,
   lastClicked = new Date().getTime(),
   tbc = 0, //Time Between Clicks
+  blockContainer,
   toolContainer,
   particleContainer = [],
   smokeContainer = [],
@@ -166,6 +173,8 @@ function Canvas(props, ref) {
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
+      blockContainer = new THREE.Group()
+      blockContainer.name = 'blockContainer'
       toolContainer = new THREE.Group()
 
       scene.background = new THREE.Color(0xbde0fe)
@@ -191,43 +200,51 @@ function Canvas(props, ref) {
         1,
         12
       )
-      camera.position.z = 1
-      camera.position.y = 3.5
+      camera.position.z = 10
+      camera.position.y = 2
 
       mouse = new THREE.Vector2()
 
       //lights
       const light = new THREE.DirectionalLight(0xffffff, 2.5)
-      light.position.set(-120, 300, 150)
+      light.position.set(-120, 350, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 2)
+      const light2 = new THREE.DirectionalLight(0xb3eeff, 1)
+      light2.position.set(120, 350, -400)
+      light2.shadow.mapSize.set(shadowSize, shadowSize)
+      light2.castShadow = false
+
+      const ambientLight = new THREE.AmbientLight(0xffffff, 2.5)
 
       world.add(light)
+      world.add(light2)
       world.add(ambientLight)
 
       //assets
-      const uri = Asset.fromModule(
-        require('../assets/models/cubescaled.glb')
-      ).uri
+      const uri = Asset.fromModule(require('../assets/models/rock.glb')).uri
+      const oresUri = Asset.fromModule(require('../assets/models/ores.glb')).uri
       const destructionUri = Asset.fromModule(
-        require('../assets/models/cubedestruction.glb')
+        require('../assets/models/rockdestruction.glb')
       ).uri
       const destruction2Uri = Asset.fromModule(
-        require('../assets/models/cubedestruction2.glb')
+        require('../assets/models/rockdestruction2.glb')
       ).uri
       const destruction3Uri = Asset.fromModule(
-        require('../assets/models/cubedestruction3.glb')
+        require('../assets/models/rockdestruction3.glb')
       ).uri
       const destruction4Uri = Asset.fromModule(
-        require('../assets/models/wooddestruction.glb')
+        require('../assets/models/rockdestruction.glb')
       ).uri
       const destruction5Uri = Asset.fromModule(
-        require('../assets/models/wooddestruction2.glb')
+        require('../assets/models/rockdestruction2.glb')
       ).uri
       const destruction6Uri = Asset.fromModule(
-        require('../assets/models/wooddestruction3.glb')
+        require('../assets/models/rockdestruction3.glb')
+      ).uri
+      const oresDestructionUri = Asset.fromModule(
+        require('../assets/models/oresdestruction.glb')
       ).uri
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
@@ -276,6 +293,9 @@ function Canvas(props, ref) {
       ).uri
       const cubeTex = Asset.fromModule(
         require('../assets/models/cubetexture.png')
+      ).uri
+      const sandTex = Asset.fromModule(
+        require('../assets/models/sandtexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -345,6 +365,15 @@ function Canvas(props, ref) {
         particles[3].animations = result.animations
       })
 
+      let m16 = loadModel(oresUri).then((result) => {
+        ores = result.scene.children[0]
+      })
+
+      let m17 = loadModel(oresDestructionUri).then((result) => {
+        oresDestruction[0] = result.scene
+        oresDestruction[0].animations = result.animations
+      })
+
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
       })
@@ -366,6 +395,9 @@ function Canvas(props, ref) {
       })
       let t7 = loadTexture(glassPickTex).then((result) => {
         glassPickaxeTexture = result
+      })
+      let t8 = loadTexture(sandTex).then((result) => {
+        sandTexture = result
       })
 
       let msmoke = []
@@ -405,6 +437,8 @@ function Canvas(props, ref) {
         m13,
         m14,
         m15,
+        m16,
+        m17,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -413,6 +447,7 @@ function Canvas(props, ref) {
         t5,
         t6,
         t7,
+        t8,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -428,12 +463,16 @@ function Canvas(props, ref) {
         toolContainer.add(pickaxe)
 
         //shadowPlane
-        planeColour = 0xc2a878
+        sandTexture.flipY = false
+        sandTexture.wrapS = sandTexture.wrapT = THREE.RepeatWrapping
+        sandTexture.offset.set(0, 0)
+        sandTexture.repeat.set(8, 8)
 
+        planeColour = 0xa1a1a1
         shadowPlane.material = new THREE.MeshStandardMaterial({
           color: planeColour,
+          transparent: true,
         })
-        shadowPlane.scale.set(0.2855, 0.2855, 0.2855)
         shadowPlane.material.map = planeTexture
         shadowPlane.receiveShadow = true
         shadowPlane.material.polygonOffset = true
@@ -443,6 +482,7 @@ function Canvas(props, ref) {
         //plane
         plane.material = new THREE.MeshStandardMaterial({
           color: planeColour,
+          map: sandTexture,
         })
         plane.receiveShadow = true
         world.add(plane)
@@ -450,6 +490,7 @@ function Canvas(props, ref) {
         //cube
         cubeNormalMap.flipY = false
         blankNormalMap.flipY = false
+        cubeTexture.flipY = false
         cube.material = new THREE.MeshStandardMaterial({
           color: 'grey',
           normalMap: blankNormalMap,
@@ -466,7 +507,22 @@ function Canvas(props, ref) {
         cube.scale.y = 0.032499998807907104
         cube.scale.z = 0.032499998807907104
 
-        world.add(cube)
+        blockContainer.add(cube)
+
+        //ores
+        ores.material = new THREE.MeshPhongMaterial({
+          color: 'grey',
+          transparent: true,
+          opacity: 1,
+        })
+        ores.name = 'ores'
+        ores.castShadow = false
+        ores.receiveShadow = false
+        ores.scale.x = 0.032499998807907104
+        ores.scale.y = 0.032499998807907104
+        ores.scale.z = 0.032499998807907104
+        blockContainer.add(ores)
+        world.add(blockContainer)
 
         //cubeDestruction
         for (let i = 0; i < cubeDestruction.length; i++) {
@@ -490,6 +546,7 @@ function Canvas(props, ref) {
           cubeDestruction[i].scale.x = 0.032499998807907104
           cubeDestruction[i].scale.y = 0.032499998807907104
           cubeDestruction[i].scale.z = 0.032499998807907104
+          cubeDestruction[i].position.y = 0.002
 
           destructionMixer[i] = new THREE.AnimationMixer(cubeDestruction[i])
           destructionClips[i] = cubeDestruction[i].animations
@@ -513,6 +570,31 @@ function Canvas(props, ref) {
           particleContainer[i] = new THREE.Group()
           particleContainer[i].add(particles[i])
           scene.add(particleContainer[i])
+        }
+
+        //Ores Destruction
+        for (let i = 0; i < oresDestruction.length; i++) {
+          oresDestruction[i].traverse((o) => {
+            if (o.isMesh) {
+              o.material = new THREE.MeshLambertMaterial({
+                color: currentBlock.colour,
+              })
+              o.castShadow = false
+              o.material.transparent = true
+            }
+          })
+
+          oresDestruction[i].name = 'oresDestruction'
+          oresDestruction[i].visible = false
+          oresDestruction[i].scale.x = 0.032499998807907104
+          oresDestruction[i].scale.y = 0.032499998807907104
+          oresDestruction[i].scale.z = 0.032499998807907104
+          oresDestruction[i].position.y = -0.002
+
+          oresDestructionMixer[i] = new THREE.AnimationMixer(oresDestruction[i])
+          oresDestructionClips[i] = oresDestruction[i].animations
+
+          scene.add(oresDestruction[i])
         }
 
         //Smoke
@@ -626,7 +708,7 @@ function Canvas(props, ref) {
     }
 
     async function animate() {
-      //Rotate cube
+      //Rotate scene
       if (panning) {
         scene.rotation.x += deltaY * rotationSpeed
         scene.rotation.y += deltaX * rotationSpeed
@@ -635,8 +717,8 @@ function Canvas(props, ref) {
       if (scene.rotation.x > 0.6) {
         scene.rotation.x = 0.6
       }
-      if (scene.rotation.x < -0.3) {
-        scene.rotation.x = -0.3
+      if (scene.rotation.x < -0.1) {
+        scene.rotation.x = -0.1
       }
 
       if (deltaX > 0) {
@@ -652,7 +734,7 @@ function Canvas(props, ref) {
         deltaY += 1
       }
 
-      //Scale cube
+      //Scale scene
       const minimum = 9
       const maximum = 15 + floors
       const threshold = 0.5
@@ -685,6 +767,9 @@ function Canvas(props, ref) {
       for (let i = 0; i < particleMixer.length; i++) {
         particleMixer[i].update(dt)
       }
+      for (let i = 0; i < oresDestructionMixer.length; i++) {
+        oresDestructionMixer[i].update(dt)
+      }
 
       TWEEN.update()
       camera.lookAt(0, 0, 0)
@@ -699,23 +784,23 @@ function Canvas(props, ref) {
 
   function animation(type, target, reference) {
     if (type === 'click') {
-      const inflate = new TWEEN.Tween(target.scale)
+      const inflate = new TWEEN.Tween(blockContainer.scale)
         .to(
           {
-            x: 0.0335,
-            y: 0.033,
-            z: 0.0335,
+            x: 1.01,
+            y: 1.01,
+            z: 1.01,
           },
           65
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Elastic.Out)
-      const deflate = new TWEEN.Tween(target.scale)
+      const deflate = new TWEEN.Tween(blockContainer.scale)
         .to(
           {
-            x: 0.032499998807907104,
-            y: 0.032499998807907104,
-            z: 0.032499998807907104,
+            x: 1,
+            y: 1,
+            z: 1,
           },
           40
         )
@@ -723,9 +808,9 @@ function Canvas(props, ref) {
       const inflateShadow = new TWEEN.Tween(shadowPlane.scale)
         .to(
           {
-            x: 0.29,
-            y: 0.29,
-            z: 0.29,
+            x: 0.1,
+            y: 0.1,
+            z: 0.1,
           },
           65
         )
@@ -735,9 +820,9 @@ function Canvas(props, ref) {
       const deflateShadow = new TWEEN.Tween(shadowPlane.scale)
         .to(
           {
-            x: 0.2855,
-            y: 0.2855,
-            z: 0.2855,
+            x: 0.09736721962690353,
+            y: 0.09736721962690353,
+            z: 0.09736721962690353,
           },
           40
         )
@@ -748,64 +833,68 @@ function Canvas(props, ref) {
       inflateShadow.start()
       return
     } else if (type === 'destroy') {
-      const fadeOut = new TWEEN.Tween(target.material)
-        .to(
-          {
-            opacity: 0,
-          },
-          150
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Exponential.Out)
-        .onUpdate(() => {
-          target.castShadow = false
-          shadowPlane.visible = false
-          target.visible = false
-        })
-        .onComplete(
-          () => ((target.castShadow = false), (shadowPlane.visible = true))
-        )
+      var fadeOut
+      var fadeIn
+      for (let i of blockContainer.children) {
+        fadeOut = new TWEEN.Tween(i.material)
+          .to(
+            {
+              opacity: 0,
+            },
+            150
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Exponential.Out)
+          .onUpdate(() => {
+            target.castShadow = false
+            shadowPlane.visible = false
+            blockContainer.visible = false
+          })
+          .onComplete(
+            () => ((target.castShadow = false), (shadowPlane.visible = true))
+          )
 
-      const fadeIn = new TWEEN.Tween(target.material)
-        .to(
-          {
-            opacity: 1,
-          },
-          50
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Exponential.In)
-        .onComplete(() => {
-          target.visible = true
-        })
+        fadeIn = new TWEEN.Tween(i.material)
+          .to(
+            {
+              opacity: 1,
+            },
+            50
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Exponential.In)
+          .onComplete(() => {
+            blockContainer.visible = true
+          })
+      }
 
-      const shrink = new TWEEN.Tween(target.scale)
+      const shrink = new TWEEN.Tween(blockContainer.scale)
         .to(
           {
-            x: 0.032499998807907104 / 2,
-            y: 0.032499998807907104 / 2,
-            z: 0.032499998807907104 / 2,
+            x: 1 / 2,
+            y: 1 / 2,
+            z: 1 / 2,
           },
           1
         )
         .yoyo(true)
-      const inflateSlow = new TWEEN.Tween(target.scale)
+      const inflateSlow = new TWEEN.Tween(blockContainer.scale)
         .to(
           {
-            x: 0.0335,
-            y: 0.033,
-            z: 0.0335,
+            x: 1.02,
+            y: 1.02,
+            z: 1.02,
           },
           300
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Elastic.Out)
-      const deflate = new TWEEN.Tween(target.scale)
+      const deflate = new TWEEN.Tween(blockContainer.scale)
         .to(
           {
-            x: 0.032499998807907104,
-            y: 0.032499998807907104,
-            z: 0.032499998807907104,
+            x: 1,
+            y: 1,
+            z: 1,
           },
           40
         )
@@ -904,67 +993,90 @@ function Canvas(props, ref) {
       lastDestruction = target
     }
 
+    let targets = [target, oresDestruction[0]]
+    oresDestruction[0].rotation.y +=
+      (Math.PI / 2) * Math.floor(Math.random() * 4)
     target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
     let opacity = 100
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
-        map: cubeTexture,
       })
     } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
-        map: cubeTexture,
       })
     } else if (currentBlock.material === 'glass') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
-        map: cubeTexture,
       })
       opacity = 0.8
     }
 
-    target.traverse((o) => {
+    oresDestruction[0].traverse((o) => {
       if (o.isMesh) {
         o.material = material
-        o.material.transparent = true
-        o.material.opacity = opacity
-
-        const opaque = new TWEEN.Tween(o.material)
-          .to(
-            {
-              opacity: opacity,
-            },
-            1000
-          )
-          .easing(TWEEN.Easing.Exponential.Out)
-          .onUpdate(() => (o.castShadow = true))
-
-        const fadeOut = new TWEEN.Tween(o.material)
-          .to(
-            {
-              opacity: 0,
-            },
-            1000
-          )
-          .easing(TWEEN.Easing.Cubic.Out)
-          .onComplete(() => (o.castShadow = false))
-
-        const hide = new TWEEN.Tween(o.material)
-          .to({}, 2000)
-          .onUpdate(() => (target.visible = true))
-          .onComplete(() => (target.visible = false))
-
-        opaque.chain(fadeOut)
-        opaque.start()
-        hide.start()
       }
     })
+
+    target.traverse((o) => {
+      if (o.isMesh) {
+        o.material = new THREE.MeshStandardMaterial({
+          color: 'grey',
+          map: cubeTexture,
+        })
+      }
+    })
+
+    for (let target of targets) {
+      target.traverse((o) => {
+        if (o.isMesh) {
+          o.material.transparent = true
+          o.material.opacity = opacity
+
+          const opaque = new TWEEN.Tween(o.material)
+            .to(
+              {
+                opacity: opacity,
+              },
+              1000
+            )
+            .easing(TWEEN.Easing.Exponential.Out)
+            .onUpdate(() => (o.castShadow = true))
+
+          const fadeOut = new TWEEN.Tween(o.material)
+            .to(
+              {
+                opacity: 0,
+              },
+              1000
+            )
+            .easing(TWEEN.Easing.Cubic.Out)
+            .onComplete(() => (o.castShadow = false))
+
+          const hide = new TWEEN.Tween(o.material)
+            .to({}, 2000)
+            .onUpdate(() => (target.visible = true))
+            .onComplete(() => (target.visible = false))
+
+          opaque.chain(fadeOut)
+          opaque.start()
+          hide.start()
+        }
+      })
+    }
+
     destructionClips[index].forEach(function (clip) {
       destructionMixer[index].clipAction(clip).setLoop(THREE.LoopOnce)
       destructionMixer[index].clipAction(clip).clampWhenFinished = true
       destructionMixer[index].clipAction(clip).play().reset()
+    })
+
+    oresDestructionClips[0].forEach(function (clip) {
+      oresDestructionMixer[0].clipAction(clip).setLoop(THREE.LoopOnce)
+      oresDestructionMixer[0].clipAction(clip).clampWhenFinished = true
+      oresDestructionMixer[0].clipAction(clip).play().reset()
     })
   }
 
@@ -1000,10 +1112,17 @@ function Canvas(props, ref) {
 
     particles[index].traverse((o) => {
       if (o.isMesh) {
-        o.material = new THREE.MeshStandardMaterial({
-          color: currentBlock.colour,
-          transparent: true,
-        })
+        if (intersects.object.name === 'ores') {
+          o.material = new THREE.MeshStandardMaterial({
+            color: currentBlock.colour,
+            transparent: true,
+          })
+        } else {
+          o.material = new THREE.MeshStandardMaterial({
+            color: 'grey',
+            transparent: true,
+          })
+        }
 
         const opaque = new TWEEN.Tween(o.material)
           .to(
@@ -1160,35 +1279,28 @@ function Canvas(props, ref) {
   }
 
   function updateMaterial(block) {
-    cube.rotation.x += (Math.PI / 2) * Math.floor(Math.random() * 4)
-    cube.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
-    cube.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    blockContainer.rotation.x += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    blockContainer.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    blockContainer.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
-        normalMap: blankNormalMap,
-        normalScale: new Vector2(0, 0),
-        map: cubeTexture,
       })
     } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
-        normalMap: blankNormalMap,
-        normalScale: new Vector2(0, 0),
-        map: cubeTexture,
       })
     } else if (currentBlock.material === 'glass') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
-        normalMap: blankNormalMap,
-        normalScale: new Vector2(0, 0),
-        map: cubeTexture,
         transparent: true,
         opacity: 0.95,
       })
     }
-    block.object.material = material
+    cube.material.normalMap = blankNormalMap
+    cube.material.normalScale = new Vector2(0, 0)
+    ores.material = material
   }
 
   function calculateBonus(currentBlock, tbc) {
@@ -1241,7 +1353,7 @@ function Canvas(props, ref) {
     let { nativeEvent } = evt
     if (nativeEvent.state === State.BEGAN) {
       let block = await raycast(evt)
-      if (block.object.name === 'cube') {
+      if (block.object.parent.name === 'blockContainer') {
         hitBlock(block, { x: nativeEvent.absoluteX, y: nativeEvent.absoluteY })
       }
     }
@@ -1253,7 +1365,7 @@ function Canvas(props, ref) {
     let { nativeEvent } = evt
     let block = await raycast(evt)
     if (nativeEvent.state === State.ACTIVE) {
-      if (block.object.name === 'cube') {
+      if (block.object.parent.name === 'blockContainer') {
         timer = setInterval(async () => {
           hitBlock(block, {
             x: nativeEvent.absoluteX,
