@@ -14,7 +14,7 @@ const Plus = (
     setHorizontalPosition(coordinates.x)
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: coordinates.y - 100,
+        toValue: coordinates.y - 150,
         duration: 1,
         useNativeDriver: false,
       }),
@@ -59,7 +59,7 @@ const Plus = (
           textShadowRadius: 1,
         }}
       >
-        +{amount}
+        {`+` + amount}
       </Font>
     </Animated.View>
   )
