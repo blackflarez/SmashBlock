@@ -44,9 +44,11 @@ var deltaX = 0,
   cubeNormalMap,
   cubeTexture,
   sandTexture,
+  skyTexture,
   pickaxe,
   pickaxeTexture,
   glassPickaxeTexture,
+  oresTexture,
   toolVisible = false,
   oresDestruction = [],
   cubeDestruction = [],
@@ -96,7 +98,7 @@ var deltaX = 0,
 var renderWidth = width,
   renderHeight = height,
   renderScale = 1,
-  shadowSize = 4096,
+  shadowSize = 256,
   shadowEnabled = true
 
 if (Platform.OS === 'android') {
@@ -201,7 +203,7 @@ function Canvas(props, ref) {
         12
       )
       camera.position.z = 10
-      camera.position.y = 2
+      camera.position.y = 3
 
       mouse = new THREE.Vector2()
 
@@ -210,6 +212,11 @@ function Canvas(props, ref) {
       light.position.set(-120, 350, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
+      const d = 0.3
+      light.shadow.camera.left = -d
+      light.shadow.camera.right = d
+      light.shadow.camera.top = d
+      light.shadow.camera.bottom = -d
 
       const light2 = new THREE.DirectionalLight(0xb3eeff, 1)
       light2.position.set(120, 350, -400)
@@ -224,6 +231,7 @@ function Canvas(props, ref) {
 
       //assets
       const uri = Asset.fromModule(require('../assets/models/rock.glb')).uri
+      const cubeUri = Asset.fromModule(require('../assets/models/cube.glb')).uri
       const oresUri = Asset.fromModule(require('../assets/models/ores.glb')).uri
       const destructionUri = Asset.fromModule(
         require('../assets/models/rockdestruction.glb')
@@ -256,7 +264,7 @@ function Canvas(props, ref) {
         require('../assets/models/pickaxe.png')
       ).uri
       const glassPickTex = Asset.fromModule(
-        require('../assets/models/glasspickaxe.png')
+        require('../assets/models/pickaxe.png')
       ).uri
       const planeUri = Asset.fromModule(
         require('../assets/models/plane.glb')
@@ -297,12 +305,18 @@ function Canvas(props, ref) {
       const sandTex = Asset.fromModule(
         require('../assets/models/sandtexture.png')
       ).uri
+      const oresTex = Asset.fromModule(
+        require('../assets/models/orestexture.png')
+      ).uri
+      const skyTex = Asset.fromModule(
+        require('../assets/models/skytexture.png')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
         cube = result.scene.children[0]
       })
 
-      let m2 = loadModel(uri).then((result) => {
+      let m2 = loadModel(cubeUri).then((result) => {
         sky = result.scene.children[0]
       })
 
@@ -399,6 +413,12 @@ function Canvas(props, ref) {
       let t8 = loadTexture(sandTex).then((result) => {
         sandTexture = result
       })
+      let t9 = loadTexture(oresTex).then((result) => {
+        oresTexture = result
+      })
+      let t10 = loadTexture(skyTex).then((result) => {
+        skyTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -448,6 +468,8 @@ function Canvas(props, ref) {
         t6,
         t7,
         t8,
+        t9,
+        t10,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -474,9 +496,9 @@ function Canvas(props, ref) {
           transparent: true,
         })
         shadowPlane.material.map = planeTexture
-        shadowPlane.receiveShadow = true
+        shadowPlane.receiveShadow = false
         shadowPlane.material.polygonOffset = true
-        shadowPlane.material.polygonOffsetFactor = -0.12
+        shadowPlane.material.polygonOffsetFactor = -0.1
         scene.add(shadowPlane)
 
         //plane
@@ -514,6 +536,7 @@ function Canvas(props, ref) {
           color: 'grey',
           transparent: true,
           opacity: 1,
+          map: oresTexture,
         })
         ores.name = 'ores'
         ores.castShadow = false
@@ -556,7 +579,7 @@ function Canvas(props, ref) {
 
         //Particles
         for (let i = 0; i < particles.length; i++) {
-          particles[i].material = new THREE.MeshLambertMaterial({
+          particles[i].material = new THREE.MeshBasicMaterial({
             color: 'grey',
           })
 
@@ -578,6 +601,7 @@ function Canvas(props, ref) {
             if (o.isMesh) {
               o.material = new THREE.MeshLambertMaterial({
                 color: currentBlock.colour,
+                map: oresTexture,
               })
               o.castShadow = false
               o.material.transparent = true
@@ -626,12 +650,15 @@ function Canvas(props, ref) {
         }
 
         //Skybox
+        skyTexture.flipY = false
         sky.name = 'sky'
-        sky.material = new THREE.MeshBasicMaterial({ color: 0xffffff })
+        sky.material = new THREE.MeshBasicMaterial({
+          map: skyTexture,
+        })
         sky.material.side = THREE.BackSide
-        sky.scale.x = 600
-        sky.scale.z = 600
-        sky.scale.y = 600
+        sky.scale.x = 4
+        sky.scale.z = 4
+        sky.scale.y = 4
         //scene.add(sky)
 
         //Floors
@@ -1002,14 +1029,17 @@ function Canvas(props, ref) {
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
+        map: oresTexture,
       })
     } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
+        map: oresTexture,
       })
     } else if (currentBlock.material === 'glass') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
+        map: oresTexture,
       })
       opacity = 0.8
     }
@@ -1043,7 +1073,9 @@ function Canvas(props, ref) {
               1000
             )
             .easing(TWEEN.Easing.Exponential.Out)
-            .onUpdate(() => (o.castShadow = true))
+            .onUpdate(() =>
+              o.parent.name === 'cubeDestruction' ? (o.castShadow = true) : null
+            )
 
           const fadeOut = new TWEEN.Tween(o.material)
             .to(
@@ -1268,7 +1300,6 @@ function Canvas(props, ref) {
 
   async function raycast(evt) {
     let { nativeEvent } = evt
-    //camera.updateProjectionMatrix()
     mouse.x = (nativeEvent.absoluteX / width) * 2 - 1
     mouse.y = -(nativeEvent.absoluteY / height) * 2 + 1
     raycaster = new THREE.Raycaster()
@@ -1286,16 +1317,19 @@ function Canvas(props, ref) {
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
+        map: oresTexture,
       })
     } else if (currentBlock.material === 'matte') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
+        map: oresTexture,
       })
     } else if (currentBlock.material === 'glass') {
       material = new THREE.MeshStandardMaterial({
         color: currentBlock.colour,
         transparent: true,
         opacity: 0.95,
+        map: oresTexture,
       })
     }
     cube.material.normalMap = blankNormalMap
@@ -1445,6 +1479,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    transform: [{ scaleX: renderScale }, { scaleY: renderScale }],
   },
   title: {
     color: '#000',
@@ -1459,7 +1494,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-    transform: [{ scaleX: renderScale }, { scaleY: renderScale }],
   },
   content: {
     width: renderWidth,
