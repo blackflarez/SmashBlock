@@ -10,6 +10,7 @@ export default [
     type: 'block',
     category: 'ore',
     output: 'Gold Ingot',
+    model: 'rock',
   },
   {
     name: 'Stone',
@@ -19,6 +20,7 @@ export default [
     material: 'matte',
     probability: 80,
     type: 'block',
+    model: 'stone',
   },
   {
     name: 'Iron Ore',
@@ -30,6 +32,7 @@ export default [
     type: 'block',
     category: 'ore',
     output: 'Iron Ingot',
+    model: 'rock',
   },
   {
     name: 'Diamond',
@@ -39,6 +42,7 @@ export default [
     material: 'glass',
     probability: 0.1,
     type: 'block',
+    model: 'rock',
   },
   {
     name: 'Wood',
@@ -48,6 +52,7 @@ export default [
     material: 'matte',
     probability: 60,
     type: 'block',
+    model: 'wood',
   },
   {
     name: 'Coal',
@@ -58,6 +63,7 @@ export default [
     probability: 30,
     type: 'block',
     category: 'fuel',
+    model: 'rock',
   },
   //Tools
   {
@@ -68,7 +74,7 @@ export default [
     efficiency: 2,
     health: 100,
     type: 'tool',
-    colour: '#5e4328',
+    colour: '#4A4138',
     material: 'matte',
     category: 'pickaxe',
   },
@@ -76,7 +82,7 @@ export default [
     name: 'Stone Pickaxe',
     description: 'Mine blocks faster.',
     recipe: { Stick: 2, Stone: 10 },
-    strength: 1.1,
+    strength: 1.25,
     efficiency: 3,
     health: 100,
     type: 'tool',
@@ -88,7 +94,7 @@ export default [
     name: 'Iron Pickaxe',
     description: 'Mine blocks even faster.',
     recipe: { Stick: 2, 'Iron Ingot': 10 },
-    strength: 1.25,
+    strength: 2,
     efficiency: 4,
     health: 200,
     type: 'tool',
@@ -100,7 +106,7 @@ export default [
     name: 'Gold Pickaxe',
     description: 'Mine blocks super fast.',
     recipe: { Stick: 2, 'Gold Ingot': 10 },
-    strength: 1.95,
+    strength: 3,
     efficiency: 6,
     health: 150,
     type: 'tool',
@@ -112,7 +118,7 @@ export default [
     name: 'Diamond Pickaxe',
     description: 'Mine blocks very fast.',
     recipe: { Stick: 2, Diamond: 10 },
-    strength: 2.95,
+    strength: 5,
     efficiency: 8,
     health: 250,
     type: 'tool',

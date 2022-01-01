@@ -25,7 +25,6 @@ import { Asset } from 'expo-asset'
 import Items from './Items'
 import { decode, encode } from 'base-64'
 import { Vector2 } from 'three'
-import { repeat } from 'lodash'
 
 if (!global.btoa) {
   global.btoa = encode
@@ -39,7 +38,11 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  rock,
+  stone,
   ores,
+  wood,
+  woodTexture,
   blankNormalMap,
   cubeNormalMap,
   cubeTexture,
@@ -92,7 +95,8 @@ var deltaX = 0,
   toolContainer,
   particleContainer = [],
   smokeContainer = [],
-  lastDestruction
+  lastDestruction,
+  lastOreDestruction
 
 //Graphics Settings
 var renderWidth = width,
@@ -232,6 +236,10 @@ function Canvas(props, ref) {
       //assets
       const uri = Asset.fromModule(require('../assets/models/rock.glb')).uri
       const cubeUri = Asset.fromModule(require('../assets/models/cube.glb')).uri
+      const stoneUri = Asset.fromModule(
+        require('../assets/models/stone.glb')
+      ).uri
+      const woodUri = Asset.fromModule(require('../assets/models/wood.glb')).uri
       const oresUri = Asset.fromModule(require('../assets/models/ores.glb')).uri
       const destructionUri = Asset.fromModule(
         require('../assets/models/rockdestruction.glb')
@@ -243,16 +251,22 @@ function Canvas(props, ref) {
         require('../assets/models/rockdestruction3.glb')
       ).uri
       const destruction4Uri = Asset.fromModule(
-        require('../assets/models/rockdestruction.glb')
+        require('../assets/models/wooddestruction.glb')
       ).uri
       const destruction5Uri = Asset.fromModule(
-        require('../assets/models/rockdestruction2.glb')
+        require('../assets/models/wooddestruction.glb')
       ).uri
       const destruction6Uri = Asset.fromModule(
-        require('../assets/models/rockdestruction3.glb')
+        require('../assets/models/wooddestruction.glb')
       ).uri
       const oresDestructionUri = Asset.fromModule(
         require('../assets/models/oresdestruction.glb')
+      ).uri
+      const oresDestruction2Uri = Asset.fromModule(
+        require('../assets/models/oresdestruction2.glb')
+      ).uri
+      const oresDestruction3Uri = Asset.fromModule(
+        require('../assets/models/oresdestruction3.glb')
       ).uri
       const floorUri = Asset.fromModule(
         require('../assets/models/floorscaled.glb')
@@ -311,9 +325,12 @@ function Canvas(props, ref) {
       const skyTex = Asset.fromModule(
         require('../assets/models/skytexture.png')
       ).uri
+      const woodTex = Asset.fromModule(
+        require('../assets/models/woodtexture.png')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
-        cube = result.scene.children[0]
+        rock = result.scene.children[0]
       })
 
       let m2 = loadModel(cubeUri).then((result) => {
@@ -388,6 +405,24 @@ function Canvas(props, ref) {
         oresDestruction[0].animations = result.animations
       })
 
+      let m18 = loadModel(oresDestruction2Uri).then((result) => {
+        oresDestruction[1] = result.scene
+        oresDestruction[1].animations = result.animations
+      })
+
+      let m19 = loadModel(oresDestruction3Uri).then((result) => {
+        oresDestruction[2] = result.scene
+        oresDestruction[2].animations = result.animations
+      })
+
+      let m20 = loadModel(stoneUri).then((result) => {
+        stone = result.scene.children[0]
+      })
+
+      let m21 = loadModel(woodUri).then((result) => {
+        wood = result.scene.children[0]
+      })
+
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
       })
@@ -418,6 +453,9 @@ function Canvas(props, ref) {
       })
       let t10 = loadTexture(skyTex).then((result) => {
         skyTexture = result
+      })
+      let t11 = loadTexture(woodTex).then((result) => {
+        woodTexture = result
       })
 
       let msmoke = []
@@ -459,6 +497,10 @@ function Canvas(props, ref) {
         m15,
         m16,
         m17,
+        m18,
+        m19,
+        m20,
+        m21,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -470,6 +512,7 @@ function Canvas(props, ref) {
         t8,
         t9,
         t10,
+        t11,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -509,35 +552,74 @@ function Canvas(props, ref) {
         plane.receiveShadow = true
         world.add(plane)
 
-        //cube
+        //rock
         cubeNormalMap.flipY = false
+
         blankNormalMap.flipY = false
         cubeTexture.flipY = false
-        cube.material = new THREE.MeshStandardMaterial({
+        rock.material = new THREE.MeshStandardMaterial({
+          color: 'grey',
+          normalMap: blankNormalMap,
+          normalScale: new Vector2(0, 0),
+          map: cubeTexture,
+        })
+        rock.visible = false
+        rock.material.metalness = 0
+        rock.name = 'cube'
+        rock.castShadow = false
+        rock.receiveShadow = true
+        rock.material.transparent = true
+        rock.scale.x = 0.032499998807907104
+        rock.scale.y = 0.032499998807907104
+        rock.scale.z = 0.032499998807907104
+
+        //stone
+        stone.material = new THREE.MeshStandardMaterial({
           color: 'grey',
           normalMap: blankNormalMap,
           normalScale: new Vector2(0, 0),
           map: cubeTexture,
         })
 
-        cube.material.metalness = 0
-        cube.name = 'cube'
-        cube.castShadow = false
-        cube.receiveShadow = true
-        cube.material.transparent = true
-        cube.scale.x = 0.032499998807907104
-        cube.scale.y = 0.032499998807907104
-        cube.scale.z = 0.032499998807907104
+        stone.material.metalness = 0
+        stone.name = 'cube'
+        stone.castShadow = false
+        stone.receiveShadow = true
+        stone.material.transparent = true
+        stone.scale.x = 0.032499998807907104
+        stone.scale.y = 0.032499998807907104
+        stone.scale.z = 0.032499998807907104
 
+        cube = Object.create(stone)
         blockContainer.add(cube)
 
+        //wood
+        woodTexture.flipY = false
+        wood.material = new THREE.MeshStandardMaterial({
+          color: 'grey',
+          normalMap: blankNormalMap,
+          normalScale: new Vector2(0, 0),
+          map: woodTexture,
+        })
+
+        wood.material.metalness = 0
+        wood.name = 'cube'
+        wood.castShadow = false
+        wood.receiveShadow = true
+        wood.material.transparent = true
+        wood.scale.x = 0.032499998807907104
+        wood.scale.y = 0.032499998807907104
+        wood.scale.z = 0.032499998807907104
+
         //ores
+        oresTexture.flipY = false
         ores.material = new THREE.MeshPhongMaterial({
           color: 'grey',
           transparent: true,
           opacity: 1,
           map: oresTexture,
         })
+        ores.visible = false
         ores.name = 'ores'
         ores.castShadow = false
         ores.receiveShadow = false
@@ -1004,28 +1086,33 @@ function Canvas(props, ref) {
   }
 
   async function destruction() {
-    let target
     let index
+    let oreIndex = Math.floor(Math.random() * oresDestruction.length)
     if (currentBlock.name === 'Wood') {
       index = Math.floor(Math.random() * (6 - 3) + 3)
     } else {
       index = Math.floor(Math.random() * 3)
     }
 
-    target = cubeDestruction[index]
-    if (target === lastDestruction) {
+    if (
+      cubeDestruction[index] === lastDestruction ||
+      oresDestruction[oreIndex] === lastOreDestruction
+    ) {
       destruction()
       return
     } else {
-      lastDestruction = target
+      lastDestruction = cubeDestruction[index]
+      lastOreDestruction = oresDestruction[oreIndex]
     }
 
-    let targets = [target, oresDestruction[0]]
-    oresDestruction[0].rotation.y +=
+    let targets = [cubeDestruction[index]]
+
+    oresDestruction[oreIndex].rotation.y +=
       (Math.PI / 2) * Math.floor(Math.random() * 4)
-    target.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
+    cubeDestruction[index].rotation.y +=
+      (Math.PI / 2) * Math.floor(Math.random() * 4)
     let material
-    let opacity = 100
+    let opacity = 1
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
         color: currentBlock.colour,
@@ -1044,18 +1131,28 @@ function Canvas(props, ref) {
       opacity = 0.8
     }
 
-    oresDestruction[0].traverse((o) => {
-      if (o.isMesh) {
-        o.material = material
-      }
-    })
+    if (currentBlock.model === 'rock') {
+      targets.push(oresDestruction[oreIndex])
+      oresDestruction[oreIndex].traverse((o) => {
+        if (o.isMesh) {
+          o.material = material
+        }
+      })
+    }
 
-    target.traverse((o) => {
+    cubeDestruction[index].traverse((o) => {
       if (o.isMesh) {
-        o.material = new THREE.MeshStandardMaterial({
-          color: 'grey',
-          map: cubeTexture,
-        })
+        if (currentBlock.name === 'Wood') {
+          o.material = new THREE.MeshStandardMaterial({
+            color: 'grey',
+            map: woodTexture,
+          })
+        } else {
+          o.material = new THREE.MeshStandardMaterial({
+            color: 'grey',
+            map: cubeTexture,
+          })
+        }
       }
     })
 
@@ -1085,7 +1182,7 @@ function Canvas(props, ref) {
               1000
             )
             .easing(TWEEN.Easing.Cubic.Out)
-            .onComplete(() => (o.castShadow = false))
+            .onUpdate(() => (o.castShadow = false))
 
           const hide = new TWEEN.Tween(o.material)
             .to({}, 2000)
@@ -1105,10 +1202,10 @@ function Canvas(props, ref) {
       destructionMixer[index].clipAction(clip).play().reset()
     })
 
-    oresDestructionClips[0].forEach(function (clip) {
-      oresDestructionMixer[0].clipAction(clip).setLoop(THREE.LoopOnce)
-      oresDestructionMixer[0].clipAction(clip).clampWhenFinished = true
-      oresDestructionMixer[0].clipAction(clip).play().reset()
+    oresDestructionClips[oreIndex].forEach(function (clip) {
+      oresDestructionMixer[oreIndex].clipAction(clip).setLoop(THREE.LoopOnce)
+      oresDestructionMixer[oreIndex].clipAction(clip).clampWhenFinished = true
+      oresDestructionMixer[oreIndex].clipAction(clip).play().reset()
     })
   }
 
@@ -1222,7 +1319,7 @@ function Canvas(props, ref) {
               y: 1.55,
               z: 1.55,
             },
-            600
+            700
           )
           .easing(TWEEN.Easing.Exponential.Out)
 
@@ -1238,7 +1335,7 @@ function Canvas(props, ref) {
         const opaque = new TWEEN.Tween(o.material)
           .to(
             {
-              opacity: 0.75,
+              opacity: 0.9,
             },
             50
           )
@@ -1313,6 +1410,39 @@ function Canvas(props, ref) {
     blockContainer.rotation.x += (Math.PI / 2) * Math.floor(Math.random() * 4)
     blockContainer.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     blockContainer.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
+
+    if (currentBlock.model === 'rock') {
+      ores.visible = true
+      cube.geometry = rock.geometry
+      cube.material = new THREE.MeshStandardMaterial({
+        color: 'grey',
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
+        map: cubeTexture,
+      })
+    } else if (currentBlock.model === 'stone') {
+      ores.visible = false
+      cube.geometry = stone.geometry
+      cube.material = new THREE.MeshStandardMaterial({
+        color: 'grey',
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
+        map: cubeTexture,
+      })
+    } else if (currentBlock.model === 'wood') {
+      blockContainer.rotation.x = 0
+
+      blockContainer.rotation.z = 0
+      ores.visible = false
+      cube.geometry = wood.geometry
+      cube.material = new THREE.MeshStandardMaterial({
+        color: 'grey',
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
+        map: woodTexture,
+      })
+    }
+
     let material
     if (currentBlock.material === 'shiny') {
       material = new THREE.MeshPhongMaterial({
@@ -1371,9 +1501,10 @@ function Canvas(props, ref) {
     } else {
       cube.material.normalMap = cubeNormalMap
       cube.material.normalScale = new Vector2(
-        Math.pow(10 / (currentBlock.health + strength), 2),
-        Math.pow(10 / (currentBlock.health + strength), 2)
+        5 / currentBlock.health,
+        5 / currentBlock.health
       )
+
       animateTool(block, true)
       animateParticle(block, true)
       props.updateBalance(currentBlock, false, coordinates, damage)

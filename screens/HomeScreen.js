@@ -227,9 +227,9 @@ export default function HomeScreen({ navigation }, props) {
   }, [])
 
   async function updateBalance(block, destroy, coordinates, damage) {
-    var amount = Math.ceil(equipped.efficiency * damage)
+    var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
     if (destroy) {
-      amount *= Math.ceil(Math.random() * (4 - 2) + 2)
+      amount = Math.floor(equipped.efficiency * damage)
     }
 
     setPlusses((plusses) => [
