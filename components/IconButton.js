@@ -4,13 +4,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Badge } from 'react-native-paper'
 import * as Haptics from 'expo-haptics'
 
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
-
-const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
+const IconButton = ({
+  color,
+  size,
+  onPress,
+  name,
+  visible,
+  notifications,
+  containerStyle,
+}) => {
   if (notifications > 0) {
     visible = true
   } else {
@@ -30,6 +32,7 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
                 width: 50,
                 height: 50,
               },
+              containerStyle,
             ]
           }
 
@@ -42,11 +45,11 @@ const IconButton = ({ color, size, onPress, name, visible, notifications }) => {
               width: 50,
               height: 50,
             },
+            containerStyle,
           ]
         }}
         onPress={() => {
           onPress()
-          haptics(Haptics.ImpactFeedbackStyle.Light)
         }}
       >
         <MaterialCommunityIcons name={name} size={size} color={color} />

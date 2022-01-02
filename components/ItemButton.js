@@ -5,12 +5,6 @@ import { Badge } from 'react-native-paper'
 import { Amount, ItemIcon, Font } from '../components'
 import * as Haptics from 'expo-haptics'
 
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
-
 const ItemButton = (
   {
     color,
@@ -79,7 +73,6 @@ const ItemButton = (
             ? null
             : () => {
                 onPress()
-                haptics(Haptics.ImpactFeedbackStyle.Light)
               }
         }
       >

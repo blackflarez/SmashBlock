@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Pressable, StyleSheet, View, Text, Animated } from 'react-native'
+import { Pressable, StyleSheet, View, Platform, Animated } from 'react-native'
 import { Font } from '../components'
 
 const Plus = (
@@ -9,12 +9,19 @@ const Plus = (
   const fadeAnim = useRef(new Animated.Value(0)).current
   const riseAnim = useRef(new Animated.Value(coordinates.y)).current
   const [horizontalPosition, setHorizontalPosition] = useState(coordinates.x)
+  var width = '100%'
+  var adjustment = 260
+
+  if (Platform.OS === 'web') {
+    width = 1000
+    adjustment = 315
+  }
 
   useEffect(() => {
     setHorizontalPosition(coordinates.x)
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: coordinates.y - 150,
+        toValue: coordinates.y - 200,
         duration: 1,
         useNativeDriver: false,
       }),
@@ -39,29 +46,31 @@ const Plus = (
   }, [])
 
   return (
-    <Animated.View
-      style={{
-        opacity: fadeAnim,
-        top: riseAnim,
-        width: '100%',
-        position: 'absolute',
-        left: horizontalPosition - 260,
-      }}
-    >
-      <Font
+    <View>
+      <Animated.View
         style={{
-          color: currentBlockColour,
-          fontSize: 26,
-          paddingLeft: 30,
-          paddingRight: 30,
-          textShadowColor: '#fff',
-          textShadowOffset: { width: 1, height: 1 },
-          textShadowRadius: 1,
+          opacity: fadeAnim,
+          top: riseAnim,
+          width: width,
+          position: 'absolute',
+          left: horizontalPosition - adjustment,
         }}
       >
-        {`+` + amount}
-      </Font>
-    </Animated.View>
+        <Font
+          style={{
+            color: currentBlockColour,
+            fontSize: 26,
+            paddingLeft: 30,
+            paddingRight: 30,
+            textShadowColor: '#fff',
+            textShadowOffset: { width: 1, height: 1 },
+            textShadowRadius: 1,
+          }}
+        >
+          {`+` + amount}
+        </Font>
+      </Animated.View>
+    </View>
   )
 }
 

@@ -77,9 +77,7 @@ export default function Scores({ navigation }, props) {
         }}
       >
         <StatusBar style="light" />
-        <View style={[styles.quarterHeight, { marginTop: 72 }]}>
-          <Font style={styles.title}>Levels</Font>
-        </View>
+        <View style={[styles.quarterHeight, { marginTop: 72 }]}></View>
         <View style={styles.halfHeight}>
           <Font style={styles.title}>Leaderboard</Font>
           <FlatList

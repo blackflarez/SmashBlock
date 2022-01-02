@@ -17,11 +17,13 @@ import {
   MenuBar,
   Items,
   EquippedButton,
+  Config,
 } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useFocusEffect } from '@react-navigation/native'
+import * as Haptics from 'expo-haptics'
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
@@ -39,11 +41,17 @@ export default function HomeScreen({ navigation }, props) {
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
   const introFadeAnim = useRef(new Animated.Value(0)).current
+  const [config, setConfig] = useState(Config)
+
+  function haptics(style) {
+    if (Platform.OS === 'ios' && config.hapticsEnabled === true) {
+      Haptics.impactAsync(style)
+    }
+  }
 
   useFocusEffect(
     React.useCallback(() => {
       let isActive = true
-
       const onFocus = async () => {
         setNotifications()
         let item
@@ -62,10 +70,22 @@ export default function HomeScreen({ navigation }, props) {
                 }
               }
             })
+
           if (isActive) {
             setEquipped(item)
             canvas.current.setTool(item)
           }
+        } catch (error) {}
+        try {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/config`)
+            .get()
+            .then((snapshot) => {
+              if (snapshot.exists()) {
+                setConfig(snapshot.val())
+                canvas.current.setConfigFromOutside(snapshot.val())
+              }
+            })
         } catch (error) {
           console.log(error)
         }
@@ -230,6 +250,9 @@ export default function HomeScreen({ navigation }, props) {
     var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
     if (destroy) {
       amount = Math.floor(equipped.efficiency * damage)
+      haptics(Haptics.ImpactFeedbackStyle.Heavy)
+    } else {
+      haptics(Haptics.ImpactFeedbackStyle.Light)
     }
 
     setPlusses((plusses) => [

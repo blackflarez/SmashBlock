@@ -11,6 +11,7 @@ import ItemIcon from './ItemIcon'
 import Items from './Items'
 import EquippedButton from './EquippedButton'
 import Font from './Font'
+import Config from './Config'
 
 export {
   IconButton,
@@ -26,4 +27,5 @@ export {
   Items,
   EquippedButton,
   Font,
+  Config,
 }

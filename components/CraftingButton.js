@@ -9,13 +9,6 @@ import {
 } from 'react-native'
 import { Badge } from 'react-native-paper'
 import { Amount, ItemIcon, Font } from '../components'
-import * as Haptics from 'expo-haptics'
-
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
 
 const CraftingButton = (
   {
@@ -207,7 +200,6 @@ const CraftingButton = (
           onPress={() => {
             if (craftable && !pending) {
               onPress()
-              haptics(Haptics.ImpactFeedbackStyle.Light)
             }
           }}
         >
