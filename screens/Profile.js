@@ -3,7 +3,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react'
 import { StyleSheet, Text, View, Animated, Pressable } from 'react-native'
 import { Firebase } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
-import { Button, Font } from '../components'
+import { Button, Font, IconButton } from '../components'
 import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
@@ -17,6 +17,14 @@ export default function Profile({ navigation }, props) {
   const handleBack = async () => {
     try {
       navigation.navigate('Home')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleSettings = async () => {
+    try {
+      navigation.navigate('Settings')
     } catch (error) {
       console.log(error)
     }
@@ -70,19 +78,48 @@ export default function Profile({ navigation }, props) {
       >
         <StatusBar style="light" />
 
-        <View style={[styles.quarterHeight, { marginTop: 72 }]}>
+        <View
+          style={[
+            styles.quarterHeight,
+            {
+              marginTop: 72,
+            },
+          ]}
+        >
           <Font style={styles.title}>{username}</Font>
         </View>
         <View style={styles.halfHeight}>
           <Font style={styles.title}>Friends</Font>
         </View>
-        <View style={styles.quarterHeight}>
+        <View
+          style={[
+            styles.quarterHeight,
+            { flexDirection: 'row', alignSelf: 'center' },
+          ]}
+        >
           <Button
             title="Log Out"
             onPress={handleSignOut}
-            width={120}
+            width={125}
             titleSize={18}
-            containerStyle={{ marginBottom: 48, alignSelf: 'center' }}
+            containerStyle={{
+              marginHorizontal: 10,
+              marginBottom: 64,
+              alignSelf: 'center',
+            }}
+            icon={'logout-variant'}
+          />
+          <Button
+            title="Settings"
+            onPress={handleSettings}
+            width={125}
+            titleSize={18}
+            containerStyle={{
+              marginHorizontal: 10,
+              marginBottom: 64,
+              alignSelf: 'center',
+            }}
+            icon={'cog'}
           />
         </View>
       </Animated.View>

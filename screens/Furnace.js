@@ -14,17 +14,10 @@ import { Button, Items, ItemButton, ItemIcon, Font } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
-import * as Haptics from 'expo-haptics'
 import { BlurView } from 'expo-blur'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 const auth = Firebase.auth()
-
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
 
 var lastOreAmount, lastFuelAmount
 
@@ -153,7 +146,6 @@ export default function Furnace({ navigation }, props) {
   }
 
   const handleRemove = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(false)
 
     if (currentItem.category === 'fuel') {
@@ -203,7 +195,6 @@ export default function Furnace({ navigation }, props) {
   }
 
   const handleOpen = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setSetAmount(1)
     setModalVisible(true)
     setCurrentItem(item)
@@ -240,7 +231,6 @@ export default function Furnace({ navigation }, props) {
   }
 
   const handleAddOre = async () => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     if (currentOre) {
       if (currentOre.name === currentItem.name) {
         try {
@@ -311,7 +301,6 @@ export default function Furnace({ navigation }, props) {
   }
 
   const handleAddFuel = async () => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     if (currentFuel) {
       if (currentFuel.name === currentItem.name) {
         try {
@@ -615,9 +604,7 @@ export default function Furnace({ navigation }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={{ margin: 24, marginTop: 72 }}>
-          <Font style={styles.title}>Furnace</Font>
-        </View>
+        <View style={{ margin: 24, marginTop: 72 }}></View>
         <View style={[styles.row]}>
           <View style={{ flexDirection: 'column' }}>
             <ItemButton

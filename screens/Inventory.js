@@ -14,16 +14,9 @@ import { Button, Items, ItemButton, ItemIcon, Font } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
-import * as Haptics from 'expo-haptics'
 import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
-
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
 
 export default function Inventory({ navigation, route }, props) {
   const { filter } = route.params
@@ -84,7 +77,6 @@ export default function Inventory({ navigation, route }, props) {
   }
 
   const handleEquip = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(false)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/equipped`)
@@ -93,7 +85,6 @@ export default function Inventory({ navigation, route }, props) {
   }
 
   const handleDestroy = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(false)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
@@ -112,7 +103,6 @@ export default function Inventory({ navigation, route }, props) {
   }
 
   const handleUnequip = async () => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(false)
     await Firebase.database()
       .ref(`users/${user.uid}/userData/equipped`)
@@ -121,7 +111,6 @@ export default function Inventory({ navigation, route }, props) {
   }
 
   const handleOpen = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setModalVisible(true)
     setCurrentItem(item)
     try {
@@ -358,9 +347,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={{ margin: 24, marginTop: 72 }}>
-          <Font style={styles.title}>Inventory</Font>
-        </View>
+        <View style={{ margin: 24, marginTop: 72 }}></View>
         <View style={[styles.halfHeight]}>
           <FlatList
             data={inventoryFiltered}

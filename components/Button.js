@@ -1,6 +1,7 @@
 import React from 'react'
 import { StyleSheet, Pressable, View, ActivityIndicator } from 'react-native'
 import { Font } from '../components'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 
 const Button = ({
   title,
@@ -13,6 +14,7 @@ const Button = ({
   containerStyle,
   pending,
   enabled,
+  icon,
 }) => {
   if (pending) {
     return (
@@ -114,7 +116,16 @@ const Button = ({
         ]
       }}
     >
-      <Font style={{ color: titleColor, fontSize: titleSize }}>{title}</Font>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {icon ? (
+          <MaterialCommunityIcons
+            name={icon}
+            size={20}
+            style={{ marginRight: 5 }}
+          />
+        ) : null}
+        <Font style={{ color: titleColor, fontSize: titleSize }}>{title}</Font>
+      </View>
     </Pressable>
   )
 }

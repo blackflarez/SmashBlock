@@ -14,17 +14,10 @@ import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { CraftingButton, Font, ItemIcon, Amount } from '../components'
 import { useStateIfMounted } from 'use-state-if-mounted'
-import * as Haptics from 'expo-haptics'
 import _ from 'lodash'
 import { BlurView } from 'expo-blur'
 
 const auth = Firebase.auth()
-
-function haptics(style) {
-  if (Platform.OS === 'ios') {
-    Haptics.impactAsync(style)
-  }
-}
 
 export default function Crafting({ navigation }, props) {
   const [pending, setPending] = useState(false)
@@ -82,7 +75,6 @@ export default function Crafting({ navigation }, props) {
   }
 
   const handleCraft = async (item) => {
-    haptics(Haptics.ImpactFeedbackStyle.Light)
     setPending(true)
 
     await Firebase.database()
@@ -255,9 +247,7 @@ export default function Crafting({ navigation }, props) {
           </View>
         </Modal>
         <StatusBar style="light" />
-        <View style={{ margin: 24, marginTop: 72 }}>
-          <Font style={styles.title}>Crafting</Font>
-        </View>
+        <View style={{ margin: 24, marginTop: 72 }}></View>
 
         <View style={[styles.halfHeight]}>
           <FlatList

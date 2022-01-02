@@ -10,7 +10,7 @@ import * as THREE from 'three'
 import ExpoTHREE, { Renderer, TextureLoader } from 'expo-three'
 import { GLView } from 'expo-gl'
 import * as React from 'react'
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import {
   LongPressGestureHandler,
   PanGestureHandler,
@@ -19,10 +19,9 @@ import {
   TapGestureHandler,
 } from 'react-native-gesture-handler'
 import * as TWEEN from '@tweenjs/tween.js'
-import * as Haptics from 'expo-haptics'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { Asset } from 'expo-asset'
-import Items from './Items'
+import { Items, Config } from '../components'
 import { decode, encode } from 'base-64'
 import { Vector2 } from 'three'
 
@@ -96,30 +95,69 @@ var deltaX = 0,
   particleContainer = [],
   smokeContainer = [],
   lastDestruction,
-  lastOreDestruction
+  lastOreDestruction,
+  light
 
 //Graphics Settings
-var renderWidth = width,
-  renderHeight = height,
-  renderScale = 1,
-  shadowSize = 256,
-  shadowEnabled = true
-
-if (Platform.OS === 'android') {
-  shadowEnabled = false
-}
+var shadowSize = 256,
+  shadowEnabled = true,
+  destructionEnabled = true,
+  particlesEnabled = true
 
 function Canvas(props, ref) {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const doubleTapRef = useRef(null)
+  const [renderScale, setRenderScale] = useState(1)
+  const [renderDimentions, setRenderDimentions] = useState({
+    width: width,
+    height: height,
+  })
 
   useImperativeHandle(
     ref,
     () => ({
+      setConfigFromOutside(config) {
+        if (config.shadowEnabled) {
+          renderer.shadowMapAutoUpdate = true
+          light.shadow.mapSize.set(config.shadowSize, config.shadowSize)
+          light.shadow.map.dispose()
+          light.shadow.map = null
+        } else if (config.shadowEnabled === false) {
+          light.shadow.mapSize.set(2, 2)
+          light.shadow.map.dispose()
+          light.shadow.map = null
+        }
+        if (config.destructionEnabled) {
+          destructionEnabled = config.destructionEnabled
+        } else if (config.destructionEnabled === false) {
+          destructionEnabled = false
+        }
+        if (config.particlesEnabled) {
+          particlesEnabled = config.particlesEnabled
+        } else if (config.particlesEnabled === false) {
+          particlesEnabled = false
+        }
+        if (config.renderScale) {
+          if (config.renderScale === 0.5) {
+            renderer.setPixelRatio(0.5)
+            setRenderDimentions({ width: width / 2, height: height / 2 })
+            setRenderScale(2)
+          } else if (config.renderScale === 0.25) {
+            renderer.setPixelRatio(0.25)
+            setRenderDimentions({ width: width / 4, height: height / 4 })
+            setRenderScale(4)
+          } else {
+            renderer.setPixelRatio(1)
+            setRenderDimentions({ width: width, height: height })
+            setRenderScale(1)
+          }
+        }
+
+        console.log(config)
+      },
       setFromOutside(block) {
         currentBlock = Object.create(block)
       },
-
       setTool(tool) {
         if (tool.category === 'pickaxe') {
           try {
@@ -137,29 +175,25 @@ function Canvas(props, ref) {
   )
 
   function setToolMaterial(tool) {
-    if (tool.material === 'glass') {
-      pickaxe.material = new THREE.MeshPhongMaterial({
-        color: tool.colour,
-        map: glassPickaxeTexture,
-        transparent: true,
-        opacity: 0,
-        visible: false,
-      })
-    } else {
-      pickaxe.material = new THREE.MeshStandardMaterial({
-        color: tool.colour,
-        map: pickaxeTexture,
-        transparent: true,
-        opacity: 0,
-        visible: false,
-      })
-    }
-  }
-
-  function haptics(style) {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(style)
-    }
+    try {
+      if (tool.material === 'glass') {
+        pickaxe.material = new THREE.MeshPhongMaterial({
+          color: tool.colour,
+          map: glassPickaxeTexture,
+          transparent: true,
+          opacity: 0,
+          visible: false,
+        })
+      } else {
+        pickaxe.material = new THREE.MeshStandardMaterial({
+          color: tool.colour,
+          map: pickaxeTexture,
+          transparent: true,
+          opacity: 0,
+          visible: false,
+        })
+      }
+    } catch (error) {}
   }
 
   async function onContextCreate(gl) {
@@ -212,7 +246,7 @@ function Canvas(props, ref) {
       mouse = new THREE.Vector2()
 
       //lights
-      const light = new THREE.DirectionalLight(0xffffff, 2.5)
+      light = new THREE.DirectionalLight(0xffffff, 2.5)
       light.position.set(-120, 350, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
@@ -1490,12 +1524,17 @@ function Canvas(props, ref) {
     }
     if (currentBlock.health <= 0 || damage > currentBlock.health) {
       animateTool(block, false)
-      animateParticle(block, false)
+      if (particlesEnabled) {
+        animateParticle(block, false)
+      }
+
       animateSmoke(block, false)
       props.updateBalance(currentBlock, true, coordinates, damage)
-      destruction()
+      if (destructionEnabled) {
+        destruction()
+      }
       props.generateBlock()
-      haptics(Haptics.ImpactFeedbackStyle.Heavy)
+
       animation('destroy', block.object, block.object)
       updateMaterial(block)
     } else {
@@ -1506,9 +1545,12 @@ function Canvas(props, ref) {
       )
 
       animateTool(block, true)
-      animateParticle(block, true)
+      if (particlesEnabled) {
+        animateParticle(block, true)
+      }
+
       props.updateBalance(currentBlock, false, coordinates, damage)
-      haptics(Haptics.ImpactFeedbackStyle.Light)
+
       animation('click', block.object, block.object)
       currentBlock.health -= strength
     }
@@ -1554,7 +1596,6 @@ function Canvas(props, ref) {
   let handlePanOut = async (evt) => {
     let { nativeEvent } = evt
     if (nativeEvent.state === State.END) {
-      haptics(Haptics.ImpactFeedbackStyle.Light)
       panning = false
       animation('returnRotation', scene, scene)
     }
@@ -1566,7 +1607,16 @@ function Canvas(props, ref) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        overflow: 'hidden',
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        transform: [{ scaleX: renderScale }, { scaleY: renderScale }],
+      }}
+    >
       <Animated.View
         style={{
           ...props.style,
@@ -1588,7 +1638,10 @@ function Canvas(props, ref) {
                   >
                     <GLView
                       onContextCreate={onContextCreate}
-                      style={styles.content}
+                      style={{
+                        width: renderDimentions.width,
+                        height: renderDimentions.height,
+                      }}
                     />
                   </TapGestureHandler>
                 </TapGestureHandler>
@@ -1604,14 +1657,6 @@ function Canvas(props, ref) {
 export default forwardRef(Canvas)
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    transform: [{ scaleX: renderScale }, { scaleY: renderScale }],
-  },
   title: {
     color: '#000',
     fontSize: 24,
@@ -1625,10 +1670,6 @@ const styles = StyleSheet.create({
   },
   wrapper: {
     alignItems: 'center',
-  },
-  content: {
-    width: renderWidth,
-    height: renderHeight,
   },
   image: {
     flex: 1,
