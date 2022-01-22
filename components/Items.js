@@ -11,6 +11,7 @@ export default [
     category: 'ore',
     output: 'Gold Ingot',
     model: 'rock',
+    locations: ['sandybeach'],
   },
   {
     name: 'Stone',
@@ -21,6 +22,7 @@ export default [
     probability: 80,
     type: 'block',
     model: 'stone',
+    locations: ['sandybeach'],
   },
   {
     name: 'Iron Ore',
@@ -33,6 +35,7 @@ export default [
     category: 'ore',
     output: 'Iron Ingot',
     model: 'rock',
+    locations: ['sandybeach'],
   },
   {
     name: 'Diamond',
@@ -43,6 +46,7 @@ export default [
     probability: 0.1,
     type: 'block',
     model: 'rock',
+    locations: ['sandybeach'],
   },
   {
     name: 'Wood',
@@ -53,6 +57,7 @@ export default [
     probability: 60,
     type: 'block',
     model: 'wood',
+    locations: ['foggyforest'],
   },
   {
     name: 'Coal',
@@ -64,6 +69,7 @@ export default [
     type: 'block',
     category: 'fuel',
     model: 'rock',
+    locations: ['sandybeach'],
   },
   //Tools
   {

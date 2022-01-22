@@ -43,7 +43,9 @@ var deltaX = 0,
   wood,
   tree,
   grass,
+  foggyForestGroup,
   flowers,
+  mapOverlay,
   flowerTexture,
   grassTexture,
   dirtTexture,
@@ -57,13 +59,19 @@ var deltaX = 0,
   pickaxeTexture,
   glassPickaxeTexture,
   oresTexture,
+  mapOverlayTexture,
   toolVisible = false,
   oresDestruction = [],
   cubeDestruction = [],
   particles = [],
   lastParticle,
+  worldMap,
+  worldMapTexture,
   sky,
   skyColour,
+  clouds,
+  cloudsTexture,
+  cloudOffset = 0,
   floors,
   plane,
   shadowPlane,
@@ -98,11 +106,18 @@ var deltaX = 0,
   tbc = 0, //Time Between Clicks
   blockContainer,
   toolContainer,
+  mapGroup,
+  mapButtonGroup,
+  mapButtons,
   particleContainer = [],
   smokeContainer = [],
   lastDestruction,
   lastOreDestruction,
-  light
+  light,
+  mapMode = false,
+  mapModePending = false,
+  currentLocation = 'foggyforest',
+  loaded = false
 
 //Graphics Settings
 var shadowSize = 256,
@@ -122,6 +137,12 @@ function Canvas(props, ref) {
   useImperativeHandle(
     ref,
     () => ({
+      updateEnvironmentFromOutside(location) {
+        updateEnvironment(location)
+      },
+      toggleMapFromOutside() {
+        animateMap()
+      },
       setConfigFromOutside(config) {
         if (config.shadowEnabled) {
           renderer.shadowMapAutoUpdate = true
@@ -161,6 +182,7 @@ function Canvas(props, ref) {
       },
       setFromOutside(block) {
         currentBlock = Object.create(block)
+        updateMaterial(block)
       },
       setTool(tool) {
         if (tool.category === 'pickaxe') {
@@ -217,12 +239,15 @@ function Canvas(props, ref) {
       //scene
       scene = new THREE.Scene()
       world = new THREE.Group()
+      mapGroup = new THREE.Group()
+      foggyForestGroup = new THREE.Group()
+      mapButtonGroup = new THREE.Group()
       blockContainer = new THREE.Group()
       blockContainer.name = 'blockContainer'
       toolContainer = new THREE.Group()
       skyColour = 0xbde0fe
       scene.background = new THREE.Color(skyColour)
-      scene.fog = new THREE.Fog(skyColour, 2, 12)
+      scene.fog = new THREE.Fog(skyColour, 2, 15)
 
       //renderer
       renderer = new Renderer({
@@ -243,7 +268,7 @@ function Canvas(props, ref) {
         60,
         gl.drawingBufferWidth / gl.drawingBufferHeight,
         1.2,
-        13
+        60
       )
 
       camera.position.z = 3
@@ -280,6 +305,10 @@ function Canvas(props, ref) {
       ).uri
       const flowersUri = Asset.fromModule(
         require('../assets/models/flowers.glb')
+      ).uri
+      const mapUri = Asset.fromModule(require('../assets/models/map.glb')).uri
+      const cloudsUri = Asset.fromModule(
+        require('../assets/models/clouds.glb')
       ).uri
       const oresUri = Asset.fromModule(require('../assets/models/ores.glb')).uri
       const destructionUri = Asset.fromModule(
@@ -339,6 +368,13 @@ function Canvas(props, ref) {
       const shadowPlaneUri = Asset.fromModule(
         require('../assets/models/shadowplane.glb')
       ).uri
+      const mapOverlayUri = Asset.fromModule(
+        require('../assets/models/mapoverlay.glb')
+      ).uri
+      const mapButtonsUri = Asset.fromModule(
+        require('../assets/models/mapbuttons.glb')
+      ).uri
+
       const planeTexUri = Asset.fromModule(
         require('../assets/models/planebake.png')
       ).uri
@@ -377,6 +413,15 @@ function Canvas(props, ref) {
       ).uri
       const flowerTex = Asset.fromModule(
         require('../assets/models/flowertexture.png')
+      ).uri
+      const worldMapTex = Asset.fromModule(
+        require('../assets/models/maptexture.png')
+      ).uri
+      const cloudsTex = Asset.fromModule(
+        require('../assets/models/cloudstexture.png')
+      ).uri
+      const mapOverlayTex = Asset.fromModule(
+        require('../assets/models/mapoverlaytexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -482,10 +527,22 @@ function Canvas(props, ref) {
       let m24 = loadModel(flowersUri).then((result) => {
         flowers = result.scene
       })
+      let m25 = loadModel(mapUri).then((result) => {
+        worldMap = result.scene
+      })
+      let m26 = loadModel(cloudsUri).then((result) => {
+        clouds = result.scene.children[0]
+      })
+      let m27 = loadModel(mapOverlayUri).then((result) => {
+        mapOverlay = result.scene.children[0]
+      })
+      let m28 = loadModel(mapButtonsUri).then((result) => {
+        mapButtons = result.scene
+      })
+
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
       })
-
       let t2 = loadTexture(planeTexUri).then((result) => {
         planeTexture = result
       })
@@ -524,6 +581,15 @@ function Canvas(props, ref) {
       })
       let t14 = loadTexture(flowerTex).then((result) => {
         flowerTexture = result
+      })
+      let t15 = loadTexture(worldMapTex).then((result) => {
+        worldMapTexture = result
+      })
+      let t16 = loadTexture(cloudsTex).then((result) => {
+        cloudsTexture = result
+      })
+      let t17 = loadTexture(mapOverlayTex).then((result) => {
+        mapOverlayTexture = result
       })
 
       let msmoke = []
@@ -572,6 +638,10 @@ function Canvas(props, ref) {
         m22,
         m23,
         m24,
+        m25,
+        m26,
+        m27,
+        m28,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -587,6 +657,9 @@ function Canvas(props, ref) {
         t12,
         t13,
         t14,
+        t15,
+        t16,
+        t17,
         ms[area - 1],
       ]).then(() => {
         //Pick
@@ -632,7 +705,42 @@ function Canvas(props, ref) {
 
         //trees
         tree.castShadow = false
-        world.add(tree)
+        foggyForestGroup.add(tree)
+
+        //map
+        worldMapTexture.flipY = false
+        worldMap.children[0].material = new THREE.MeshLambertMaterial({
+          color: 0x808080,
+          map: worldMapTexture,
+        })
+        worldMap.visible = false
+        mapGroup.add(worldMap)
+
+        //map overlay
+        mapOverlayTexture.flipY = false
+        mapOverlay.material = new THREE.MeshBasicMaterial({
+          map: mapOverlayTexture,
+          transparent: true,
+          opacity: 0,
+        })
+        mapGroup.add(mapOverlay)
+
+        //map buttons
+        mapButtons.visible = false
+        mapButtonGroup.add(mapButtons)
+
+        //clouds
+        cloudsTexture.flipY = false
+        cloudsTexture.wrapS = cloudsTexture.wrapT = THREE.RepeatWrapping
+        cloudsTexture.offset.set(0, 0)
+        cloudsTexture.repeat.set(8, 8)
+        clouds.material = new THREE.MeshLambertMaterial({
+          map: cloudsTexture,
+          blending: THREE.AdditiveBlending,
+          transparent: true,
+          opacity: 0.1,
+        })
+        mapGroup.add(clouds)
 
         //grass
         grassTexture.flipY = false
@@ -644,7 +752,8 @@ function Canvas(props, ref) {
             alphaTest: 0.5,
           })
           grass.children[i].receiveShadow = true
-          scene.add(grass.children[i])
+          foggyForestGroup.add(grass.children[i])
+          scene.add(foggyForestGroup)
         }
 
         //flowers
@@ -657,7 +766,7 @@ function Canvas(props, ref) {
             alphaTest: 0.5,
           })
           flowers.children[i].receiveShadow = false
-          scene.add(flowers.children[i])
+          foggyForestGroup.add(flowers.children[i])
         }
 
         //rock
@@ -700,6 +809,7 @@ function Canvas(props, ref) {
 
         cube = Object.create(stone)
         blockContainer.add(cube)
+        updateMaterial(currentBlock)
 
         //wood
         woodTexture.flipY = false
@@ -914,6 +1024,9 @@ function Canvas(props, ref) {
         scene.rotation.y = -0.78
         scene.add(world)
         scene.add(toolContainer)
+        mapGroup.add(mapButtonGroup)
+        scene.add(mapGroup)
+        props.setLoading()
 
         animate()
         Animated.timing(fadeAnim, {
@@ -925,10 +1038,20 @@ function Canvas(props, ref) {
     }
 
     async function animate() {
+      if (mapMode) {
+        cloudsTexture.offset.set(cloudOffset, cloudOffset)
+        cloudOffset += 0.0005
+      }
+
       //panning
       if (panning) {
-        scene.rotation.x += deltaY * rotationSpeed
-        scene.rotation.y += deltaX * rotationSpeed
+        if (mapMode && !mapModePending) {
+          mapGroup.position.z += deltaY * 0.003
+          mapGroup.position.x += deltaX * 0.003
+        } else if (!mapMode) {
+          scene.rotation.x += deltaY * rotationSpeed
+          scene.rotation.y += deltaX * rotationSpeed
+        }
       }
 
       if (scene.rotation.x > 0.2) {
@@ -952,10 +1075,9 @@ function Canvas(props, ref) {
       }
 
       //scale
-      const minimum = 9
-      const maximum = 15 + floors
-      const threshold = 0.5
-      camera.position.z -= scale / 15
+      const minimum = 60
+      const maximum = 100
+      camera.fov -= scale / 2
       if (scale > 0) {
         scale -= 0.1
       }
@@ -969,11 +1091,11 @@ function Canvas(props, ref) {
         scale += 0.1
       }
 
-      if (camera.position.z < minimum) {
-        // camera.position.z = minimum
+      if (camera.fov < minimum) {
+        camera.fov = minimum
       }
-      if (camera.position.z > maximum) {
-        //camera.position.z = maximum
+      if (camera.fov > maximum) {
+        camera.fov = maximum
       }
 
       //animate
@@ -996,7 +1118,6 @@ function Canvas(props, ref) {
     }
 
     init()
-    props.setLoading()
   }
 
   function animation(type, target, reference) {
@@ -1506,18 +1627,282 @@ function Canvas(props, ref) {
       .start()
   }
 
-  async function raycast(evt) {
-    let { nativeEvent } = evt
-    mouse.x = (nativeEvent.absoluteX / width) * 2 - 1
-    mouse.y = -(nativeEvent.absoluteY / height) * 2 + 1
-    raycaster = new THREE.Raycaster()
-    scene.updateMatrixWorld()
-    raycaster.setFromCamera(mouse, camera)
-    var intersects = raycaster.intersectObjects(world.children, true)
-    return intersects[0]
+  function animateMap(position) {
+    if (position && !mapModePending) {
+      new TWEEN.Tween(mapGroup.position)
+        .to(
+          {
+            x: -position.x,
+            z: -position.z,
+          },
+          500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+    }
+    if (!mapMode && !mapModePending) {
+      //world
+      props.setMapMode()
+      skyColour = 0xbde0fe
+      console.log(currentLocation)
+      let position = mapButtons.children.filter(
+        (o) => o.name === currentLocation
+      )[0].position
+
+      new TWEEN.Tween(scene)
+        .to(
+          {
+            background: new THREE.Color(skyColour),
+          },
+          2500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+
+      new TWEEN.Tween(mapOverlay.material)
+        .to(
+          {
+            opacity: 1,
+          },
+          3500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+
+      new TWEEN.Tween(mapGroup.position)
+        .to(
+          {
+            x: -position.x,
+            z: -position.z,
+          },
+          500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      mapModePending = true
+      new TWEEN.Tween(worldMap)
+        .to({}, 1100)
+        .onComplete(() => (worldMap.visible = true))
+        .start()
+
+      new TWEEN.Tween(scene.rotation)
+        .to(
+          {
+            y: 0,
+          },
+          1500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(scene.fog)
+        .to(
+          {
+            far: 70,
+            color: new THREE.Color(skyColour),
+          },
+          2500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onComplete(() => {
+          mapModePending = false
+        })
+        .start()
+      new TWEEN.Tween(camera.position)
+        .to(
+          {
+            y: 150,
+          },
+          1500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(camera.rotation)
+        .to(
+          {
+            x: -1.4,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+
+        .start()
+      new TWEEN.Tween(camera)
+        .to(
+          {
+            fov: 80,
+          },
+          1750
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onUpdate(() => {
+          camera.updateProjectionMatrix()
+        })
+        .start()
+      mapMode = true
+    } else if (mapMode && !mapModePending) {
+      //scene
+      props.setSceneMode(currentLocation)
+      mapModePending = true
+
+      new TWEEN.Tween(mapOverlay.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(worldMap)
+        .to({}, 400)
+        .onComplete(() => (worldMap.visible = false))
+        .start()
+      new TWEEN.Tween(scene.rotation)
+        .to(
+          {
+            y: -0.78,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(scene.fog)
+        .to(
+          {
+            far: 15,
+          },
+          500
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+
+      new TWEEN.Tween(camera.position)
+        .to(
+          {
+            y: 1.25,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onComplete(() => {
+          mapModePending = false
+        })
+        .start()
+      new TWEEN.Tween(camera.rotation)
+        .to(
+          {
+            x: -0.32175055439664224,
+          },
+          1750
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onComplete(() => {})
+        .start()
+
+      new TWEEN.Tween(camera)
+        .to(
+          {
+            fov: 60,
+          },
+          1750
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onUpdate(() => {
+          camera.updateProjectionMatrix()
+        })
+        .start()
+      mapMode = false
+    }
   }
 
-  function updateMaterial(block) {
+  async function raycast(evt, group) {
+    try {
+      let { nativeEvent } = evt
+      mouse.x = (nativeEvent.absoluteX / width) * 2 - 1
+      mouse.y = -(nativeEvent.absoluteY / height) * 2 + 1
+      raycaster = new THREE.Raycaster()
+      scene.updateMatrixWorld()
+      raycaster.setFromCamera(mouse, camera)
+      var intersects = raycaster.intersectObjects(group.children, true)
+      return intersects[0]
+    } catch (error) {
+      return null
+    }
+  }
+
+  function updateEnvironment(location) {
+    currentLocation = location
+    if (location === 'sandybeach') {
+      foggyForestGroup.visible = false
+      plane.material.map = sandTexture
+      skyColour = 0x87ceeb
+
+      new TWEEN.Tween(scene)
+        .to(
+          {
+            background: new THREE.Color(skyColour),
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(scene.fog)
+        .to(
+          {
+            color: new THREE.Color(skyColour),
+            far: 80,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+    } else if (location === 'foggyforest') {
+      foggyForestGroup.visible = true
+      plane.material.map = dirtTexture
+      skyColour = 0xbde0fe
+
+      new TWEEN.Tween(scene)
+        .to(
+          {
+            background: new THREE.Color(skyColour),
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+      new TWEEN.Tween(scene.fog)
+        .to(
+          {
+            color: new THREE.Color(skyColour),
+            far: 15,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .start()
+    }
+  }
+
+  function updateMaterial() {
     blockContainer.rotation.x += (Math.PI / 2) * Math.floor(Math.random() * 4)
     blockContainer.rotation.y += (Math.PI / 2) * Math.floor(Math.random() * 4)
     blockContainer.rotation.z += (Math.PI / 2) * Math.floor(Math.random() * 4)
@@ -1611,7 +1996,6 @@ function Canvas(props, ref) {
         destruction()
       }
       props.generateBlock()
-
       animation('destroy', block.object, block.object)
       updateMaterial(block)
     } else {
@@ -1636,10 +2020,26 @@ function Canvas(props, ref) {
   let handlePress = async (evt) => {
     let { nativeEvent } = evt
     if (nativeEvent.state === State.BEGAN) {
-      let block = await raycast(evt)
-      if (block.object.parent.name === 'blockContainer') {
-        hitBlock(block, { x: nativeEvent.absoluteX, y: nativeEvent.absoluteY })
-      }
+      try {
+        if (!mapMode) {
+          let block = await raycast(evt, world)
+          if (block.object.parent.name === 'blockContainer') {
+            hitBlock(block, {
+              x: nativeEvent.absoluteX,
+              y: nativeEvent.absoluteY,
+            })
+          }
+        }
+      } catch (error) {}
+    }
+    if (nativeEvent.state === State.END) {
+      try {
+        if (mapMode && !mapModePending) {
+          let target = await raycast(evt, mapButtonGroup)
+          currentLocation = target.object.name
+          animateMap(target.object.position)
+        }
+      } catch (error) {}
     }
   }
 
@@ -1647,9 +2047,9 @@ function Canvas(props, ref) {
 
   let handleLongPress = async (evt) => {
     let { nativeEvent } = evt
-    let block = await raycast(evt)
+    let block = await raycast(evt, world)
     if (nativeEvent.state === State.ACTIVE) {
-      if (block.object.parent.name === 'blockContainer') {
+      if (block.object.parent.name === 'blockContainer' && !mapMode) {
         timer = setInterval(async () => {
           hitBlock(block, {
             x: nativeEvent.absoluteX,
@@ -1674,13 +2074,18 @@ function Canvas(props, ref) {
     let { nativeEvent } = evt
     if (nativeEvent.state === State.END) {
       panning = false
-      animation('returnRotation', scene, scene)
+      if (!mapMode) {
+        animation('returnRotation', scene, scene)
+      }
     }
   }
 
   let handlePinch = (evt) => {
     let { nativeEvent } = evt
-    //scale = nativeEvent.velocity
+    if (mapMode && !mapModePending) {
+      scale = nativeEvent.velocity
+      camera.updateProjectionMatrix()
+    }
   }
 
   return (

@@ -11,53 +11,63 @@ const MenuBar = (
     onHandleFurnace,
     inventoryNotificaitons,
     furnaceNotifications,
+    menuVisible,
   },
   props
 ) => {
   const [profileNotifications, setProfileNotifications] = useState(0)
-
-  return (
-    <View
-      style={{
-        flexDirection: 'row',
-      }}
-    >
-      <IconButton
-        name="account-outline"
-        size={32}
-        color="#212529"
-        onPress={onHandleProfile}
-        visible={false}
-      />
-      <IconButton
-        name="trophy-variant-outline"
-        size={32}
-        color="#212529"
-        onPress={onHandleScores}
-        visible={false}
-      />
-      <IconButton
-        name="fire"
-        size={32}
-        color="#212529"
-        onPress={onHandleFurnace}
-        notifications={furnaceNotifications}
-      />
-      <IconButton
-        name="toolbox-outline"
-        size={32}
-        color="#212529"
-        onPress={onHandleCrafting}
-      />
-      <IconButton
-        name="view-grid-outline"
-        size={32}
-        color="#212529"
-        onPress={onHandleInventory}
-        notifications={inventoryNotificaitons}
-      />
-    </View>
-  )
+  if (!menuVisible) {
+    return null
+  } else {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          alignContent: 'stretch',
+        }}
+      >
+        <IconButton
+          name="account-outline"
+          size={32}
+          color="#212529"
+          onPress={onHandleProfile}
+          visible={false}
+          containerStyle={{ margin: 10 }}
+        />
+        <IconButton
+          name="trophy-variant-outline"
+          size={32}
+          color="#212529"
+          onPress={onHandleScores}
+          visible={false}
+          containerStyle={{ margin: 10 }}
+        />
+        <IconButton
+          name="fire"
+          size={32}
+          color="#212529"
+          onPress={onHandleFurnace}
+          notifications={furnaceNotifications}
+          containerStyle={{ margin: 10 }}
+        />
+        <IconButton
+          name="toolbox-outline"
+          size={32}
+          color="#212529"
+          onPress={onHandleCrafting}
+          containerStyle={{ margin: 10 }}
+        />
+        <IconButton
+          name="view-grid-outline"
+          size={32}
+          color="#212529"
+          onPress={onHandleInventory}
+          notifications={inventoryNotificaitons}
+          containerStyle={{ margin: 10 }}
+        />
+      </View>
+    )
+  }
 }
 
 const styles = StyleSheet.create({})
