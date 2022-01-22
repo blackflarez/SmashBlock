@@ -9,12 +9,12 @@ const Plus = (
   const fadeAnim = useRef(new Animated.Value(0)).current
   const riseAnim = useRef(new Animated.Value(coordinates.y)).current
   const [horizontalPosition, setHorizontalPosition] = useState(coordinates.x)
-  var width = '100%'
+  var width = 500
   var adjustment = 260
 
   if (Platform.OS === 'web') {
     width = 1000
-    adjustment = 315
+    adjustment = 260
   }
 
   useEffect(() => {
@@ -51,7 +51,6 @@ const Plus = (
         style={{
           opacity: fadeAnim,
           top: riseAnim,
-          width: width,
           position: 'absolute',
           left: horizontalPosition - adjustment,
         }}
