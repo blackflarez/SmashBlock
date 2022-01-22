@@ -19,6 +19,7 @@ import {
   EquippedButton,
   Config,
   IconButton,
+  Font,
 } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -48,6 +49,8 @@ export default function HomeScreen({ navigation }, props) {
   const [config, setConfig] = useState(Config)
   const [menuVisible, setMenuVisible] = useState(true)
   const [mapButtonVisible, setMapButtonVisible] = useState(true)
+  const locationAnim = useRef(new Animated.Value(0)).current
+  const locationRiseAnim = useRef(new Animated.Value(30)).current
 
   function haptics(style) {
     if (Platform.OS === 'ios' && config.hapticsEnabled === true) {
@@ -107,6 +110,31 @@ export default function HomeScreen({ navigation }, props) {
     } catch (error) {}
     try {
       canvas.current.updateEnvironmentFromOutside(location)
+      Animated.sequence([
+        Animated.timing(locationRiseAnim, {
+          toValue: 30,
+          duration: 0.1,
+          useNativeDriver: false,
+        }),
+        Animated.timing(locationAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        }),
+
+        Animated.parallel([
+          Animated.timing(locationRiseAnim, {
+            toValue: -700,
+            duration: 6000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(locationAnim, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: false,
+          }),
+        ]),
+      ]).start()
     } catch (error) {}
   }, [location, canvasLoading])
 
@@ -293,7 +321,7 @@ export default function HomeScreen({ navigation }, props) {
   async function updateBalance(block, destroy, coordinates, damage) {
     var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
     if (destroy) {
-      amount = Math.floor(equipped.efficiency * damage)
+      amount = Math.floor(amount * 1.5)
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
@@ -455,6 +483,25 @@ export default function HomeScreen({ navigation }, props) {
       }}
     >
       <StatusBar style="dark" />
+
+      <Animated.View
+        style={{
+          opacity: locationAnim,
+          top: locationRiseAnim,
+          alignContent: 'center',
+        }}
+      >
+        <Font
+          style={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontSize: 22,
+            paddingLeft: 30,
+            paddingRight: 30,
+          }}
+        >
+          {location}
+        </Font>
+      </Animated.View>
 
       <Animated.View
         style={{

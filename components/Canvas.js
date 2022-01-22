@@ -720,7 +720,7 @@ function Canvas(props, ref) {
         mapOverlayTexture.flipY = false
         mapOverlay.material = new THREE.MeshBasicMaterial({
           map: mapOverlayTexture,
-          transparent: true,
+          transparent: 1,
           opacity: 0,
         })
         mapGroup.add(mapOverlay)
@@ -1645,7 +1645,6 @@ function Canvas(props, ref) {
       //world
       props.setMapMode()
       skyColour = 0xbde0fe
-      console.log(currentLocation)
       let position = mapButtons.children.filter(
         (o) => o.name === currentLocation
       )[0].position
@@ -1666,10 +1665,13 @@ function Canvas(props, ref) {
           {
             opacity: 1,
           },
-          3500
+          1000
         )
         .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
+        .easing(TWEEN.Easing.Linear.None)
+        .onUpdate(() => {
+          mapOverlay.visible = true
+        })
         .start()
 
       new TWEEN.Tween(mapGroup.position)
@@ -1743,9 +1745,7 @@ function Canvas(props, ref) {
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Cubic.InOut)
-        .onUpdate(() => {
-          camera.updateProjectionMatrix()
-        })
+        .onUpdate(() => camera.updateProjectionMatrix())
         .start()
       mapMode = true
     } else if (mapMode && !mapModePending) {
@@ -1758,10 +1758,11 @@ function Canvas(props, ref) {
           {
             opacity: 0,
           },
-          500
+          200
         )
         .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
+        .easing(TWEEN.Easing.Linear.None)
+        .onComplete(() => (mapOverlay.visible = false))
         .start()
       new TWEEN.Tween(worldMap)
         .to({}, 400)
@@ -1822,9 +1823,7 @@ function Canvas(props, ref) {
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Cubic.InOut)
-        .onUpdate(() => {
-          camera.updateProjectionMatrix()
-        })
+        .onUpdate(() => camera.updateProjectionMatrix())
         .start()
       mapMode = false
     }

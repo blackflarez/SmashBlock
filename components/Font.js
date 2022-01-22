@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, StyleSheet } from 'react-native'
+import { Text, StyleSheet, Platform } from 'react-native'
 import { useFonts, McLaren_400Regular } from '@expo-google-fonts/mclaren'
 
 const Font = (props) => {
@@ -14,4 +14,6 @@ const Font = (props) => {
 }
 export default Font
 
-const styles = StyleSheet.create({ font: { fontFamily: 'McLaren_400Regular' } })
+const styles = StyleSheet.create({
+  font: { fontFamily: 'McLaren_400Regular' },
+})
