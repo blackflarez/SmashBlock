@@ -18,6 +18,7 @@ import {
   Items,
   EquippedButton,
   Config,
+  IconButton,
 } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -37,11 +38,16 @@ export default function HomeScreen({ navigation }, props) {
   const [inventory, setInventory] = useState({})
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [newItems, setNewItems] = useState([])
-  const [equipped, setEquipped] = useState()
+  const [equipped, setEquipped] = useState(null)
+  const [location, setLocation] = useState('foggyforest')
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
+  const [mapIcon, setMapIcon] = useState('map-outline')
   const introFadeAnim = useRef(new Animated.Value(0)).current
+  const introFadeAnimMap = useRef(new Animated.Value(0)).current
   const [config, setConfig] = useState(Config)
+  const [menuVisible, setMenuVisible] = useState(true)
+  const [mapButtonVisible, setMapButtonVisible] = useState(true)
 
   function haptics(style) {
     if (Platform.OS === 'ios' && config.hapticsEnabled === true) {
@@ -86,9 +92,7 @@ export default function HomeScreen({ navigation }, props) {
                 canvas.current.setConfigFromOutside(snapshot.val())
               }
             })
-        } catch (error) {
-          console.log(error)
-        }
+        } catch (error) {}
       }
       onFocus()
       return () => {
@@ -96,6 +100,15 @@ export default function HomeScreen({ navigation }, props) {
       }
     }, [inventory, canvasLoading])
   )
+
+  useEffect(() => {
+    try {
+      generateBlock()
+    } catch (error) {}
+    try {
+      canvas.current.updateEnvironmentFromOutside(location)
+    } catch (error) {}
+  }, [location, canvasLoading])
 
   const handleSignOut = async () => {
     try {
@@ -151,6 +164,13 @@ export default function HomeScreen({ navigation }, props) {
     }
   }
 
+  const handleMap = async () => {
+    try {
+      canvas.current.toggleMapFromOutside()
+    } catch (error) {
+      console.log(error)
+    }
+  }
   const onHandleUsername = async () => {
     if (name === '' || name === null) {
       setUserTakenError('Please enter a valid username.')
@@ -196,6 +216,9 @@ export default function HomeScreen({ navigation }, props) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/inventory`)
       .set(inventory)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/location`)
+      .set(location)
   }
 
   async function setNotifications() {
@@ -226,19 +249,40 @@ export default function HomeScreen({ navigation }, props) {
             setInventory(snapshot.val().userData.inventory)
             setName(snapshot.val().userData.name)
             setFirstTimeDialog(false)
-            await Firebase.database()
-              .ref(`scores/${user.uid}/name`)
-              .set(snapshot.val().userData.name)
-            await Firebase.database()
-              .ref(`scores/${user.uid}/score`)
-              .set(snapshot.val().userData.inventory['Gold Ore'])
+            try {
+              await Firebase.database()
+                .ref(`scores/${user.uid}/name`)
+                .set(snapshot.val().userData.name)
+            } catch (error) {}
+
+            try {
+              await Firebase.database()
+                .ref(`scores/${user.uid}/score`)
+                .set(snapshot.val().userData.inventory['Gold Ore'])
+            } catch (error) {}
+            try {
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/location`)
+                .get()
+                .then((snapshot) => {
+                  if (snapshot.exists()) {
+                    setLocation(snapshot.val())
+                  }
+                })
+            } catch (error) {}
           } else {
             setDatabase()
           }
           setIsLoading(false)
+
           Animated.timing(introFadeAnim, {
             toValue: 1,
-            duration: 700,
+            duration: 1000,
+            useNativeDriver: true,
+          }).start()
+          Animated.timing(introFadeAnimMap, {
+            toValue: 1,
+            duration: 1000,
             useNativeDriver: true,
           }).start()
         })
@@ -288,13 +332,49 @@ export default function HomeScreen({ navigation }, props) {
   }
 
   function generateBlock() {
+    let currentBlocks = blocks.filter((o) => o.locations.includes(location))
     let chance = Math.random() * 100
-    let block = blocks[Math.floor(Math.random() * blocks.length)]
+    let block = currentBlocks[Math.floor(Math.random() * currentBlocks.length)]
     if (block.probability > chance) {
       canvas.current.setFromOutside(block)
     } else {
       generateBlock()
     }
+  }
+
+  function setMapMode() {
+    Animated.timing(introFadeAnimMap, {
+      toValue: 0,
+      duration: 700,
+      useNativeDriver: true,
+    }).start(() => {
+      setMapButtonVisible(false)
+    })
+    Animated.timing(introFadeAnim, {
+      toValue: 0,
+      duration: 700,
+      useNativeDriver: true,
+    }).start(() => {
+      setMenuVisible(false)
+    })
+  }
+
+  async function setSceneMode(currentLocation) {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/location`)
+      .set(currentLocation)
+    setLocation(currentLocation)
+    Animated.timing(introFadeAnim, {
+      toValue: 1,
+      duration: 1500,
+      useNativeDriver: true,
+    }).start(setMenuVisible(true))
+
+    Animated.timing(introFadeAnimMap, {
+      toValue: 1,
+      duration: 1500,
+      useNativeDriver: true,
+    }).start(setMapButtonVisible(true))
   }
 
   if (isLoading) {
@@ -388,6 +468,26 @@ export default function HomeScreen({ navigation }, props) {
         <EquippedButton
           name={equipped ? equipped.name : null}
           onPress={() => handleInventory('tool')}
+          buttonVisible={menuVisible}
+        />
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          opacity: introFadeAnimMap,
+          position: 'absolute',
+          flex: 1,
+          top: 75,
+          right: 20,
+        }}
+      >
+        <IconButton
+          name={mapIcon}
+          size={38}
+          borderSize={70}
+          borderRadius={10}
+          onPress={handleMap}
+          buttonDisabled={!mapButtonVisible}
         />
       </Animated.View>
 
@@ -407,6 +507,7 @@ export default function HomeScreen({ navigation }, props) {
           onHandleScores={handleScores}
           onHandleFurnace={handleFurnace}
           inventoryNotificaitons={inventoryNotificaitons}
+          menuVisible={menuVisible}
           style={{ flex: 1, alignSelf: 'center' }}
         />
       </Animated.View>
@@ -418,6 +519,8 @@ export default function HomeScreen({ navigation }, props) {
           updateBalance={updateBalance}
           generateBlock={generateBlock}
           setLoading={() => setCanvasLoading(false)}
+          setMapMode={setMapMode}
+          setSceneMode={setSceneMode}
           ref={canvas}
         />
       </View>

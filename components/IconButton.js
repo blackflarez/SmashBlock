@@ -12,68 +12,74 @@ const IconButton = ({
   visible,
   notifications,
   containerStyle,
+  borderRadius = 50,
+  borderSize = 50,
+  buttonDisabled,
 }) => {
-  if (notifications > 0) {
-    visible = true
+  if (buttonDisabled) {
+    return null
   } else {
-    visible = false
-  }
-  return (
-    <View>
-      <Pressable
-        style={(args) => {
-          if (args.pressed) {
+    if (notifications > 0) {
+      visible = true
+    } else {
+      visible = false
+    }
+    return (
+      <View>
+        <Pressable
+          style={(args) => {
+            if (args.pressed) {
+              return [
+                styles.base,
+                {
+                  opacity: 0.5,
+                  backgroundColor: 'rgba(52, 52, 52, 0.4)',
+                  borderRadius: borderRadius,
+                  width: borderSize,
+                  height: borderSize,
+                },
+                containerStyle,
+              ]
+            }
+
             return [
               styles.base,
               {
-                opacity: 0.5,
-                backgroundColor: 'rgba(52, 52, 52, 0.4)',
-                borderRadius: 50,
-                width: 50,
-                height: 50,
+                opacity: 1,
+                backgroundColor: 'rgba(255, 255, 255, 0.4)',
+                borderRadius: borderRadius,
+                width: borderSize,
+                height: borderSize,
               },
               containerStyle,
             ]
-          }
-
-          return [
-            styles.base,
-            {
-              opacity: 1,
-              backgroundColor: 'rgba(255, 255, 255, 0.4)',
-              borderRadius: 50,
-              width: 50,
-              height: 50,
-            },
-            containerStyle,
-          ]
-        }}
-        onPress={() => {
-          onPress()
-        }}
-      >
-        <MaterialCommunityIcons name={name} size={size} color={color} />
-        <Badge
-          visible={visible}
-          size={20}
-          style={{
-            position: 'absolute',
-            top: -4,
-            right: -4,
+          }}
+          onPress={() => {
+            onPress()
           }}
         >
-          {notifications}
-        </Badge>
-      </Pressable>
-    </View>
-  )
+          <MaterialCommunityIcons name={name} size={size} color={color} />
+          <Badge
+            visible={visible}
+            size={20}
+            style={{
+              position: 'absolute',
+              top: -4,
+              right: -4,
+            }}
+          >
+            {notifications}
+          </Badge>
+        </Pressable>
+      </View>
+    )
+  }
 }
 
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 15,
   },
 })
 
