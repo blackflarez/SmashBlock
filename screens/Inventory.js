@@ -400,7 +400,6 @@ export default function Inventory({ navigation, route }, props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 250,
     paddingHorizontal: 12,
     justifyContent: 'center',
     alignItems: 'center',

@@ -58,7 +58,7 @@ const Plus = (
         <Font
           style={{
             color: currentBlockColour,
-            fontSize: 26,
+            fontSize: 34,
             paddingLeft: 30,
             paddingRight: 30,
             textShadowColor: '#fff',

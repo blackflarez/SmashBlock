@@ -37,6 +37,7 @@ var deltaX = 0,
   deltaY = 0,
   scale = 0,
   cube,
+  tool,
   rock,
   stone,
   ores,
@@ -56,6 +57,7 @@ var deltaX = 0,
   sandTexture,
   skyTexture,
   pickaxe,
+  axe,
   pickaxeTexture,
   glassPickaxeTexture,
   oresTexture,
@@ -185,7 +187,7 @@ function Canvas(props, ref) {
         updateMaterial(block)
       },
       setTool(tool) {
-        if (tool.category === 'pickaxe') {
+        if (tool.name !== 'Fists') {
           try {
             toolVisible = true
             setToolMaterial(tool)
@@ -200,24 +202,46 @@ function Canvas(props, ref) {
     []
   )
 
-  function setToolMaterial(tool) {
+  function setToolMaterial(equipped) {
     try {
-      if (tool.material === 'glass') {
-        pickaxe.material = new THREE.MeshPhongMaterial({
-          color: tool.colour,
-          map: glassPickaxeTexture,
-          transparent: true,
-          opacity: 0,
-          visible: false,
-        })
-      } else {
-        pickaxe.material = new THREE.MeshLambertMaterial({
-          color: tool.colour,
-          map: pickaxeTexture,
-          transparent: true,
-          opacity: 0,
-          visible: false,
-        })
+      if (equipped.category === 'pickaxe') {
+        tool.geometry = pickaxe.geometry
+        if (equipped.material === 'glass') {
+          tool.material = new THREE.MeshPhongMaterial({
+            color: equipped.colour,
+            map: glassPickaxeTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        } else {
+          tool.material = new THREE.MeshLambertMaterial({
+            color: equipped.colour,
+            map: pickaxeTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        }
+      } else if (equipped.category === 'axe') {
+        tool.geometry = axe.geometry
+        if (equipped.material === 'glass') {
+          tool.material = new THREE.MeshPhongMaterial({
+            color: equipped.colour,
+            map: glassPickaxeTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        } else {
+          tool.material = new THREE.MeshLambertMaterial({
+            color: equipped.colour,
+            map: pickaxeTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        }
       }
     } catch (error) {}
   }
@@ -344,12 +368,7 @@ function Canvas(props, ref) {
       const pickUri = Asset.fromModule(
         require('../assets/models/pickaxe.glb')
       ).uri
-      const pickTexUri = Asset.fromModule(
-        require('../assets/models/pickaxe.png')
-      ).uri
-      const glassPickTex = Asset.fromModule(
-        require('../assets/models/pickaxe.png')
-      ).uri
+      const axeUri = Asset.fromModule(require('../assets/models/axe.glb')).uri
       const planeUri = Asset.fromModule(
         require('../assets/models/plane.glb')
       ).uri
@@ -375,6 +394,12 @@ function Canvas(props, ref) {
         require('../assets/models/mapbuttons.glb')
       ).uri
 
+      const pickTexUri = Asset.fromModule(
+        require('../assets/models/pickaxe.png')
+      ).uri
+      const glassPickTex = Asset.fromModule(
+        require('../assets/models/pickaxe.png')
+      ).uri
       const planeTexUri = Asset.fromModule(
         require('../assets/models/planebake.png')
       ).uri
@@ -462,62 +487,49 @@ function Canvas(props, ref) {
       let m9 = loadModel(pickUri).then((result) => {
         pickaxe = result.scene.children[0]
       })
-
       let m10 = loadModel(planeUri).then((result) => {
         plane = result.scene.children[0]
       })
-
       let m11 = loadModel(shadowPlaneUri).then((result) => {
         shadowPlane = result.scene.children[0]
       })
-
       let m12 = loadModel(particlesUri).then((result) => {
         particles[0] = result.scene
         particles[0].animations = result.animations
       })
-
       let m13 = loadModel(particles2Uri).then((result) => {
         particles[1] = result.scene
         particles[1].animations = result.animations
       })
-
       let m14 = loadModel(particles3Uri).then((result) => {
         particles[2] = result.scene
         particles[2].animations = result.animations
       })
-
       let m15 = loadModel(particles4Uri).then((result) => {
         particles[3] = result.scene
         particles[3].animations = result.animations
       })
-
       let m16 = loadModel(oresUri).then((result) => {
         ores = result.scene.children[0]
       })
-
       let m17 = loadModel(oresDestructionUri).then((result) => {
         oresDestruction[0] = result.scene
         oresDestruction[0].animations = result.animations
       })
-
       let m18 = loadModel(oresDestruction2Uri).then((result) => {
         oresDestruction[1] = result.scene
         oresDestruction[1].animations = result.animations
       })
-
       let m19 = loadModel(oresDestruction3Uri).then((result) => {
         oresDestruction[2] = result.scene
         oresDestruction[2].animations = result.animations
       })
-
       let m20 = loadModel(stoneUri).then((result) => {
         stone = result.scene.children[0]
       })
-
       let m21 = loadModel(woodUri).then((result) => {
         wood = result.scene.children[0]
       })
-
       let m22 = loadModel(treeUri).then((result) => {
         tree = result.scene
       })
@@ -538,6 +550,9 @@ function Canvas(props, ref) {
       })
       let m28 = loadModel(mapButtonsUri).then((result) => {
         mapButtons = result.scene
+      })
+      let m29 = loadModel(axeUri).then((result) => {
+        axe = result.scene.children[0]
       })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
@@ -642,6 +657,7 @@ function Canvas(props, ref) {
         m26,
         m27,
         m28,
+        m29,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -662,17 +678,24 @@ function Canvas(props, ref) {
         t17,
         ms[area - 1],
       ]).then(() => {
-        //Pick
+        //Tool
+
+        axe.castShadow = false
+        axe.receiveShadow = false
+        axe.position.z = 0.8
+
         pickaxeTexture.flipY = false
         glassPickaxeTexture.flipY = false
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
-        setToolMaterial(props.equipped)
+
         strength = props.equipped.strength
-        pickaxe.castShadow = false
-        pickaxe.receiveShadow = false
-        pickaxe.position.z = 0.8
-        toolContainer.add(pickaxe)
+        tool = Object.create(pickaxe)
+        tool.castShadow = false
+        tool.receiveShadow = false
+        tool.position.z = 0.8
+        setToolMaterial(props.equipped)
+        toolContainer.add(tool)
 
         //shadowPlane
         shadowPlane.material = new THREE.MeshLambertMaterial({
@@ -1596,7 +1619,7 @@ function Canvas(props, ref) {
 
   function animateTool(intersects, animateY) {
     animateY
-      ? new TWEEN.Tween(pickaxe.position)
+      ? new TWEEN.Tween(tool.position)
           .to(
             {
               x: intersects.point.x,
@@ -1606,7 +1629,7 @@ function Canvas(props, ref) {
           )
           .easing(TWEEN.Easing.Exponential.Out)
           .start()
-      : new TWEEN.Tween(pickaxe.position)
+      : new TWEEN.Tween(tool.position)
           .to(
             {
               x: intersects.point.x,
@@ -1978,7 +2001,7 @@ function Canvas(props, ref) {
   }
 
   async function hitBlock(block, coordinates, longPress) {
-    animation('swing', pickaxe, pickaxe)
+    animation('swing', tool, tool)
     let damage = strength
     if (longPress) {
       damage = strength + Math.log(longPress)
@@ -2012,7 +2035,11 @@ function Canvas(props, ref) {
       props.updateBalance(currentBlock, false, coordinates, damage)
 
       animation('click', block.object, block.object)
-      currentBlock.health -= strength
+      if (currentBlock.tools.includes(props.equipped.category)) {
+        currentBlock.health -= strength
+      } else {
+        currentBlock.health -= strength / 3
+      }
     }
   }
 
