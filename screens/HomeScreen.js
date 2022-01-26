@@ -319,44 +319,46 @@ export default function HomeScreen({ navigation }, props) {
   }, [])
 
   async function updateBalance(block, destroy, coordinates, damage) {
-    var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
     if (destroy) {
-      amount = Math.floor(amount * 1.5)
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
+
+      var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
+
+      setPlusses((plusses) => [
+        ...(plusses.length > 15
+          ? plusses.splice(plusses.length - 10)
+          : plusses),
+        <Plus
+          currentBlockColour={block.colour}
+          amount={amount}
+          bonus={destroy}
+          currentBlock={block.name}
+          key={Math.random(1000)}
+          coordinates={coordinates}
+        />,
+      ])
+
+      Firebase.database()
+        .ref(`users/${user.uid}/userData/inventory`)
+        .child(`${block.name}`)
+        .get()
+        .then(async (snapshot) => {
+          if (!snapshot.exists()) {
+            Firebase.database()
+              .ref(`users/${user.uid}/userData/newItems`)
+              .child(`${block.name}`)
+              .set(Firebase.firebase_.database.ServerValue.increment(1))
+            setNotifications()
+          }
+        })
+
+      Firebase.database()
+        .ref(`users/${user.uid}/userData/inventory`)
+        .child(`${block.name}`)
+        .set(Firebase.firebase_.database.ServerValue.increment(amount))
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
     }
-
-    setPlusses((plusses) => [
-      ...(plusses.length > 15 ? plusses.splice(plusses.length - 10) : plusses),
-      <Plus
-        currentBlockColour={block.colour}
-        amount={amount}
-        bonus={destroy}
-        currentBlock={block.name}
-        key={Math.random(1000)}
-        coordinates={coordinates}
-      />,
-    ])
-
-    Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory`)
-      .child(`${block.name}`)
-      .get()
-      .then(async (snapshot) => {
-        if (!snapshot.exists()) {
-          Firebase.database()
-            .ref(`users/${user.uid}/userData/newItems`)
-            .child(`${block.name}`)
-            .set(Firebase.firebase_.database.ServerValue.increment(1))
-          setNotifications()
-        }
-      })
-
-    Firebase.database()
-      .ref(`users/${user.uid}/userData/inventory`)
-      .child(`${block.name}`)
-      .set(Firebase.firebase_.database.ServerValue.increment(amount))
   }
 
   function generateBlock() {

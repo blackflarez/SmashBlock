@@ -27,6 +27,11 @@ export default {
     'Wood Pickaxe': Asset.fromModule(
       require(`../assets/icons/woodpickaxe.png`)
     ),
+    'Gold Axe': Asset.fromModule(require(`../assets/icons/goldaxe.png`)),
+    'Stone Axe': Asset.fromModule(require(`../assets/icons/stoneaxe.png`)),
+    'Iron Axe': Asset.fromModule(require(`../assets/icons/ironaxe.png`)),
+    'Diamond Axe': Asset.fromModule(require(`../assets/icons/diamondaxe.png`)),
+    'Wood Axe': Asset.fromModule(require(`../assets/icons/woodaxe.png`)),
     Stick: Asset.fromModule(require(`../assets/icons/stick.png`)),
     'Gold Ingot': Asset.fromModule(require(`../assets/icons/goldingot.png`)),
     'Iron Ingot': Asset.fromModule(require(`../assets/icons/ironingot.png`)),
