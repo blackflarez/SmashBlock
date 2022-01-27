@@ -119,7 +119,11 @@ var deltaX = 0,
   mapMode = false,
   mapModePending = false,
   currentLocation = 'foggyforest',
-  loaded = false
+  crosshair,
+  crosshairTexture,
+  crosshairGroup,
+  recentClicks = 0,
+  crosshairActive
 
 //Graphics Settings
 var shadowSize = 256,
@@ -269,6 +273,7 @@ function Canvas(props, ref) {
       blockContainer = new THREE.Group()
       blockContainer.name = 'blockContainer'
       toolContainer = new THREE.Group()
+      crosshairGroup = new THREE.Group()
       skyColour = 0xbde0fe
       scene.background = new THREE.Color(skyColour)
       scene.fog = new THREE.Fog(skyColour, 2, 15)
@@ -393,6 +398,9 @@ function Canvas(props, ref) {
       const mapButtonsUri = Asset.fromModule(
         require('../assets/models/mapbuttons.glb')
       ).uri
+      const crosshairUri = Asset.fromModule(
+        require('../assets/models/crosshair.glb')
+      ).uri
 
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxe.png')
@@ -447,6 +455,9 @@ function Canvas(props, ref) {
       ).uri
       const mapOverlayTex = Asset.fromModule(
         require('../assets/models/mapoverlaytexture.png')
+      ).uri
+      const crosshairTex = Asset.fromModule(
+        require('../assets/models/crosshairtexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -554,6 +565,9 @@ function Canvas(props, ref) {
       let m29 = loadModel(axeUri).then((result) => {
         axe = result.scene.children[0]
       })
+      let m30 = loadModel(crosshairUri).then((result) => {
+        crosshair = result.scene.children[0]
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -605,6 +619,9 @@ function Canvas(props, ref) {
       })
       let t17 = loadTexture(mapOverlayTex).then((result) => {
         mapOverlayTexture = result
+      })
+      let t18 = loadTexture(crosshairTex).then((result) => {
+        crosshairTexture = result
       })
 
       let msmoke = []
@@ -658,6 +675,7 @@ function Canvas(props, ref) {
         m27,
         m28,
         m29,
+        m30,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -676,10 +694,10 @@ function Canvas(props, ref) {
         t15,
         t16,
         t17,
+        t18,
         ms[area - 1],
       ]).then(() => {
-        //Tool
-
+        //tool
         axe.castShadow = false
         axe.receiveShadow = false
         axe.position.z = 0.8
@@ -696,8 +714,32 @@ function Canvas(props, ref) {
         tool.position.z = 0.8
         setToolMaterial(props.equipped)
         toolContainer.add(tool)
+        tool.renderOrder = 2
+        tool.onBeforeRender = function (renderer) {
+          renderer.clearDepth()
+        }
 
-        //shadowPlane
+        //crosshair
+        crosshairTexture.flipY = false
+        const crosshair = new THREE.Sprite(
+          new THREE.SpriteMaterial({
+            map: crosshairTexture,
+            transparent: true,
+            blending: THREE.AdditiveBlending,
+          })
+        )
+        crosshair.renderOrder = 1
+        crosshair.onBeforeRender = function (renderer) {
+          renderer.clearDepth()
+        }
+        crosshair.position.set(0.3, 0.25, 0.3)
+        crosshair.scale.set(0.4, 0.4, 0.4)
+        crosshair.name = 'crosshair'
+        crosshairGroup.visible = false
+        crosshairGroup.add(crosshair)
+        world.add(crosshairGroup)
+
+        //shadowplane
         shadowPlane.material = new THREE.MeshLambertMaterial({
           color: 0xffffff,
           transparent: true,
@@ -1061,6 +1103,33 @@ function Canvas(props, ref) {
     }
 
     async function animate() {
+      //crosshair
+      if (recentClicks > 0) {
+        crosshairActive = true
+        recentClicks -= 0.05
+      } else if (crosshairActive && crosshair.visible) {
+        crosshairActive = false
+        new TWEEN.Tween(crosshairGroup.scale)
+          .to(
+            {
+              x: 0,
+              y: 0,
+              Z: 0,
+            },
+            250
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .onComplete(() => {
+            crosshairGroup.visible = false
+          })
+          .start()
+      }
+      if (recentClicks > 10) {
+        recentClicks = 10
+      }
+
+      //map clouds
       if (mapMode) {
         cloudsTexture.offset.set(cloudOffset, cloudOffset)
         cloudOffset += 0.0005
@@ -1134,7 +1203,7 @@ function Canvas(props, ref) {
       }
 
       TWEEN.update()
-
+      crosshair.lookAt(camera.position)
       requestAnimationFrame(animate)
       renderer.render(scene, camera)
       gl.endFrameEXP()
@@ -1618,26 +1687,28 @@ function Canvas(props, ref) {
   }
 
   function animateTool(intersects, animateY) {
-    animateY
-      ? new TWEEN.Tween(tool.position)
-          .to(
-            {
-              x: intersects.point.x,
-              y: intersects.point.y + 0.5,
-            },
-            500
-          )
-          .easing(TWEEN.Easing.Exponential.Out)
-          .start()
-      : new TWEEN.Tween(tool.position)
-          .to(
-            {
-              x: intersects.point.x,
-            },
-            500
-          )
-          .easing(TWEEN.Easing.Exponential.Out)
-          .start()
+    if (animateY) {
+      new TWEEN.Tween(tool.position)
+        .to(
+          {
+            x: intersects.point.x,
+            y: intersects.point.y + 0.5,
+          },
+          500
+        )
+        .easing(TWEEN.Easing.Exponential.Out)
+        .start()
+    } else {
+      new TWEEN.Tween(tool.position)
+        .to(
+          {
+            x: intersects.point.x,
+          },
+          500
+        )
+        .easing(TWEEN.Easing.Exponential.Out)
+        .start()
+    }
 
     new TWEEN.Tween(toolContainer.rotation)
       .to(
@@ -1852,6 +1923,52 @@ function Canvas(props, ref) {
     }
   }
 
+  function animateCrosshair() {
+    if (recentClicks > 5) {
+      crosshairGroup.visible = true
+    } else {
+      crosshairGroup.visible = false
+    }
+    const shrink = new TWEEN.Tween(crosshairGroup.scale)
+      .to(
+        {
+          x: 0,
+          y: 0,
+          Z: 0,
+        },
+        1
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Cubic.InOut)
+    const grow = new TWEEN.Tween(crosshairGroup.scale)
+      .to(
+        {
+          x: 1,
+          y: 1,
+          Z: 1,
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Cubic.InOut)
+
+    shrink.chain(grow)
+    shrink.start()
+
+    new TWEEN.Tween(crosshairGroup.rotation)
+      .to(
+        {
+          x: Math.random() * (1 - -1) + -1,
+          y: Math.random() * (1 - -1) + -1,
+          Z: Math.random() * (1 - -1) + -1,
+        },
+        100
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Cubic.InOut)
+      .start()
+  }
+
   async function raycast(evt, group) {
     try {
       let { nativeEvent } = evt
@@ -2000,13 +2117,19 @@ function Canvas(props, ref) {
     return tbc
   }
 
-  async function hitBlock(block, coordinates, longPress) {
+  async function hitBlock(block, coordinates, crosshair) {
     animation('swing', tool, tool)
     let damage = strength
-    if (longPress) {
-      damage = strength + Math.log(longPress)
+    let bonus = 1
+
+    if (crosshair) {
+      if (crosshairActive) {
+        bonus += 2
+      }
     }
     if (currentBlock.health <= 0 || damage > currentBlock.health) {
+      animateCrosshair()
+
       animateTool(block, false)
       if (particlesEnabled) {
         animateParticle(block, false)
@@ -2035,10 +2158,11 @@ function Canvas(props, ref) {
       props.updateBalance(currentBlock, false, coordinates, damage)
 
       animation('click', block.object, block.object)
+
       if (currentBlock.tools.includes(props.equipped.category)) {
-        currentBlock.health -= strength
+        currentBlock.health -= strength * bonus
       } else {
-        currentBlock.health -= strength / 3
+        currentBlock.health -= (strength / 3) * bonus
       }
     }
   }
@@ -2050,10 +2174,25 @@ function Canvas(props, ref) {
         if (!mapMode) {
           let block = await raycast(evt, world)
           if (block.object.parent.name === 'blockContainer') {
-            hitBlock(block, {
-              x: nativeEvent.absoluteX,
-              y: nativeEvent.absoluteY,
-            })
+            recentClicks += 1
+            hitBlock(
+              block,
+              {
+                x: nativeEvent.absoluteX,
+                y: nativeEvent.absoluteY,
+              },
+              false
+            )
+          } else if (block.object.name === 'crosshair') {
+            recentClicks += 1
+            hitBlock(
+              block,
+              {
+                x: nativeEvent.absoluteX,
+                y: nativeEvent.absoluteY,
+              },
+              true
+            )
           }
         }
       } catch (error) {}
