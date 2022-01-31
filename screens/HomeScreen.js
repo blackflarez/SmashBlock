@@ -322,7 +322,13 @@ export default function HomeScreen({ navigation }, props) {
     if (destroy) {
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
 
-      var amount = Math.floor(1 + (equipped.efficiency * damage) / 10)
+      var amount = Math.floor(
+        1 +
+          (equipped.efficiency *
+            (Math.random() * (1.5 - 0.75) + 0.75) *
+            damage) /
+            10
+      )
 
       setPlusses((plusses) => [
         ...(plusses.length > 15

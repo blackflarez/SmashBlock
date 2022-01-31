@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, Platform, Animated } from 'react-native'
-import { Font } from '../components'
+import { Font, ItemIcon } from '../components'
 
 const Plus = (
   { currentBlockColour, amount, currentBlock, bonus, coordinates },
@@ -21,7 +21,7 @@ const Plus = (
     setHorizontalPosition(coordinates.x)
     Animated.sequence([
       Animated.timing(riseAnim, {
-        toValue: coordinates.y - 200,
+        toValue: coordinates.y - 300,
         duration: 1,
         useNativeDriver: false,
       }),
@@ -33,12 +33,12 @@ const Plus = (
       Animated.parallel([
         Animated.timing(riseAnim, {
           toValue: 0,
-          duration: 800,
+          duration: 1000,
           useNativeDriver: false,
         }),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 800,
+          duration: 1000,
           useNativeDriver: false,
         }),
       ]),
@@ -55,19 +55,22 @@ const Plus = (
           left: horizontalPosition - adjustment,
         }}
       >
-        <Font
-          style={{
-            color: currentBlockColour,
-            fontSize: 34,
-            paddingLeft: 30,
-            paddingRight: 30,
-            textShadowColor: '#fff',
-            textShadowOffset: { width: 1, height: 1 },
-            textShadowRadius: 1,
-          }}
-        >
-          {`+` + amount}
-        </Font>
+        <View style={{ flexDirection: 'row', alignContent: 'center' }}>
+          <ItemIcon name={currentBlock} size={35} />
+          <Font
+            style={{
+              color: currentBlockColour,
+              fontSize: 35,
+              paddingLeft: 5,
+              paddingRight: 30,
+              textShadowColor: '#fff',
+              textShadowOffset: { width: 1, height: 1 },
+              textShadowRadius: 1,
+            }}
+          >
+            {`+` + amount}
+          </Font>
+        </View>
       </Animated.View>
     </View>
   )
