@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native'
 import Slider from '@react-native-community/slider'
-import { Button, ItemButton, Items } from '../components'
+import { Button, Levels, Items } from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { CraftingButton, Font, ItemIcon, Amount } from '../components'
@@ -20,17 +20,23 @@ import { BlurView } from 'expo-blur'
 const auth = Firebase.auth()
 
 export default function Crafting({ navigation }, props) {
-  const [pending, setPending] = useState(false)
+  const [pending, setPending] = useStateIfMounted(false)
   const [inventory, setInventory] = useStateIfMounted(null)
-  const [filterType, setFilterType] = useState('all')
-  const [craftingAmount, setCraftingAmount] = useState(1)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [currentItem, setCurrentItem] = useState(Items[4])
-  const [craftingItems, setCraftingItems] = useState(
+  const [filterType, setFilterType] = useStateIfMounted('all')
+  const [craftingAmount, setCraftingAmount] = useStateIfMounted(1)
+  const [modalVisible, setModalVisible] = useStateIfMounted(false)
+  const [currentItem, setCurrentItem] = useStateIfMounted(Items[4])
+  const [craftingItems, setCraftingItems] = useStateIfMounted(
     Items.filter((data) => data.recipe)
   )
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const [currentLevel, setCurrentLevel] = useStateIfMounted(1)
+  const [levelUpModal, setLevelUpModal] = useStateIfMounted(false)
+  const [levelUpSkill, setLevelUpSkill] = useStateIfMounted()
+  const [levelUpAmount, setLevelUpAmount] = useStateIfMounted()
+  const [levelUpDescription, setLevelUpDescription] = useStateIfMounted()
+  const [unableCraftModal, setUnableCraftModal] = useStateIfMounted(false)
 
   const handleBack = async () => {
     try {
@@ -74,6 +80,54 @@ export default function Crafting({ navigation }, props) {
     return amount
   }
 
+  async function updateLevel(block) {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .child(`CraftingXP`)
+      .set(
+        Firebase.firebase_.database.ServerValue.increment(
+          block.xpAmount * craftingAmount
+        )
+      )
+
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .get()
+      .then((snapshot) => {
+        let level = snapshot.child(`Crafting`).val()
+        let xp = 0.095 * Math.sqrt(snapshot.child(`CraftingXP`).val())
+        if (Math.floor(xp) > level) {
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`Crafting`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+            .then(() => {
+              setLevelUpModal(true)
+              setLevelUpSkill(`Crafting`)
+              setLevelUpAmount(level + 1)
+              setCurrentLevel(level + 1)
+              let description = []
+              Object.entries(Levels).forEach(([key, value]) => {
+                if (key == 'Crafting') {
+                  Object.entries(value).forEach(([key, value]) => {
+                    if (key == level + 1) {
+                      Object.entries(value).forEach(([key, value]) => {
+                        description.push(`${key}: ${value} \n`)
+                      })
+                    }
+                  })
+                }
+              })
+              setLevelUpDescription(description)
+            })
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`Level`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+        }
+      })
+  }
+
   const handleCraft = async (item) => {
     setPending(true)
 
@@ -105,9 +159,8 @@ export default function Crafting({ navigation }, props) {
       .ref(`users/${user.uid}/userData/inventory`)
       .child(`${item.name}`)
       .set(Firebase.firebase_.database.ServerValue.increment(craftingAmount))
-      .then(setPending(false))
+      .then(setPending(false), setModalVisible(false), updateLevel(item))
 
-    setModalVisible(false)
     setCraftingAmount(1)
   }
 
@@ -115,6 +168,20 @@ export default function Crafting({ navigation }, props) {
     setCurrentItem(item)
     setModalVisible(true)
   }
+
+  const handleOpenLocked = async (item) => {
+    setCurrentItem(item)
+    setUnableCraftModal(true)
+  }
+
+  useEffect(() => {
+    Firebase.database()
+      .ref(`users/${user.uid}/userData/levels/Crafting`)
+      .get()
+      .then((snapshot) => {
+        setCurrentLevel(snapshot.val())
+      })
+  }, [])
 
   useEffect(() => {
     async function init() {
@@ -132,7 +199,6 @@ export default function Crafting({ navigation }, props) {
               }
             })
             setInventory(items)
-            //console.log(inventory)
           } else {
             console.log('No data available')
           }
@@ -156,11 +222,13 @@ export default function Crafting({ navigation }, props) {
         name={item.name}
         amount={item.amount}
         onPress={() => handleOpen(item)}
+        onPressLocked={() => handleOpenLocked(item)}
         colour={item.name}
         description={item.description}
         recipe={item.recipe}
         inventory={inventory}
         currentItem={currentItem}
+        locked={currentLevel < item.craftLevel}
       />
     ) : null
 
@@ -180,6 +248,81 @@ export default function Crafting({ navigation }, props) {
           flex: 1,
         }}
       >
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={unableCraftModal}
+          onRequestClose={() => {
+            setUnableCraftModal(false)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 200 }]}>
+              <Font style={styles.text}>
+                You must Crafting level {currentItem.craftLevel} to craft{' '}
+                {currentItem.name}.
+              </Font>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setUnableCraftModal(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={levelUpModal}
+          onRequestClose={() => {
+            setLevelUpModal(false)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 300 }]}>
+              <Font style={styles.text}>Level Up!</Font>
+              <Font
+                style={[
+                  styles.textLight,
+                  { marginBottom: 20, color: '#757575' },
+                ]}
+              >
+                You are now {levelUpSkill} level {levelUpAmount}.
+              </Font>
+
+              <Font style={styles.textLight}>{levelUpDescription}</Font>
+
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setLevelUpModal(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
         <Modal
           animationType="fade"
           transparent={true}
@@ -239,13 +382,15 @@ export default function Crafting({ navigation }, props) {
                   backgroundColor={'#eee'}
                   containerStyle={{ marginTop: 20, alignSelf: 'center' }}
                   onPress={() => {
-                    setModalVisible(false), setCraftingAmount(1)
+                    setModalVisible(false)
+                    setCraftingAmount(1)
                   }}
                 ></Button>
               </View>
             </View>
           </View>
         </Modal>
+
         <StatusBar style="light" />
         <View style={{ margin: 24, marginTop: 72 }}></View>
 

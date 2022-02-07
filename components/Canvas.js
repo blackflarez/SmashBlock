@@ -2214,7 +2214,10 @@ function Canvas(props, ref) {
     let { nativeEvent } = evt
     let block = await raycast(evt, world)
     if (nativeEvent.state === State.ACTIVE) {
-      if (block.object.parent.name === 'blockContainer' && !mapMode) {
+      if (
+        block.object.parent.name === 'blockContainer' ||
+        (block.object.name === 'crosshair' && !mapMode)
+      ) {
         timer = setInterval(async () => {
           hitBlock(block, {
             x: nativeEvent.absoluteX,

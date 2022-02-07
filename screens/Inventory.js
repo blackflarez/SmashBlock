@@ -26,6 +26,7 @@ export default function Inventory({ navigation, route }, props) {
   const [filterType, setFilterType] = useStateIfMounted(filter)
   const [modalVisible, setModalVisible] = useStateIfMounted(false)
   const [destroyModalVisible, setDestroyModalVisible] = useStateIfMounted(false)
+  const [unableEquipModal, setUnableEquipModal] = useStateIfMounted(false)
   const [currentItem, setCurrentItem] = useState(Items[0])
   const [destroyAmount, setDestroyAmount] = useState(1)
   const { user } = useContext(AuthenticatedUserContext)
@@ -78,10 +79,21 @@ export default function Inventory({ navigation, route }, props) {
 
   const handleEquip = async (item) => {
     setModalVisible(false)
-    await Firebase.database()
-      .ref(`users/${user.uid}/userData/equipped`)
-      .set(item)
-      .then(setModalVisible(false), handleBack())
+    if (item.equipLevel) {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/levels/${item.skill}`)
+        .get()
+        .then(async (snapshot) => {
+          if (snapshot.val() >= item.equipLevel) {
+            await Firebase.database()
+              .ref(`users/${user.uid}/userData/equipped`)
+              .set(item.name)
+              .then(handleBack())
+          } else {
+            setUnableEquipModal(true)
+          }
+        })
+    }
   }
 
   const handleDestroy = async (item) => {
@@ -203,6 +215,39 @@ export default function Inventory({ navigation, route }, props) {
         <Modal
           animationType="fade"
           transparent={true}
+          visible={unableEquipModal}
+          onRequestClose={() => {
+            setUnableEquipModal(false)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 200 }]}>
+              <Font style={styles.text}>
+                You must {currentItem.skill} level {currentItem.equipLevel} to
+                equip {currentItem.name}.
+              </Font>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setUnableEquipModal(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
           visible={destroyModalVisible}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.')
@@ -308,7 +353,7 @@ export default function Inventory({ navigation, route }, props) {
                     backgroundColor={'#eee'}
                     containerStyle={{ marginTop: 10, alignSelf: 'center' }}
                     onPress={() => {
-                      handleEquip(currentItem.name)
+                      handleEquip(currentItem)
                     }}
                   ></Button>
                 ) : null}

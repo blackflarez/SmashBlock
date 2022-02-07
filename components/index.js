@@ -12,6 +12,7 @@ import Items from './Items'
 import EquippedButton from './EquippedButton'
 import Font from './Font'
 import Config from './Config'
+import Levels from './Levels'
 
 export {
   IconButton,
@@ -28,4 +29,5 @@ export {
   EquippedButton,
   Font,
   Config,
+  Levels,
 }

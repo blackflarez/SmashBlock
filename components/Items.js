@@ -13,6 +13,9 @@ export default [
     model: 'rock',
     locations: ['sandybeach'],
     tools: ['pickaxe'],
+    xpType: 'Mining',
+    smeltLevel: 2,
+    xpAmount: 45,
   },
   {
     name: 'Stone',
@@ -25,6 +28,8 @@ export default [
     model: 'stone',
     locations: ['sandybeach'],
     tools: ['pickaxe'],
+    xpType: 'Mining',
+    xpAmount: 1,
   },
   {
     name: 'Iron Ore',
@@ -39,6 +44,9 @@ export default [
     model: 'rock',
     locations: ['sandybeach'],
     tools: ['pickaxe'],
+    xpType: 'Mining',
+    smeltLevel: 1,
+    xpAmount: 5,
   },
   {
     name: 'Diamond',
@@ -51,6 +59,8 @@ export default [
     model: 'rock',
     locations: ['sandybeach'],
     tools: ['pickaxe'],
+    xpType: 'Mining',
+    xpAmount: 90,
   },
   {
     name: 'Wood',
@@ -63,6 +73,8 @@ export default [
     model: 'wood',
     locations: ['foggyforest'],
     tools: ['axe'],
+    xpType: 'Woodcutting',
+    xpAmount: 1,
   },
   {
     name: 'Coal',
@@ -76,6 +88,9 @@ export default [
     model: 'rock',
     locations: ['sandybeach'],
     tools: ['pickaxe'],
+    xpType: 'Mining',
+    smeltLevel: 1,
+    xpAmount: 5,
   },
   //Tools
   {
@@ -89,6 +104,10 @@ export default [
     colour: '#4A4138',
     material: 'matte',
     category: 'pickaxe',
+    skill: 'Mining',
+    equipLevel: 1,
+    craftLevel: 1,
+    xpAmount: 10,
   },
   {
     name: 'Stone Pickaxe',
@@ -101,6 +120,10 @@ export default [
     colour: 'gray',
     material: 'matte',
     category: 'pickaxe',
+    skill: 'Mining',
+    equipLevel: 2,
+    craftLevel: 1,
+    xpAmount: 20,
   },
   {
     name: 'Iron Pickaxe',
@@ -113,6 +136,10 @@ export default [
     colour: 'slategray',
     material: 'shiny',
     category: 'pickaxe',
+    skill: 'Mining',
+    equipLevel: 3,
+    craftLevel: 2,
+    xpAmount: 30,
   },
   {
     name: 'Gold Pickaxe',
@@ -125,6 +152,10 @@ export default [
     colour: 'darkgoldenrod',
     material: 'shiny',
     category: 'pickaxe',
+    skill: 'Mining',
+    equipLevel: 4,
+    craftLevel: 2,
+    xpAmount: 40,
   },
   {
     name: 'Diamond Pickaxe',
@@ -137,6 +168,10 @@ export default [
     colour: '#ACDDE7',
     material: 'glass',
     category: 'pickaxe',
+    skill: 'Mining',
+    equipLevel: 5,
+    craftLevel: 3,
+    xpAmount: 50,
   },
   {
     name: 'Wood Axe',
@@ -149,6 +184,9 @@ export default [
     colour: '#4A4138',
     material: 'matte',
     category: 'axe',
+    equipLevel: 1,
+    craftLevel: 1,
+    xpAmount: 10,
   },
   {
     name: 'Stone Axe',
@@ -161,6 +199,9 @@ export default [
     colour: 'gray',
     material: 'matte',
     category: 'axe',
+    equipLevel: 2,
+    craftLevel: 1,
+    xpAmount: 20,
   },
   {
     name: 'Iron Axe',
@@ -173,6 +214,9 @@ export default [
     colour: 'slategray',
     material: 'shiny',
     category: 'axe',
+    equipLevel: 3,
+    craftLevel: 2,
+    xpAmount: 30,
   },
   {
     name: 'Gold Axe',
@@ -185,6 +229,9 @@ export default [
     colour: 'darkgoldenrod',
     material: 'shiny',
     category: 'axe',
+    equipLevel: 4,
+    craftLevel: 2,
+    xpAmount: 40,
   },
   {
     name: 'Diamond Axe',
@@ -197,6 +244,9 @@ export default [
     colour: '#ACDDE7',
     material: 'glass',
     category: 'axe',
+    equipLevel: 5,
+    craftLevel: 3,
+    xpAmount: 50,
   },
   //Resources
   {
@@ -204,15 +254,19 @@ export default [
     description: 'Useful for crafting.',
     recipe: { Wood: 5 },
     type: 'resource',
+    xpAmount: 1,
+    craftLevel: 1,
   },
   {
     name: 'Gold Ingot',
     description: 'Pure bar of gold.',
     type: 'resource',
+    xpAmount: 10,
   },
   {
     name: 'Iron Ingot',
     description: 'Pure bar of iron.',
     type: 'resource',
+    xpAmount: 5,
   },
 ]
