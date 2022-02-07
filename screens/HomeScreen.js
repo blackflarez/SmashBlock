@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
   SafeAreaView,
+  Modal,
 } from 'react-native'
 import {
   InputField,
@@ -20,6 +21,8 @@ import {
   Config,
   IconButton,
   Font,
+  Button,
+  Levels,
 } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -33,6 +36,10 @@ export default function HomeScreen({ navigation }, props) {
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
   const [firstTimeDialog, setFirstTimeDialog] = useState(true)
+  const [levelUpModal, setLevelUpModal] = useState(false)
+  const [levelUpSkill, setLevelUpSkill] = useState()
+  const [levelUpAmount, setLevelUpAmount] = useState()
+  const [levelUpDescription, setLevelUpDescription] = useState()
   const [userTakenError, setUserTakenError] = useState('')
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
@@ -247,6 +254,17 @@ export default function HomeScreen({ navigation }, props) {
     await Firebase.database()
       .ref(`users/${user.uid}/userData/location`)
       .set(location)
+    await Firebase.database().ref(`users/${user.uid}/userData/levels`).set({
+      Level: 4,
+      Woodcutting: 1,
+      WoodcuttingXP: 0,
+      Mining: 1,
+      MiningXP: 0,
+      Smelting: 1,
+      SmeltingXP: 0,
+      Crafting: 1,
+      CraftingXP: 0,
+    })
   }
 
   async function setNotifications() {
@@ -286,7 +304,7 @@ export default function HomeScreen({ navigation }, props) {
             try {
               await Firebase.database()
                 .ref(`scores/${user.uid}/score`)
-                .set(snapshot.val().userData.inventory['Gold Ore'])
+                .set(snapshot.val().userData.levels.Level)
             } catch (error) {}
             try {
               await Firebase.database()
@@ -317,6 +335,49 @@ export default function HomeScreen({ navigation }, props) {
     }
     init()
   }, [])
+
+  async function updateLevel(block) {
+    Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .child(`${block.xpType}XP`)
+      .set(Firebase.firebase_.database.ServerValue.increment(block.xpAmount))
+
+    Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .get()
+      .then((snapshot) => {
+        let level = snapshot.child(`${block.xpType}`).val()
+        let xp = 0.095 * Math.sqrt(snapshot.child(`${block.xpType}XP`).val())
+        if (Math.floor(xp) > level) {
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`${block.xpType}`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+            .then(() => {
+              setLevelUpModal(true)
+              setLevelUpSkill(block.xpType)
+              setLevelUpAmount(level + 1)
+              let description = []
+              Object.entries(Levels).forEach(([key, value]) => {
+                if (key == block.xpType) {
+                  Object.entries(value).forEach(([key, value]) => {
+                    if (key == level + 1) {
+                      Object.entries(value).forEach(([key, value]) => {
+                        description.push(`${key}: ${value} \n`)
+                      })
+                    }
+                  })
+                }
+              })
+              setLevelUpDescription(description)
+            })
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`Level`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+        }
+      })
+  }
 
   async function updateBalance(block, destroy, coordinates, damage) {
     if (destroy) {
@@ -362,6 +423,8 @@ export default function HomeScreen({ navigation }, props) {
         .ref(`users/${user.uid}/userData/inventory`)
         .child(`${block.name}`)
         .set(Firebase.firebase_.database.ServerValue.increment(amount))
+
+      updateLevel(block)
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
     }
@@ -492,6 +555,45 @@ export default function HomeScreen({ navigation }, props) {
     >
       <StatusBar style="dark" />
 
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={levelUpModal}
+        onRequestClose={() => {
+          setLevelUpModal(false)
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Font style={styles.text}>Level Up!</Font>
+            <Font
+              style={[styles.textLight, { marginBottom: 20, color: '#757575' }]}
+            >
+              You are now {levelUpSkill} level {levelUpAmount}.
+            </Font>
+
+            <Font style={styles.textLight}>{levelUpDescription}</Font>
+
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                width: 120,
+              }}
+            >
+              <Button
+                title={'Close'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  setLevelUpModal(false)
+                }}
+              ></Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <Animated.View
         style={{
           opacity: locationAnim,
@@ -516,7 +618,7 @@ export default function HomeScreen({ navigation }, props) {
           opacity: introFadeAnim,
           position: 'absolute',
           flex: 1,
-          top: 75,
+          top: 60,
           left: 20,
         }}
       >
@@ -532,7 +634,7 @@ export default function HomeScreen({ navigation }, props) {
           opacity: introFadeAnimMap,
           position: 'absolute',
           flex: 1,
-          top: 75,
+          top: 60,
           right: 20,
         }}
       >
@@ -614,5 +716,28 @@ const styles = StyleSheet.create({
   canvas: {
     zIndex: -1,
     position: 'absolute',
+  },
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  modalView: {
+    width: 300,
+    height: 300,
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
   },
 })

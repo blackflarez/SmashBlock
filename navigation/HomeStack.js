@@ -50,7 +50,7 @@ export default function HomeStack() {
         name="Scores"
         component={Scores}
         options={{
-          title: <Font>Levels</Font>,
+          title: <Font>Skills</Font>,
           headerShown: true,
           headerTitleStyle: {
             fontSize: 22,

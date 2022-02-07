@@ -10,7 +10,14 @@ import {
   Platform,
 } from 'react-native'
 import Slider from '@react-native-community/slider'
-import { Button, Items, ItemButton, ItemIcon, Font } from '../components'
+import {
+  Button,
+  Items,
+  ItemButton,
+  ItemIcon,
+  Font,
+  Levels,
+} from '../components'
 import { Firebase, Database } from '../config/firebase'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useStateIfMounted } from 'use-state-if-mounted'
@@ -46,6 +53,12 @@ export default function Furnace({ navigation }, props) {
   const [setAmount, setSetAmount] = useStateIfMounted(1)
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const [currentLevel, setCurrentLevel] = useStateIfMounted(1)
+  const [levelUpModal, setLevelUpModal] = useStateIfMounted(false)
+  const [levelUpSkill, setLevelUpSkill] = useStateIfMounted()
+  const [levelUpAmount, setLevelUpAmount] = useStateIfMounted()
+  const [levelUpDescription, setLevelUpDescription] = useStateIfMounted()
+  const [unableSmeltModal, setUnableSmeltModal] = useStateIfMounted(false)
 
   const handleBack = async () => {
     try {
@@ -54,6 +67,15 @@ export default function Furnace({ navigation }, props) {
       console.log(error)
     }
   }
+
+  useEffect(() => {
+    Firebase.database()
+      .ref(`users/${user.uid}/userData/levels/Smelting`)
+      .get()
+      .then((snapshot) => {
+        setCurrentLevel(snapshot.val())
+      })
+  }, [])
 
   useMemo(() => {
     if (!loading) {
@@ -145,6 +167,55 @@ export default function Furnace({ navigation }, props) {
     }
   }
 
+  async function updateLevel(block) {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .child(`SmeltingXP`)
+      .set(
+        Firebase.firebase_.database.ServerValue.increment(
+          block.xpAmount * currentOutput.amount
+        )
+      )
+
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .get()
+      .then((snapshot) => {
+        let level = snapshot.child(`Smelting`).val()
+        let xp = 0.095 * Math.sqrt(snapshot.child(`SmeltingXP`).val())
+        if (Math.floor(xp) > level) {
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`Smelting`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+            .then(() => {
+              console.log('levelup')
+              setLevelUpModal(true)
+              setLevelUpSkill(`Smelting`)
+              setLevelUpAmount(level + 1)
+              setCurrentLevel(level + 1)
+              let description = []
+              Object.entries(Levels).forEach(([key, value]) => {
+                if (key == 'Smelting') {
+                  Object.entries(value).forEach(([key, value]) => {
+                    if (key == level + 1) {
+                      Object.entries(value).forEach(([key, value]) => {
+                        description.push(`${key}: ${value} \n`)
+                      })
+                    }
+                  })
+                }
+              })
+              setLevelUpDescription(description)
+            })
+          Firebase.database()
+            .ref(`users/${user.uid}/userData/levels`)
+            .child(`Level`)
+            .set(Firebase.firebase_.database.ServerValue.increment(1))
+        }
+      })
+  }
+
   const handleRemove = async (item) => {
     setModalVisible(false)
 
@@ -190,14 +261,22 @@ export default function Furnace({ navigation }, props) {
             currentOutput.amount
           )
         )
-        .then(setRemoveModalVisible(false))
+        .then(
+          setRemoveModalVisible(false),
+          updateLevel(Items.find((o) => item === o.name))
+        )
     }
   }
 
   const handleOpen = async (item) => {
-    setSetAmount(1)
-    setModalVisible(true)
-    setCurrentItem(item)
+    if (currentLevel >= item.smeltLevel) {
+      setSetAmount(1)
+      setModalVisible(true)
+      setCurrentItem(item)
+    } else {
+      setCurrentItem(item)
+      setUnableSmeltModal(true)
+    }
   }
 
   const handleOpenOre = async () => {
@@ -489,6 +568,81 @@ export default function Furnace({ navigation }, props) {
         <Modal
           animationType="fade"
           transparent={true}
+          visible={unableSmeltModal}
+          onRequestClose={() => {
+            setUnableSmeltModal(false)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 200 }]}>
+              <Font style={styles.text}>
+                You must be Smelting level {currentItem.smeltLevel} to use{' '}
+                {currentItem.name}.
+              </Font>
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setUnableSmeltModal(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={levelUpModal}
+          onRequestClose={() => {
+            setLevelUpModal(false)
+          }}
+        >
+          <View style={styles.centeredView}>
+            <View style={[styles.modalView, { height: 300 }]}>
+              <Font style={styles.text}>Level Up!</Font>
+              <Font
+                style={[
+                  styles.textLight,
+                  { marginBottom: 20, color: '#757575' },
+                ]}
+              >
+                You are now {levelUpSkill} level {levelUpAmount}.
+              </Font>
+
+              <Font style={styles.textLight}>{levelUpDescription}</Font>
+
+              <View
+                style={{
+                  position: 'absolute',
+                  bottom: 20,
+                  width: 120,
+                }}
+              >
+                <Button
+                  title={'Close'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    setLevelUpModal(false)
+                  }}
+                ></Button>
+              </View>
+            </View>
+          </View>
+        </Modal>
+        <Modal
+          animationType="fade"
+          transparent={true}
           visible={removeModalVisible}
           onRequestClose={() => {
             Alert.alert('Modal has been closed.')
@@ -513,7 +667,6 @@ export default function Furnace({ navigation }, props) {
                   onPress={() => {
                     handleRemove(currentItem.name), setRemoveModalVisible(false)
                   }}
-                  pending={cooking}
                 ></Button>
                 <Button
                   title={'Close'}
