@@ -1,16 +1,13 @@
 export default {
-  Level: {
-    1: { Locations: ['sandybeach', 'foggyforrest'] },
-  },
   Mining: {
-    1: { Items: ['Wood Pickaxe'] },
+    1: { Items: ['Wood Pickaxe'], Locations: ['Spooky_Cave'] },
     2: { Items: ['Stone Pickaxe'] },
     3: { Items: ['Iron Pickaxe'] },
     4: { Items: ['Gold Pickaxe'] },
     5: { Items: ['Diamond Pickaxe'] },
   },
   Woodcutting: {
-    1: { Items: ['Wood Axe'] },
+    1: { Items: ['Wood Axe'], Locations: ['Foggy_Forest'] },
     2: { Items: ['Stone Axe'] },
     3: { Items: ['Iron Axe'] },
     4: { Items: ['Gold Axe'] },

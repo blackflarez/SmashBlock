@@ -47,7 +47,7 @@ export default function HomeScreen({ navigation }, props) {
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [newItems, setNewItems] = useState([])
   const [equipped, setEquipped] = useState(null)
-  const [location, setLocation] = useState('foggyforest')
+  const [location, setLocation] = useState('Foggy_Forest')
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
   const [mapIcon, setMapIcon] = useState('map-outline')
@@ -382,13 +382,8 @@ export default function HomeScreen({ navigation }, props) {
   async function updateBalance(block, destroy, coordinates, damage) {
     if (destroy) {
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
-
       var amount = Math.floor(
-        1 +
-          (equipped.efficiency *
-            (Math.random() * (1.5 - 0.75) + 0.75) *
-            damage) /
-            10
+        1 + equipped.efficiency * (Math.random() * (1.5 - 0.75) + 0.75)
       )
 
       setPlusses((plusses) => [
@@ -430,6 +425,21 @@ export default function HomeScreen({ navigation }, props) {
     }
   }
 
+  async function isUnlocked(map) {
+    let unlocked = false
+    let location = Items.find((o) => o.name === map)
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/levels`)
+      .get()
+      .then(async (snapshot) => {
+        let level = snapshot.child(location.skill).val()
+        if (level >= location.unlockLevel) {
+          unlocked = true
+        }
+      })
+    return unlocked
+  }
+
   function generateBlock() {
     let currentBlocks = blocks.filter((o) => o.locations.includes(location))
     let chance = Math.random() * 100
@@ -459,21 +469,35 @@ export default function HomeScreen({ navigation }, props) {
   }
 
   async function setSceneMode(currentLocation) {
+    let unlocked = false
+    let location = Items.find((o) => o.name === currentLocation)
     await Firebase.database()
-      .ref(`users/${user.uid}/userData/location`)
-      .set(currentLocation)
-    setLocation(currentLocation)
-    Animated.timing(introFadeAnim, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true,
-    }).start(setMenuVisible(true))
+      .ref(`users/${user.uid}/userData/levels`)
+      .get()
+      .then(async (snapshot) => {
+        let level = snapshot.child(location.skill).val()
+        if (level >= location.unlockLevel) {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/location`)
+            .set(currentLocation)
+          setLocation(currentLocation)
+          unlocked = true
 
-    Animated.timing(introFadeAnimMap, {
-      toValue: 1,
-      duration: 1500,
-      useNativeDriver: true,
-    }).start(setMapButtonVisible(true))
+          Animated.timing(introFadeAnim, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }).start(setMenuVisible(true))
+
+          Animated.timing(introFadeAnimMap, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          }).start(setMapButtonVisible(true))
+        }
+      })
+
+    return unlocked
   }
 
   if (isLoading) {
@@ -609,7 +633,7 @@ export default function HomeScreen({ navigation }, props) {
             paddingRight: 30,
           }}
         >
-          {location}
+          {location.replace('_', ' ')}
         </Font>
       </Animated.View>
 
@@ -678,6 +702,7 @@ export default function HomeScreen({ navigation }, props) {
           setLoading={() => setCanvasLoading(false)}
           setMapMode={setMapMode}
           setSceneMode={setSceneMode}
+          isUnlocked={isUnlocked}
           ref={canvas}
         />
       </View>

@@ -50,6 +50,7 @@ var deltaX = 0,
   flowerTexture,
   grassTexture,
   dirtTexture,
+  caveFloorTexture,
   woodTexture,
   blankNormalMap,
   cubeNormalMap,
@@ -105,25 +106,30 @@ var deltaX = 0,
   holdSpeed = 200,
   strength = 1,
   lastClicked = new Date().getTime(),
-  tbc = 0, //Time Between Clicks
+  tbc = 0,
   blockContainer,
   toolContainer,
   mapGroup,
   mapButtonGroup,
   mapButtons,
+  lockedTexture,
   particleContainer = [],
   smokeContainer = [],
   lastDestruction,
   lastOreDestruction,
   light,
+  light2,
   mapMode = false,
   mapModePending = false,
-  currentLocation = 'foggyforest',
+  currentLocation = 'Foggy_Forest',
   crosshair,
   crosshairTexture,
   crosshairGroup,
   recentClicks = 0,
-  crosshairActive
+  crosshairActive,
+  cave,
+  spookyCaveGroup,
+  mapGroups = []
 
 //Graphics Settings
 var shadowSize = 256,
@@ -207,10 +213,12 @@ function Canvas(props, ref) {
   )
 
   function setToolMaterial(equipped) {
+    tool.visible = true
     try {
       if (equipped.category === 'pickaxe') {
         tool.geometry = pickaxe.geometry
         if (equipped.material === 'glass') {
+          console.log(equipped.material)
           tool.material = new THREE.MeshPhongMaterial({
             color: equipped.colour,
             map: glassPickaxeTexture,
@@ -269,6 +277,9 @@ function Canvas(props, ref) {
       world = new THREE.Group()
       mapGroup = new THREE.Group()
       foggyForestGroup = new THREE.Group()
+      foggyForestGroup.name = 'Foggy_Forest'
+      spookyCaveGroup = new THREE.Group()
+      spookyCaveGroup.name = 'Spooky_Cave'
       mapButtonGroup = new THREE.Group()
       blockContainer = new THREE.Group()
       blockContainer.name = 'blockContainer'
@@ -277,8 +288,9 @@ function Canvas(props, ref) {
       skyColour = 0xbde0fe
       scene.background = new THREE.Color(skyColour)
       scene.fog = new THREE.Fog(skyColour, 2, 15)
+      mapGroups.push(spookyCaveGroup, foggyForestGroup)
 
-      //renderer
+      //rendere
       renderer = new Renderer({
         gl,
         depth: false,
@@ -316,9 +328,14 @@ function Canvas(props, ref) {
       light.shadow.camera.top = d
       light.shadow.camera.bottom = -d
 
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 3)
+      light2.position.set(-120, 50, 150)
+      light2.shadow.mapSize.set(shadowSize, shadowSize)
+
       const ambientLight = new THREE.HemisphereLight(0xffffff, 0xfff3e8, 2.5)
 
       world.add(light)
+      spookyCaveGroup.add(light2)
       world.add(ambientLight)
 
       //assets
@@ -401,12 +418,13 @@ function Canvas(props, ref) {
       const crosshairUri = Asset.fromModule(
         require('../assets/models/crosshair.glb')
       ).uri
+      const caveUri = Asset.fromModule(require('../assets/models/cave.glb')).uri
 
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxe.png')
       ).uri
       const glassPickTex = Asset.fromModule(
-        require('../assets/models/pickaxe.png')
+        require('../assets/models/glasspickaxe.png')
       ).uri
       const planeTexUri = Asset.fromModule(
         require('../assets/models/planebake.png')
@@ -441,6 +459,9 @@ function Canvas(props, ref) {
       const dirtTex = Asset.fromModule(
         require('../assets/models/dirttexture.png')
       ).uri
+      const caveFloorTex = Asset.fromModule(
+        require('../assets/models/cavefloortexture.png')
+      ).uri
       const grassTex = Asset.fromModule(
         require('../assets/models/grasstexture.png')
       ).uri
@@ -458,6 +479,9 @@ function Canvas(props, ref) {
       ).uri
       const crosshairTex = Asset.fromModule(
         require('../assets/models/crosshairtexture.png')
+      ).uri
+      const lockedButtonTex = Asset.fromModule(
+        require('../assets/models/lockedtexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -568,6 +592,9 @@ function Canvas(props, ref) {
       let m30 = loadModel(crosshairUri).then((result) => {
         crosshair = result.scene.children[0]
       })
+      let m31 = loadModel(caveUri).then((result) => {
+        cave = result.scene
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -623,6 +650,12 @@ function Canvas(props, ref) {
       let t18 = loadTexture(crosshairTex).then((result) => {
         crosshairTexture = result
       })
+      let t19 = loadTexture(lockedButtonTex).then((result) => {
+        lockedTexture = result
+      })
+      let t20 = loadTexture(caveFloorTex).then((result) => {
+        caveFloorTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -676,6 +709,7 @@ function Canvas(props, ref) {
         m28,
         m29,
         m30,
+        m31,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -695,6 +729,8 @@ function Canvas(props, ref) {
         t16,
         t17,
         t18,
+        t19,
+        t20,
         ms[area - 1],
       ]).then(() => {
         //tool
@@ -718,6 +754,7 @@ function Canvas(props, ref) {
         tool.onBeforeRender = function (renderer) {
           renderer.clearDepth()
         }
+        tool.visible = false
 
         //crosshair
         crosshairTexture.flipY = false
@@ -772,6 +809,10 @@ function Canvas(props, ref) {
         tree.castShadow = false
         foggyForestGroup.add(tree)
 
+        //cave
+        spookyCaveGroup.add(cave)
+        scene.add(spookyCaveGroup)
+
         //map
         worldMapTexture.flipY = false
         worldMap.children[0].material = new THREE.MeshLambertMaterial({
@@ -791,7 +832,14 @@ function Canvas(props, ref) {
         mapGroup.add(mapOverlay)
 
         //map buttons
-        mapButtons.visible = false
+        mapButtons.visible = true
+        lockedTexture.flipY = false
+        for (let i = 0; i < mapButtons.children.length; i++) {
+          mapButtons.children[i].material = new THREE.MeshBasicMaterial({
+            map: lockedTexture,
+            transparent: 1,
+          })
+        }
         mapButtonGroup.add(mapButtons)
 
         //clouds
@@ -1686,7 +1734,7 @@ function Canvas(props, ref) {
     })
   }
 
-  function animateTool(intersects, animateY) {
+  async function animateTool(intersects, animateY) {
     if (animateY) {
       new TWEEN.Tween(tool.position)
         .to(
@@ -1721,7 +1769,7 @@ function Canvas(props, ref) {
       .start()
   }
 
-  function animateMap(position) {
+  async function animateMap(position) {
     if (position && !mapModePending) {
       new TWEEN.Tween(mapGroup.position)
         .to(
@@ -1736,7 +1784,14 @@ function Canvas(props, ref) {
         .start()
     }
     if (!mapMode && !mapModePending) {
-      //world
+      //mapmode
+      for (let i of mapButtons.children) {
+        if (await props.isUnlocked(i.name)) {
+          i.visible = false
+        } else {
+          i.visible = true
+        }
+      }
       props.setMapMode()
       skyColour = 0xbde0fe
       let position = mapButtons.children.filter(
@@ -1782,7 +1837,7 @@ function Canvas(props, ref) {
       mapModePending = true
       new TWEEN.Tween(worldMap)
         .to({}, 1100)
-        .onComplete(() => (worldMap.visible = true))
+        .onComplete(() => ((worldMap.visible = true), (light.visible = true)))
         .start()
 
       new TWEEN.Tween(scene.rotation)
@@ -1843,83 +1898,74 @@ function Canvas(props, ref) {
         .start()
       mapMode = true
     } else if (mapMode && !mapModePending) {
-      //scene
-      props.setSceneMode(currentLocation)
-      mapModePending = true
+      if (await props.setSceneMode(currentLocation)) {
+        //scenemode
+        mapModePending = true
+        new TWEEN.Tween(mapOverlay.material)
+          .to(
+            {
+              opacity: 0,
+            },
+            200
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Linear.None)
+          .onComplete(() => (mapOverlay.visible = false))
+          .start()
+        new TWEEN.Tween(worldMap)
+          .to({}, 400)
+          .onComplete(() => (worldMap.visible = false))
+          .start()
+        new TWEEN.Tween(scene.rotation)
+          .to(
+            {
+              y: -0.78,
+            },
+            2000
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .start()
 
-      new TWEEN.Tween(mapOverlay.material)
-        .to(
-          {
-            opacity: 0,
-          },
-          200
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Linear.None)
-        .onComplete(() => (mapOverlay.visible = false))
-        .start()
-      new TWEEN.Tween(worldMap)
-        .to({}, 400)
-        .onComplete(() => (worldMap.visible = false))
-        .start()
-      new TWEEN.Tween(scene.rotation)
-        .to(
-          {
-            y: -0.78,
-          },
-          2000
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .start()
-      new TWEEN.Tween(scene.fog)
-        .to(
-          {
-            far: 15,
-          },
-          500
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .start()
+        new TWEEN.Tween(camera.position)
+          .to(
+            {
+              y: 1.25,
+            },
+            2000
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .onComplete(() => {
+            mapModePending = false
+          })
+          .start()
+        new TWEEN.Tween(camera.rotation)
+          .to(
+            {
+              x: -0.32175055439664224,
+            },
+            1750
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .onComplete(() => {})
+          .start()
 
-      new TWEEN.Tween(camera.position)
-        .to(
-          {
-            y: 1.25,
-          },
-          2000
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .onComplete(() => {
-          mapModePending = false
-        })
-        .start()
-      new TWEEN.Tween(camera.rotation)
-        .to(
-          {
-            x: -0.32175055439664224,
-          },
-          1750
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .onComplete(() => {})
-        .start()
-
-      new TWEEN.Tween(camera)
-        .to(
-          {
-            fov: 60,
-          },
-          1750
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .onUpdate(() => camera.updateProjectionMatrix())
-        .start()
-      mapMode = false
+        new TWEEN.Tween(camera)
+          .to(
+            {
+              fov: 60,
+            },
+            1750
+          )
+          .yoyo(true)
+          .easing(TWEEN.Easing.Cubic.InOut)
+          .onUpdate(() => camera.updateProjectionMatrix())
+          .start()
+        mapMode = false
+        updateEnvironment(currentLocation)
+      }
     }
   }
 
@@ -1986,59 +2032,74 @@ function Canvas(props, ref) {
 
   function updateEnvironment(location) {
     currentLocation = location
-    if (location === 'sandybeach') {
-      foggyForestGroup.visible = false
+    for (let i of mapGroups) {
+      if (i.name == location) {
+        i.visible = true
+      } else {
+        i.visible = false
+      }
+    }
+
+    if (location === 'Sandy_Beach') {
       plane.material.map = sandTexture
       skyColour = 0x87ceeb
 
-      new TWEEN.Tween(scene)
-        .to(
-          {
-            background: new THREE.Color(skyColour),
-          },
-          2000
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .start()
       new TWEEN.Tween(scene.fog)
         .to(
           {
             color: new THREE.Color(skyColour),
-            far: 80,
+            far: 30,
           },
-          2000
+          300
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Cubic.InOut)
         .start()
-    } else if (location === 'foggyforest') {
-      foggyForestGroup.visible = true
+    } else if (location === 'Foggy_Forest') {
       plane.material.map = dirtTexture
       skyColour = 0xbde0fe
 
-      new TWEEN.Tween(scene)
-        .to(
-          {
-            background: new THREE.Color(skyColour),
-          },
-          2000
-        )
-        .yoyo(true)
-        .easing(TWEEN.Easing.Cubic.InOut)
-        .start()
       new TWEEN.Tween(scene.fog)
         .to(
           {
-            color: new THREE.Color(skyColour),
+            skyColour: new THREE.Color(skyColour),
             far: 15,
           },
-          2000
+          300
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Cubic.InOut)
         .start()
+    } else if (location === 'Spooky_Cave') {
+      plane.material.map = caveFloorTexture
+      skyColour = 0x9ba2ff
+
+      new TWEEN.Tween(scene.fog)
+        .to(
+          {
+            far: 20,
+            color: new THREE.Color(skyColour),
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.InOut)
+        .onComplete(() => {
+          light.visible = false
+        })
+        .start()
     }
+
+    new TWEEN.Tween(scene)
+      .to(
+        {
+          background: new THREE.Color(skyColour),
+        },
+        300
+      )
+      .yoyo(true)
+      .easing(TWEEN.Easing.Cubic.InOut)
+      .start()
   }
 
   function updateMaterial() {
@@ -2066,7 +2127,6 @@ function Canvas(props, ref) {
       })
     } else if (currentBlock.model === 'wood') {
       blockContainer.rotation.x = 0
-
       blockContainer.rotation.z = 0
       ores.visible = false
       cube.geometry = wood.geometry
@@ -2162,7 +2222,7 @@ function Canvas(props, ref) {
       if (currentBlock.tools.includes(props.equipped.category)) {
         currentBlock.health -= strength * bonus
       } else {
-        currentBlock.health -= (strength / 3) * bonus
+        currentBlock.health -= (strength / 2) * bonus
       }
     }
   }
