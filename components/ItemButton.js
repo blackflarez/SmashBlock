@@ -1,7 +1,7 @@
 import React from 'react'
 import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
-import { Badge } from 'react-native-paper'
+import { Badge, ProgressBar } from 'react-native-paper'
 import { Amount, ItemIcon, Font } from '../components'
 import * as Haptics from 'expo-haptics'
 
@@ -18,6 +18,7 @@ const ItemButton = (
     margin,
     equipped,
     newItem,
+    health,
   },
   props
 ) => {

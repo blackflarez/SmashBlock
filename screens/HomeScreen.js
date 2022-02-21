@@ -47,6 +47,8 @@ export default function HomeScreen({ navigation }, props) {
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [newItems, setNewItems] = useState([])
   const [equipped, setEquipped] = useState(null)
+  const [equippedDurability, setEquippedDurability] = useState(null)
+  const [equippedPending, setEquippedPending] = useState(false)
   const [location, setLocation] = useState('Foggy_Forest')
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
@@ -58,6 +60,7 @@ export default function HomeScreen({ navigation }, props) {
   const [mapButtonVisible, setMapButtonVisible] = useState(true)
   const locationAnim = useRef(new Animated.Value(0)).current
   const locationRiseAnim = useRef(new Animated.Value(30)).current
+  const fists = { name: 'Fists', strength: 1, efficiency: 1 }
 
   function haptics(style) {
     if (Platform.OS === 'ios' && config.hapticsEnabled === true) {
@@ -79,17 +82,23 @@ export default function HomeScreen({ navigation }, props) {
               if (snapshot.exists()) {
                 item = Items.find((data) => data.name === snapshot.val())
               } else {
-                item = {
-                  name: 'Fists',
-                  strength: 1,
-                  efficiency: 1,
-                }
+                item = fists
               }
             })
 
           if (isActive) {
             setEquipped(item)
             canvas.current.setTool(item)
+            await Firebase.database()
+              .ref(`users/${user.uid}/userData/durability/${item.name}`)
+              .get()
+              .then(async (snapshot) => {
+                if (snapshot.exists()) {
+                  setEquippedDurability(snapshot.val())
+                } else {
+                  setEquippedDurability(null)
+                }
+              })
           }
         } catch (error) {}
         try {
@@ -104,6 +113,7 @@ export default function HomeScreen({ navigation }, props) {
             })
         } catch (error) {}
       }
+
       onFocus()
       return () => {
         isActive = false
@@ -379,6 +389,60 @@ export default function HomeScreen({ navigation }, props) {
       })
   }
 
+  async function updateDurability() {
+    if (equipped.name !== 'Fists') {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/durability/${equipped.name}`)
+        .get()
+        .then(async (snapshot) => {
+          if (snapshot.exists()) {
+            setEquippedDurability(snapshot.val())
+            if (snapshot.val() === 0) {
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/durability/${equipped.name}`)
+                .set(null)
+
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/inventory/${equipped.name}`)
+                .set(Firebase.firebase_.database.ServerValue.increment(-1))
+
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/inventory/${equipped.name}`)
+                .get()
+                .then(async (snapshot) => {
+                  if (snapshot.val() === 0) {
+                    canvas.current.setTool(fists)
+                    setEquipped(fists)
+                    await Firebase.database()
+                      .ref(`users/${user.uid}/userData/equipped`)
+                      .set(null)
+                    setEquippedDurability(null)
+                    await Firebase.database()
+                      .ref(
+                        `users/${user.uid}/userData/durability/${equipped.name}`
+                      )
+                      .set(null)
+                  }
+                })
+            } else {
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/durability/${equipped.name}`)
+                .set(
+                  await Firebase.firebase_.database.ServerValue.increment(
+                    -equipped.durability
+                  )
+                )
+            }
+          } else {
+            setEquippedDurability(10000 - equipped.durability)
+            await Firebase.database()
+              .ref(`users/${user.uid}/userData/durability/${equipped.name}`)
+              .set(10000 - equipped.durability)
+          }
+        })
+    }
+  }
+
   async function updateBalance(block, destroy, coordinates, damage) {
     if (destroy) {
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
@@ -423,6 +487,8 @@ export default function HomeScreen({ navigation }, props) {
     } else {
       haptics(Haptics.ImpactFeedbackStyle.Light)
     }
+
+    await updateDurability()
   }
 
   async function isUnlocked(map) {
@@ -650,6 +716,7 @@ export default function HomeScreen({ navigation }, props) {
           name={equipped ? equipped.name : null}
           onPress={() => handleInventory('tool')}
           buttonVisible={menuVisible}
+          health={equippedDurability / 10000}
         />
       </Animated.View>
 
