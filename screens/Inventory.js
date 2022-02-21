@@ -33,6 +33,7 @@ export default function Inventory({ navigation, route }, props) {
   const fadeAnim = useRef(new Animated.Value(0)).current
   const [equipped, setEquipped] = useStateIfMounted()
   const [newItems, setNewItems] = useStateIfMounted([])
+  const [equippedDurability, setEquippedDurability] = useState(null)
 
   const handleBack = async () => {
     try {
@@ -183,6 +184,17 @@ export default function Inventory({ navigation, route }, props) {
     const interval = setInterval(() => init(), 500)
     return () => clearInterval(interval)
   }, [])
+
+  function getHealth(item) {
+    Firebase.database()
+      .ref(`users/${user.uid}/userData/durability/${item.name}`)
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          return snapshot.val()
+        } else return null
+      })
+  }
 
   const renderItem = ({ item }) => (
     <ItemButton

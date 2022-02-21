@@ -90,10 +90,10 @@ const EquippedButton = (
             {Amount(amount)}
           </Badge>
           <ProgressBar
+            visible={health}
             progress={health}
-            color={'green'}
-            style={{ width: 60, borderRadius: 10 }}
-            visible={false}
+            color={['hsl(', (health * 100).toString(10), ',100%,50%)'].join('')}
+            style={{ width: 55, borderRadius: 10, marginBottom: 5 }}
           />
         </Pressable>
       </View>

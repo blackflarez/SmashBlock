@@ -218,7 +218,6 @@ function Canvas(props, ref) {
       if (equipped.category === 'pickaxe') {
         tool.geometry = pickaxe.geometry
         if (equipped.material === 'glass') {
-          console.log(equipped.material)
           tool.material = new THREE.MeshPhongMaterial({
             color: equipped.colour,
             map: glassPickaxeTexture,
