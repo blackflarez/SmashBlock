@@ -205,6 +205,7 @@ export default function Inventory({ navigation, route }, props) {
       margin={20}
       equipped={equipped}
       newItem={newItems.includes(item.name)}
+      probability={item.probability}
     />
   )
 

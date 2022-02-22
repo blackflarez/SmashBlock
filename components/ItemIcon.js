@@ -12,7 +12,7 @@ const ItemIcon = ({ name, size }, props) => {
         height: size,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.05,
         shadowRadius: 6,
         alignSelf: 'center',
       }}
