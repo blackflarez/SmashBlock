@@ -29,6 +29,7 @@ import Canvas from '../components/Canvas'
 import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 import { useFocusEffect } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
+import { set } from 'lodash'
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
@@ -129,7 +130,7 @@ export default function HomeScreen({ navigation }, props) {
       canvas.current.updateEnvironmentFromOutside(location)
       Animated.sequence([
         Animated.timing(locationRiseAnim, {
-          toValue: 30,
+          toValue: 175,
           duration: 0.1,
           useNativeDriver: false,
         }),
@@ -333,12 +334,12 @@ export default function HomeScreen({ navigation }, props) {
 
           Animated.timing(introFadeAnim, {
             toValue: 1,
-            duration: 1000,
+            duration: 1500,
             useNativeDriver: true,
           }).start()
           Animated.timing(introFadeAnimMap, {
             toValue: 1,
-            duration: 1000,
+            duration: 1500,
             useNativeDriver: true,
           }).start()
         })
@@ -411,8 +412,8 @@ export default function HomeScreen({ navigation }, props) {
                 .get()
                 .then(async (snapshot) => {
                   if (snapshot.val() === 0) {
-                    canvas.current.setTool(fists)
                     setEquipped(fists)
+                    canvas.current.setTool(fists)
                     await Firebase.database()
                       .ref(`users/${user.uid}/userData/equipped`)
                       .set(null)
@@ -694,7 +695,7 @@ export default function HomeScreen({ navigation }, props) {
         <Font
           style={{
             color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: 22,
+            fontSize: 24,
             paddingLeft: 30,
             paddingRight: 30,
           }}

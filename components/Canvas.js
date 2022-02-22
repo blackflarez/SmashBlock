@@ -119,6 +119,8 @@ var deltaX = 0,
   lastOreDestruction,
   light,
   light2,
+  light3,
+  light4,
   mapMode = false,
   mapModePending = false,
   currentLocation = 'Foggy_Forest',
@@ -321,20 +323,38 @@ function Canvas(props, ref) {
       light.position.set(-120, 350, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
-      const d = 3
-      light.shadow.camera.left = -d
-      light.shadow.camera.right = d
-      light.shadow.camera.top = d
-      light.shadow.camera.bottom = -d
 
-      light2 = new THREE.DirectionalLight(0x9ba2ff, 3)
-      light2.position.set(-120, 50, 150)
+      light.shadow.camera.left = -3
+      light.shadow.camera.right = 3
+      light.shadow.camera.top = 3
+      light.shadow.camera.bottom = -3
+
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 1.25)
+      light2.position.set(-120, 350, 150)
       light2.shadow.mapSize.set(shadowSize, shadowSize)
+      light2.castShadow = true
+
+      light2.shadow.camera.left = -3
+      light2.shadow.camera.right = 3
+      light2.shadow.camera.top = 3
+      light2.shadow.camera.bottom = -3
+
+      light3 = new THREE.DirectionalLight(0xe25822, 2)
+      light3.position.set(120, 5, -1)
+      light3.shadow.mapSize.set(shadowSize, shadowSize)
+
+      light4 = new THREE.DirectionalLight(0xffffff, 3.5)
+      light4.position.set(-120, 350, 150)
+      light4.shadow.mapSize.set(shadowSize, shadowSize)
+      light4.castShadow = true
+      light4.visible = false
 
       const ambientLight = new THREE.HemisphereLight(0xffffff, 0xfff3e8, 2.5)
 
-      world.add(light)
+      foggyForestGroup.add(light)
       spookyCaveGroup.add(light2)
+      spookyCaveGroup.add(light3)
+      world.add(light4)
       world.add(ambientLight)
 
       //assets
@@ -904,7 +924,7 @@ function Canvas(props, ref) {
 
         //stone
         stone.material = new THREE.MeshStandardMaterial({
-          color: 'grey',
+          color: '#595959',
           normalMap: blankNormalMap,
           normalScale: new Vector2(0, 0),
           map: cubeTexture,
@@ -962,7 +982,7 @@ function Canvas(props, ref) {
         //cubeDestruction
         for (let i = 0; i < cubeDestruction.length; i++) {
           cubeDestruction[i].material = new THREE.MeshLambertMaterial({
-            color: 'grey',
+            color: '#595959',
           })
 
           cubeDestruction[i].traverse((o) => {
@@ -992,7 +1012,7 @@ function Canvas(props, ref) {
         //Particles
         for (let i = 0; i < particles.length; i++) {
           particles[i].material = new THREE.MeshBasicMaterial({
-            color: 'grey',
+            color: '#595959',
           })
 
           particles[i].name = 'particles'
@@ -1517,7 +1537,7 @@ function Canvas(props, ref) {
           })
         } else {
           o.material = new THREE.MeshLambertMaterial({
-            color: 'grey',
+            color: '#595959',
             map: cubeTexture,
           })
         }
@@ -1796,7 +1816,17 @@ function Canvas(props, ref) {
       let position = mapButtons.children.filter(
         (o) => o.name === currentLocation
       )[0].position
-
+      new TWEEN.Tween()
+        .to({}, 500)
+        .yoyo(true)
+        .onComplete(() => {
+          for (let i of mapGroups) {
+            if (i.name == currentLocation) {
+              i.visible = false
+            }
+          }
+        })
+        .start()
       new TWEEN.Tween(scene)
         .to(
           {
@@ -1836,9 +1866,8 @@ function Canvas(props, ref) {
       mapModePending = true
       new TWEEN.Tween(worldMap)
         .to({}, 1100)
-        .onComplete(() => ((worldMap.visible = true), (light.visible = true)))
+        .onComplete(() => ((worldMap.visible = true), (light4.visible = true)))
         .start()
-
       new TWEEN.Tween(scene.rotation)
         .to(
           {
@@ -1900,6 +1929,11 @@ function Canvas(props, ref) {
       if (await props.setSceneMode(currentLocation)) {
         //scenemode
         mapModePending = true
+        new TWEEN.Tween()
+          .to({}, 1250)
+          .yoyo(true)
+          .onComplete(() => (light4.visible = false))
+          .start()
         new TWEEN.Tween(mapOverlay.material)
           .to(
             {
@@ -2071,7 +2105,7 @@ function Canvas(props, ref) {
         .start()
     } else if (location === 'Spooky_Cave') {
       plane.material.map = caveFloorTexture
-      skyColour = 0x9ba2ff
+      skyColour = 0x3e4c5e
 
       new TWEEN.Tween(scene.fog)
         .to(
@@ -2083,9 +2117,6 @@ function Canvas(props, ref) {
         )
         .yoyo(true)
         .easing(TWEEN.Easing.Cubic.InOut)
-        .onComplete(() => {
-          light.visible = false
-        })
         .start()
     }
 
@@ -2110,7 +2141,7 @@ function Canvas(props, ref) {
       ores.visible = true
       cube.geometry = rock.geometry
       cube.material = new THREE.MeshStandardMaterial({
-        color: 'grey',
+        color: '#595959',
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
         map: cubeTexture,
@@ -2119,7 +2150,7 @@ function Canvas(props, ref) {
       ores.visible = false
       cube.geometry = stone.geometry
       cube.material = new THREE.MeshStandardMaterial({
-        color: 'grey',
+        color: '#595959',
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
         map: cubeTexture,

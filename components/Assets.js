@@ -12,6 +12,8 @@ export default {
     Diamond: Asset.fromModule(require(`../assets/icons/diamond.png`)),
     Wood: Asset.fromModule(require(`../assets/icons/wood.png`)),
     Coal: Asset.fromModule(require(`../assets/icons/coal.png`)),
+    'Copper Ore': Asset.fromModule(require(`../assets/icons/copper.png`)),
+    'Copper Wire': Asset.fromModule(require(`../assets/icons/copperwire.png`)),
     'Gold Pickaxe': Asset.fromModule(
       require(`../assets/icons/goldpickaxe.png`)
     ),
@@ -35,5 +37,8 @@ export default {
     Stick: Asset.fromModule(require(`../assets/icons/stick.png`)),
     'Gold Ingot': Asset.fromModule(require(`../assets/icons/goldingot.png`)),
     'Iron Ingot': Asset.fromModule(require(`../assets/icons/ironingot.png`)),
+    'Copper Ingot': Asset.fromModule(
+      require(`../assets/icons/copperingot.png`)
+    ),
   },
 }

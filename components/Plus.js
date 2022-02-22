@@ -56,7 +56,7 @@ const Plus = (
         }}
       >
         <View style={{ flexDirection: 'row', alignContent: 'center' }}>
-          <ItemIcon name={currentBlock} size={35} />
+          <ItemIcon name={currentBlock} size={42} />
           <Font
             style={{
               color: currentBlockColour,
