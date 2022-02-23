@@ -59,6 +59,8 @@ var deltaX = 0,
   skyTexture,
   pickaxe,
   axe,
+  drill,
+  drillTexture,
   pickaxeTexture,
   glassPickaxeTexture,
   oresTexture,
@@ -203,6 +205,11 @@ function Canvas(props, ref) {
           try {
             toolVisible = true
             setToolMaterial(tool)
+            if (tool.speed) {
+              holdSpeed = tool.speed
+            } else {
+              holdSpeed = 200
+            }
           } catch (error) {}
         } else {
           toolVisible = false
@@ -215,6 +222,7 @@ function Canvas(props, ref) {
   )
 
   function setToolMaterial(equipped) {
+    console.log(equipped.category)
     tool.visible = true
     try {
       if (equipped.category === 'pickaxe') {
@@ -255,6 +263,15 @@ function Canvas(props, ref) {
             visible: false,
           })
         }
+      } else if (equipped.category === 'drill') {
+        tool.geometry = drill.geometry
+        tool.material = new THREE.MeshPhongMaterial({
+          color: 'grey',
+          map: drillTexture,
+          transparent: true,
+          opacity: 0,
+          visible: false,
+        })
       }
     } catch (error) {}
   }
@@ -291,7 +308,7 @@ function Canvas(props, ref) {
       scene.fog = new THREE.Fog(skyColour, 2, 15)
       mapGroups.push(spookyCaveGroup, foggyForestGroup)
 
-      //rendere
+      //renderer
       renderer = new Renderer({
         gl,
         depth: false,
@@ -329,7 +346,7 @@ function Canvas(props, ref) {
       light.shadow.camera.top = 3
       light.shadow.camera.bottom = -3
 
-      light2 = new THREE.DirectionalLight(0x9ba2ff, 1.25)
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 2.5)
       light2.position.set(-120, 350, 150)
       light2.shadow.mapSize.set(shadowSize, shadowSize)
       light2.castShadow = true
@@ -340,7 +357,7 @@ function Canvas(props, ref) {
       light2.shadow.camera.bottom = -3
 
       light3 = new THREE.DirectionalLight(0xe25822, 2)
-      light3.position.set(120, 5, -1)
+      light3.position.set(2, 1, -2)
       light3.shadow.mapSize.set(shadowSize, shadowSize)
 
       light4 = new THREE.DirectionalLight(0xffffff, 3.5)
@@ -438,6 +455,9 @@ function Canvas(props, ref) {
         require('../assets/models/crosshair.glb')
       ).uri
       const caveUri = Asset.fromModule(require('../assets/models/cave.glb')).uri
+      const drillUri = Asset.fromModule(
+        require('../assets/models/drill.glb')
+      ).uri
 
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxe.png')
@@ -501,6 +521,9 @@ function Canvas(props, ref) {
       ).uri
       const lockedButtonTex = Asset.fromModule(
         require('../assets/models/lockedtexture.png')
+      ).uri
+      const drillTex = Asset.fromModule(
+        require('../assets/models/drilltexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -614,6 +637,9 @@ function Canvas(props, ref) {
       let m31 = loadModel(caveUri).then((result) => {
         cave = result.scene
       })
+      let m32 = loadModel(drillUri).then((result) => {
+        drill = result.scene.children[0]
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -675,6 +701,9 @@ function Canvas(props, ref) {
       let t20 = loadTexture(caveFloorTex).then((result) => {
         caveFloorTexture = result
       })
+      let t21 = loadTexture(drillTex).then((result) => {
+        drillTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -729,6 +758,7 @@ function Canvas(props, ref) {
         m29,
         m30,
         m31,
+        m32,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -750,13 +780,11 @@ function Canvas(props, ref) {
         t18,
         t19,
         t20,
+        t21,
         ms[area - 1],
       ]).then(() => {
         //tool
-        axe.castShadow = false
-        axe.receiveShadow = false
-        axe.position.z = 0.8
-
+        drillTexture.flipY = false
         pickaxeTexture.flipY = false
         glassPickaxeTexture.flipY = false
         pickaxeTexture.magFilter = THREE.NearestFilter
@@ -1468,6 +1496,80 @@ function Canvas(props, ref) {
       fadeInInverse.start()
       swingIn.chain(swingOut)
       swingIn.start()
+      hide.start()
+      return
+    } else if (type === 'drill') {
+      const fadeOutInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onComplete(() => (target.castShadow = false))
+
+      const fadeInInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 10,
+          },
+          100
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.In)
+        .onUpdate(() => (target.castShadow = true))
+
+      const swingIn = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 0,
+          },
+          500
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+
+      const swingOut = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 1,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.Out)
+
+      const digIn = new TWEEN.Tween(target.position)
+        .to(
+          {
+            z: 0.7,
+          },
+          50
+        )
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const digOut = new TWEEN.Tween(target.position)
+        .to(
+          {
+            z: 0.8,
+          },
+          400
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const hide = new TWEEN.Tween(target.material)
+        .to({}, 400)
+        .onUpdate(() => (target.material.visible = toolVisible))
+        .onComplete(() => (target.material.visible = false))
+
+      fadeInInverse.chain(fadeOutInverse)
+      fadeInInverse.start()
+      swingIn.chain(swingOut)
+      swingIn.start()
+      digIn.chain(digOut)
+      digIn.start()
       hide.start()
       return
     }
@@ -2208,7 +2310,15 @@ function Canvas(props, ref) {
   }
 
   async function hitBlock(block, coordinates, crosshair) {
-    animation('swing', tool, tool)
+    if (
+      props.equipped.category === 'pickaxe' ||
+      props.equipped.category === 'axe'
+    ) {
+      animation('swing', tool, tool)
+    } else if (props.equipped.category === 'drill') {
+      animation('drill', tool, tool)
+    }
+
     let damage = strength
     let bonus = 1
 
