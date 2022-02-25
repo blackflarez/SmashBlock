@@ -61,6 +61,8 @@ var deltaX = 0,
   axe,
   drill,
   drillTexture,
+  chainsaw,
+  chainsawTexture,
   pickaxeTexture,
   glassPickaxeTexture,
   oresTexture,
@@ -272,6 +274,15 @@ function Canvas(props, ref) {
           opacity: 0,
           visible: false,
         })
+      } else if (equipped.category === 'chainsaw') {
+        tool.geometry = chainsaw.geometry
+        tool.material = new THREE.MeshPhongMaterial({
+          color: 'grey',
+          map: chainsawTexture,
+          transparent: true,
+          opacity: 0,
+          visible: false,
+        })
       }
     } catch (error) {}
   }
@@ -458,7 +469,9 @@ function Canvas(props, ref) {
       const drillUri = Asset.fromModule(
         require('../assets/models/drill.glb')
       ).uri
-
+      const chainsawUri = Asset.fromModule(
+        require('../assets/models/chainsaw.glb')
+      ).uri
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxe.png')
       ).uri
@@ -524,6 +537,9 @@ function Canvas(props, ref) {
       ).uri
       const drillTex = Asset.fromModule(
         require('../assets/models/drilltexture.png')
+      ).uri
+      const chainsawTex = Asset.fromModule(
+        require('../assets/models/chainsawtexture.png')
       ).uri
 
       let m1 = loadModel(uri).then((result) => {
@@ -640,6 +656,9 @@ function Canvas(props, ref) {
       let m32 = loadModel(drillUri).then((result) => {
         drill = result.scene.children[0]
       })
+      let m33 = loadModel(chainsawUri).then((result) => {
+        chainsaw = result.scene.children[0]
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -704,6 +723,9 @@ function Canvas(props, ref) {
       let t21 = loadTexture(drillTex).then((result) => {
         drillTexture = result
       })
+      let t22 = loadTexture(chainsawTex).then((result) => {
+        chainsawTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -759,6 +781,7 @@ function Canvas(props, ref) {
         m30,
         m31,
         m32,
+        m33,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -781,12 +804,15 @@ function Canvas(props, ref) {
         t19,
         t20,
         t21,
+        t22,
         ms[area - 1],
       ]).then(() => {
         //tool
         drillTexture.flipY = false
+        chainsawTexture.flipY = false
         pickaxeTexture.flipY = false
         glassPickaxeTexture.flipY = false
+
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
 
@@ -935,7 +961,7 @@ function Canvas(props, ref) {
         blankNormalMap.flipY = false
         cubeTexture.flipY = false
         rock.material = new THREE.MeshStandardMaterial({
-          color: 'grey',
+          color: '#595959',
           normalMap: blankNormalMap,
           normalScale: new Vector2(0, 0),
           map: cubeTexture,
@@ -1572,6 +1598,80 @@ function Canvas(props, ref) {
       digIn.start()
       hide.start()
       return
+    } else if (type === 'chainsaw') {
+      const fadeOutInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onComplete(() => (target.castShadow = false))
+
+      const fadeInInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 10,
+          },
+          100
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.In)
+        .onUpdate(() => (target.castShadow = true))
+
+      const swingIn = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 0,
+          },
+          500
+        )
+        .easing(TWEEN.Easing.Cubic.Out)
+
+      const swingOut = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: 3,
+          },
+          2000
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.Out)
+
+      const digIn = new TWEEN.Tween(target.position)
+        .to(
+          {
+            z: 0.7,
+          },
+          50
+        )
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const digOut = new TWEEN.Tween(target.position)
+        .to(
+          {
+            z: 0.71,
+          },
+          400
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const hide = new TWEEN.Tween(target.material)
+        .to({}, 400)
+        .onUpdate(() => (target.material.visible = toolVisible))
+        .onComplete(() => (target.material.visible = false))
+
+      fadeInInverse.chain(fadeOutInverse)
+      fadeInInverse.start()
+      swingIn.chain(swingOut)
+      swingIn.start()
+      //digIn.chain(digOut)
+      //digIn.start()
+      hide.start()
+      return
     }
   }
 
@@ -1741,7 +1841,7 @@ function Canvas(props, ref) {
           })
         } else {
           o.material = new THREE.MeshBasicMaterial({
-            color: 'grey',
+            color: '#595959',
             transparent: true,
           })
         }
@@ -2317,6 +2417,8 @@ function Canvas(props, ref) {
       animation('swing', tool, tool)
     } else if (props.equipped.category === 'drill') {
       animation('drill', tool, tool)
+    } else if (props.equipped.category === 'chainsaw') {
+      animation('chainsaw', tool, tool)
     }
 
     let damage = strength
@@ -2359,10 +2461,13 @@ function Canvas(props, ref) {
 
       animation('click', block.object, block.object)
 
-      if (currentBlock.tools.includes(props.equipped.category)) {
+      if (
+        currentBlock.tools.includes(props.equipped.category) ||
+        props.equipped.name === 'Fists'
+      ) {
         currentBlock.health -= strength * bonus
       } else {
-        currentBlock.health -= (strength / 2) * bonus
+        currentBlock.health -= (strength / 5) * bonus
       }
     }
   }

@@ -35,6 +35,7 @@ export default {
     'Diamond Axe': Asset.fromModule(require(`../assets/icons/diamondaxe.png`)),
     'Wood Axe': Asset.fromModule(require(`../assets/icons/woodaxe.png`)),
     Drill: Asset.fromModule(require(`../assets/icons/drill.png`)),
+    Chainsaw: Asset.fromModule(require(`../assets/icons/chainsaw.png`)),
     Stick: Asset.fromModule(require(`../assets/icons/stick.png`)),
     'Gold Ingot': Asset.fromModule(require(`../assets/icons/goldingot.png`)),
     'Iron Ingot': Asset.fromModule(require(`../assets/icons/ironingot.png`)),
