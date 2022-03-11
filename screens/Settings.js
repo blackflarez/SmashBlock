@@ -67,7 +67,7 @@ export default function Settings({ navigation }, props) {
 
   const handleHighShadows = async () => {
     try {
-      setConfig({ ...config, shadowEnabled: true, shadowSize: 256 })
+      setConfig({ ...config, shadowEnabled: true, shadowSize: 512 })
     } catch (error) {
       console.log(error)
     }
@@ -163,7 +163,7 @@ export default function Settings({ navigation }, props) {
   return (
     <BlurView
       intensity={100}
-      tint="light"
+      tint='light'
       style={{
         flex: 1,
         flexDirection: 'column',
@@ -176,7 +176,7 @@ export default function Settings({ navigation }, props) {
           flex: 1,
         }}
       >
-        <StatusBar style="light" />
+        <StatusBar style='light' />
         <View
           style={[
             styles.quarterHeight,
@@ -206,7 +206,7 @@ export default function Settings({ navigation }, props) {
                 Haptics
               </Font>
               <Button
-                title="Off"
+                title='Off'
                 onPress={handleDisableHaptics}
                 enabled={!config.hapticsEnabled}
                 width={75}
@@ -216,7 +216,7 @@ export default function Settings({ navigation }, props) {
                 }}
               />
               <Button
-                title="On"
+                title='On'
                 onPress={handleEnableHaptics}
                 enabled={config.hapticsEnabled}
                 width={75}
@@ -245,7 +245,7 @@ export default function Settings({ navigation }, props) {
               Destruction
             </Font>
             <Button
-              title="Off"
+              title='Off'
               onPress={handleDisableDestruction}
               enabled={!config.destructionEnabled}
               width={75}
@@ -255,7 +255,7 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="On"
+              title='On'
               onPress={handleEnableDestruction}
               enabled={config.destructionEnabled}
               width={75}
@@ -283,7 +283,7 @@ export default function Settings({ navigation }, props) {
               Particles
             </Font>
             <Button
-              title="Off"
+              title='Off'
               onPress={handleDisableParticles}
               enabled={!config.particlesEnabled}
               width={75}
@@ -293,7 +293,7 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="On"
+              title='On'
               onPress={handleEnableParticles}
               enabled={config.particlesEnabled}
               width={75}
@@ -321,7 +321,7 @@ export default function Settings({ navigation }, props) {
               Shadows
             </Font>
             <Button
-              title="Off"
+              title='Off'
               onPress={handleDisableShadows}
               enabled={!config.shadowEnabled}
               width={75}
@@ -331,9 +331,9 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="Low"
+              title='Low'
               onPress={handleLowShadows}
-              enabled={config.shadowSize < 256 && config.shadowEnabled}
+              enabled={config.shadowSize < 512 && config.shadowEnabled}
               width={75}
               titleSize={16}
               containerStyle={{
@@ -341,9 +341,9 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="High"
+              title='High'
               onPress={handleHighShadows}
-              enabled={config.shadowSize === 256 && config.shadowEnabled}
+              enabled={config.shadowSize === 512 && config.shadowEnabled}
               width={75}
               titleSize={16}
               containerStyle={{
@@ -368,7 +368,7 @@ export default function Settings({ navigation }, props) {
               Resolution
             </Font>
             <Button
-              title="Low"
+              title='Low'
               onPress={handleLowResolution}
               enabled={config.renderScale === 0.25}
               width={75}
@@ -378,7 +378,7 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="Med"
+              title='Med'
               onPress={handleMediumResolution}
               enabled={config.renderScale === 0.5}
               width={75}
@@ -388,7 +388,7 @@ export default function Settings({ navigation }, props) {
               }}
             />
             <Button
-              title="High"
+              title='High'
               onPress={handleHighResolution}
               enabled={config.renderScale === 1}
               width={75}
@@ -410,7 +410,7 @@ export default function Settings({ navigation }, props) {
           ]}
         >
           <Button
-            title="Cancel"
+            title='Cancel'
             onPress={handleBack}
             width={120}
             titleSize={18}
@@ -421,7 +421,7 @@ export default function Settings({ navigation }, props) {
             }}
           />
           <Button
-            title="Apply"
+            title='Apply'
             onPress={handleApply}
             width={120}
             titleSize={18}
