@@ -40,6 +40,7 @@ var deltaX = 0,
   tool,
   rock,
   stone,
+  sand,
   ores,
   wood,
   tree,
@@ -59,6 +60,8 @@ var deltaX = 0,
   skyTexture,
   pickaxe,
   axe,
+  shovel,
+  shovelTexture,
   drill,
   drillTexture,
   chainsaw,
@@ -125,6 +128,8 @@ var deltaX = 0,
   light2,
   light3,
   light4,
+  light5,
+  light6,
   mapMode = false,
   mapModePending = false,
   currentLocation = 'Foggy_Forest',
@@ -134,11 +139,13 @@ var deltaX = 0,
   recentClicks = 0,
   crosshairActive,
   cave,
+  island,
   spookyCaveGroup,
+  sandyBeachGroup,
   mapGroups = []
 
 //Graphics Settings
-var shadowSize = 256,
+var shadowSize = 512,
   shadowEnabled = true,
   destructionEnabled = true,
   particlesEnabled = true
@@ -224,7 +231,6 @@ function Canvas(props, ref) {
   )
 
   function setToolMaterial(equipped) {
-    console.log(equipped.category)
     tool.visible = true
     try {
       if (equipped.category === 'pickaxe') {
@@ -260,6 +266,25 @@ function Canvas(props, ref) {
           tool.material = new THREE.MeshLambertMaterial({
             color: equipped.colour,
             map: pickaxeTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        }
+      } else if (equipped.category === 'shovel') {
+        tool.geometry = shovel.geometry
+        if (equipped.material === 'glass') {
+          tool.material = new THREE.MeshPhongMaterial({
+            color: equipped.colour,
+            map: shovelTexture,
+            transparent: true,
+            opacity: 0,
+            visible: false,
+          })
+        } else {
+          tool.material = new THREE.MeshLambertMaterial({
+            color: equipped.colour,
+            map: shovelTexture,
             transparent: true,
             opacity: 0,
             visible: false,
@@ -307,8 +332,13 @@ function Canvas(props, ref) {
       mapGroup = new THREE.Group()
       foggyForestGroup = new THREE.Group()
       foggyForestGroup.name = 'Foggy_Forest'
+      scene.add(foggyForestGroup)
       spookyCaveGroup = new THREE.Group()
       spookyCaveGroup.name = 'Spooky_Cave'
+      scene.add(spookyCaveGroup)
+      sandyBeachGroup = new THREE.Group()
+      sandyBeachGroup.name = 'Sandy_Beach'
+      scene.add(sandyBeachGroup)
       mapButtonGroup = new THREE.Group()
       blockContainer = new THREE.Group()
       blockContainer.name = 'blockContainer'
@@ -317,7 +347,7 @@ function Canvas(props, ref) {
       skyColour = 0xbde0fe
       scene.background = new THREE.Color(skyColour)
       scene.fog = new THREE.Fog(skyColour, 2, 15)
-      mapGroups.push(spookyCaveGroup, foggyForestGroup)
+      mapGroups.push(spookyCaveGroup, foggyForestGroup, sandyBeachGroup)
 
       //renderer
       renderer = new Renderer({
@@ -347,25 +377,25 @@ function Canvas(props, ref) {
       mouse = new THREE.Vector2()
 
       //lights
-      light = new THREE.DirectionalLight(0xffffff, 3.5)
-      light.position.set(-120, 350, 150)
+      light = new THREE.DirectionalLight(0xffffff, 3.2)
+      light.position.set(-120, 200, 150)
       light.shadow.mapSize.set(shadowSize, shadowSize)
       light.castShadow = true
 
-      light.shadow.camera.left = -3
-      light.shadow.camera.right = 3
-      light.shadow.camera.top = 3
-      light.shadow.camera.bottom = -3
+      light.shadow.camera.left = -10
+      light.shadow.camera.right = 10
+      light.shadow.camera.top = 10
+      light.shadow.camera.bottom = -10
 
-      light2 = new THREE.DirectionalLight(0x9ba2ff, 2.5)
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 1)
       light2.position.set(-120, 350, 150)
       light2.shadow.mapSize.set(shadowSize, shadowSize)
       light2.castShadow = true
 
-      light2.shadow.camera.left = -3
-      light2.shadow.camera.right = 3
-      light2.shadow.camera.top = 3
-      light2.shadow.camera.bottom = -3
+      light2.shadow.camera.left = -10
+      light2.shadow.camera.right = 10
+      light2.shadow.camera.top = 10
+      light2.shadow.camera.bottom = -10
 
       light3 = new THREE.DirectionalLight(0xe25822, 2)
       light3.position.set(2, 1, -2)
@@ -377,12 +407,28 @@ function Canvas(props, ref) {
       light4.castShadow = true
       light4.visible = false
 
+      light5 = new THREE.DirectionalLight(0xffffff, 3.2)
+      light5.position.set(-120, 350, 150)
+      light5.shadow.mapSize.set(shadowSize, shadowSize)
+      light5.castShadow = true
+
+      light5.shadow.camera.left = -8
+      light5.shadow.camera.right = 8
+      light5.shadow.camera.top = 8
+      light5.shadow.camera.bottom = -8
+
+      light6 = new THREE.DirectionalLight(0xe25822, 0.5)
+      light6.position.set(2, 1, -2)
+
       const ambientLight = new THREE.HemisphereLight(0xffffff, 0xfff3e8, 2.5)
 
       foggyForestGroup.add(light)
       spookyCaveGroup.add(light2)
       spookyCaveGroup.add(light3)
+      sandyBeachGroup.add(light5)
+      sandyBeachGroup.add(light6)
       world.add(light4)
+
       world.add(ambientLight)
 
       //assets
@@ -391,6 +437,7 @@ function Canvas(props, ref) {
       const stoneUri = Asset.fromModule(
         require('../assets/models/stone.glb')
       ).uri
+      const sandUri = Asset.fromModule(require('../assets/models/sand.glb')).uri
       const woodUri = Asset.fromModule(require('../assets/models/wood.glb')).uri
       const treeUri = Asset.fromModule(require('../assets/models/tree.glb')).uri
       const grassUri = Asset.fromModule(
@@ -422,6 +469,15 @@ function Canvas(props, ref) {
       const destruction6Uri = Asset.fromModule(
         require('../assets/models/wooddestruction.glb')
       ).uri
+      const destruction7Uri = Asset.fromModule(
+        require('../assets/models/sanddestruction.glb')
+      ).uri
+      const destruction8Uri = Asset.fromModule(
+        require('../assets/models/sanddestruction.glb')
+      ).uri
+      const destruction9Uri = Asset.fromModule(
+        require('../assets/models/sanddestruction.glb')
+      ).uri
       const oresDestructionUri = Asset.fromModule(
         require('../assets/models/oresdestruction.glb')
       ).uri
@@ -438,6 +494,9 @@ function Canvas(props, ref) {
         require('../assets/models/pickaxe.glb')
       ).uri
       const axeUri = Asset.fromModule(require('../assets/models/axe.glb')).uri
+      const shovelUri = Asset.fromModule(
+        require('../assets/models/shovel.glb')
+      ).uri
       const planeUri = Asset.fromModule(
         require('../assets/models/plane.glb')
       ).uri
@@ -466,6 +525,9 @@ function Canvas(props, ref) {
         require('../assets/models/crosshair.glb')
       ).uri
       const caveUri = Asset.fromModule(require('../assets/models/cave.glb')).uri
+      const islandUri = Asset.fromModule(
+        require('../assets/models/island.glb')
+      ).uri
       const drillUri = Asset.fromModule(
         require('../assets/models/drill.glb')
       ).uri
@@ -541,30 +603,28 @@ function Canvas(props, ref) {
       const chainsawTex = Asset.fromModule(
         require('../assets/models/chainsawtexture.png')
       ).uri
+      const shovelTex = Asset.fromModule(
+        require('../assets/models/shoveltexture.png')
+      ).uri
 
       let m1 = loadModel(uri).then((result) => {
         rock = result.scene.children[0]
       })
-
       let m2 = loadModel(cubeUri).then((result) => {
         sky = result.scene.children[0]
       })
-
       let m3 = loadModel(destructionUri).then((result) => {
         cubeDestruction[0] = result.scene
         cubeDestruction[0].animations = result.animations
       })
-
       let m4 = loadModel(destruction2Uri).then((result) => {
         cubeDestruction[1] = result.scene
         cubeDestruction[1].animations = result.animations
       })
-
       let m5 = loadModel(destruction3Uri).then((result) => {
         cubeDestruction[2] = result.scene
         cubeDestruction[2].animations = result.animations
       })
-
       let m6 = loadModel(destruction4Uri).then((result) => {
         cubeDestruction[3] = result.scene
         cubeDestruction[3].animations = result.animations
@@ -659,6 +719,27 @@ function Canvas(props, ref) {
       let m33 = loadModel(chainsawUri).then((result) => {
         chainsaw = result.scene.children[0]
       })
+      let m34 = loadModel(shovelUri).then((result) => {
+        shovel = result.scene.children[0]
+      })
+      let m35 = loadModel(sandUri).then((result) => {
+        sand = result.scene.children[0]
+      })
+      let m36 = loadModel(islandUri).then((result) => {
+        island = result.scene
+      })
+      let m37 = loadModel(destruction7Uri).then((result) => {
+        cubeDestruction[6] = result.scene
+        cubeDestruction[6].animations = result.animations
+      })
+      let m38 = loadModel(destruction8Uri).then((result) => {
+        cubeDestruction[7] = result.scene
+        cubeDestruction[7].animations = result.animations
+      })
+      let m39 = loadModel(destruction9Uri).then((result) => {
+        cubeDestruction[8] = result.scene
+        cubeDestruction[8].animations = result.animations
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -726,6 +807,9 @@ function Canvas(props, ref) {
       let t22 = loadTexture(chainsawTex).then((result) => {
         chainsawTexture = result
       })
+      let t23 = loadTexture(shovelTex).then((result) => {
+        shovelTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -782,6 +866,12 @@ function Canvas(props, ref) {
         m31,
         m32,
         m33,
+        m34,
+        m35,
+        m36,
+        m37,
+        m38,
+        m39,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -805,6 +895,7 @@ function Canvas(props, ref) {
         t20,
         t21,
         t22,
+        t23,
         ms[area - 1],
       ]).then(() => {
         //tool
@@ -812,9 +903,9 @@ function Canvas(props, ref) {
         chainsawTexture.flipY = false
         pickaxeTexture.flipY = false
         glassPickaxeTexture.flipY = false
-
         pickaxeTexture.magFilter = THREE.NearestFilter
         pickaxeTexture.anisotropy = 16
+        shovelTexture.flipY = false
 
         strength = props.equipped.strength
         tool = Object.create(pickaxe)
@@ -864,7 +955,7 @@ function Canvas(props, ref) {
         sandTexture.flipY = false
         sandTexture.wrapS = sandTexture.wrapT = THREE.RepeatWrapping
         sandTexture.offset.set(0, 0)
-        sandTexture.repeat.set(8, 8)
+        sandTexture.repeat.set(2, 2)
 
         dirtTexture.flipY = false
         dirtTexture.wrapS = dirtTexture.wrapT = THREE.RepeatWrapping
@@ -879,12 +970,64 @@ function Canvas(props, ref) {
         world.add(plane)
 
         //trees
+        for (let i of tree.children) {
+          if (i.name.includes('Island')) {
+            i.material = new THREE.MeshStandardMaterial({
+              map: sandTexture,
+              color: '#a1a1a1',
+            })
+          }
+          if (i.name.includes('cast')) {
+            i.traverse((o) => {
+              if (o.isMesh) {
+                o.castShadow = true
+              }
+            })
+          }
+          if (i.name.includes('recieve')) {
+            i.receiveShadow = true
+          }
+        }
         tree.castShadow = false
         foggyForestGroup.add(tree)
 
         //cave
+        for (let i of cave.children) {
+          if (i.name.includes('cast')) {
+            i.traverse((o) => {
+              if (o.isMesh) {
+                o.castShadow = true
+              }
+            })
+          }
+          if (i.name.includes('recieve')) {
+            i.receiveShadow = true
+          }
+        }
         spookyCaveGroup.add(cave)
-        scene.add(spookyCaveGroup)
+
+        //island
+        for (let i of island.children) {
+          if (i.name.includes('Island')) {
+            i.material = new THREE.MeshStandardMaterial({
+              map: sandTexture,
+              color: '#a1a1a1',
+            })
+          }
+          if (i.name.includes('cast')) {
+            i.traverse((o) => {
+              if (o.isMesh) {
+                o.castShadow = true
+              }
+            })
+          }
+          if (i.name.includes('recieve')) {
+            i.receiveShadow = true
+          }
+        }
+
+        island.receiveShadow = true
+        sandyBeachGroup.add(island)
 
         //map
         worldMapTexture.flipY = false
@@ -931,7 +1074,7 @@ function Canvas(props, ref) {
         //grass
         grassTexture.flipY = false
         for (let i = 0; i < grass.children.length; i++) {
-          grass.children[i].material = new THREE.MeshBasicMaterial({
+          grass.children[i].material = new THREE.MeshLambertMaterial({
             map: grassTexture,
             transparent: 1,
             side: THREE.DoubleSide,
@@ -939,7 +1082,6 @@ function Canvas(props, ref) {
           })
           grass.children[i].receiveShadow = true
           foggyForestGroup.add(grass.children[i])
-          scene.add(foggyForestGroup)
         }
 
         //flowers
@@ -975,6 +1117,22 @@ function Canvas(props, ref) {
         rock.scale.x = 0.32499998807907104
         rock.scale.y = 0.32499998807907104
         rock.scale.z = 0.32499998807907104
+
+        //sand
+        sand.material = new THREE.MeshStandardMaterial({
+          color: '#ECD8B5',
+          normalMap: blankNormalMap,
+          normalScale: new Vector2(0, 0),
+        })
+        sand.visible = false
+        sand.material.metalness = 0
+        sand.name = 'cube'
+        sand.castshadow = false
+        sand.receiveShadow = true
+        sand.material.transparent = true
+        sand.scale.x = 0.32499998807907104
+        sand.scale.y = 0.32499998807907104
+        sand.scale.z = 0.32499998807907104
 
         //stone
         stone.material = new THREE.MeshStandardMaterial({
@@ -1524,6 +1682,59 @@ function Canvas(props, ref) {
       swingIn.start()
       hide.start()
       return
+    } else if (type === 'shovel') {
+      const fadeOutInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 0,
+          },
+          300
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.Out)
+        .onComplete(() => (target.castShadow = false))
+
+      const fadeInInverse = new TWEEN.Tween(target.material)
+        .to(
+          {
+            opacity: 10,
+          },
+          100
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Exponential.In)
+        .onUpdate(() => (target.castShadow = true))
+
+      const swingIn = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: -1,
+          },
+          1000
+        )
+        .easing(TWEEN.Easing.Elastic.Out)
+
+      const swingOut = new TWEEN.Tween(target.rotation)
+        .to(
+          {
+            x: -2,
+          },
+          50
+        )
+        .yoyo(true)
+        .easing(TWEEN.Easing.Cubic.Out)
+
+      const hide = new TWEEN.Tween(target.material)
+        .to({}, 400)
+        .onUpdate(() => (target.material.visible = toolVisible))
+        .onComplete(() => (target.material.visible = false))
+
+      fadeInInverse.chain(fadeOutInverse)
+      fadeInInverse.start()
+      swingOut.chain(swingIn)
+      swingOut.start()
+      hide.start()
+      return
     } else if (type === 'drill') {
       const fadeOutInverse = new TWEEN.Tween(target.material)
         .to(
@@ -1680,6 +1891,8 @@ function Canvas(props, ref) {
     let oreIndex = Math.floor(Math.random() * oresDestruction.length)
     if (currentBlock.name === 'Wood') {
       index = Math.floor(Math.random() * (6 - 3) + 3)
+    } else if (currentBlock.name === 'Sand') {
+      index = Math.floor(Math.random() * (9 - 6) + 6)
     } else {
       index = Math.floor(Math.random() * 3)
     }
@@ -1736,6 +1949,10 @@ function Canvas(props, ref) {
           o.material = new THREE.MeshLambertMaterial({
             color: 'grey',
             map: woodTexture,
+          })
+        } else if (currentBlock.name === 'Sand') {
+          o.material = new THREE.MeshLambertMaterial({
+            color: currentBlock.colour,
           })
         } else {
           o.material = new THREE.MeshLambertMaterial({
@@ -2266,6 +2483,7 @@ function Canvas(props, ref) {
   }
 
   function updateEnvironment(location) {
+    plane.visible = true
     currentLocation = location
     for (let i of mapGroups) {
       if (i.name == location) {
@@ -2276,14 +2494,14 @@ function Canvas(props, ref) {
     }
 
     if (location === 'Sandy_Beach') {
-      plane.material.map = sandTexture
+      plane.visible = false
       skyColour = 0x87ceeb
 
       new TWEEN.Tween(scene.fog)
         .to(
           {
             color: new THREE.Color(skyColour),
-            far: 30,
+            far: 50,
           },
           300
         )
@@ -2368,6 +2586,14 @@ function Canvas(props, ref) {
         normalScale: new Vector2(0, 0),
         map: woodTexture,
       })
+    } else if (currentBlock.model === 'sand') {
+      ores.visible = false
+      cube.geometry = sand.geometry
+      cube.material = new THREE.MeshStandardMaterial({
+        color: '#ECD8B5',
+        normalMap: blankNormalMap,
+        normalScale: new Vector2(0, 0),
+      })
     }
 
     let material
@@ -2415,6 +2641,8 @@ function Canvas(props, ref) {
       props.equipped.category === 'axe'
     ) {
       animation('swing', tool, tool)
+    } else if (props.equipped.category === 'shovel') {
+      animation('shovel', tool, tool)
     } else if (props.equipped.category === 'drill') {
       animation('drill', tool, tool)
     } else if (props.equipped.category === 'chainsaw') {
