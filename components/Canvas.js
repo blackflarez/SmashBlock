@@ -60,6 +60,7 @@ var deltaX = 0,
   skyTexture,
   pickaxe,
   axe,
+  axeTexture,
   shovel,
   shovelTexture,
   drill,
@@ -254,23 +255,13 @@ function Canvas(props, ref) {
         }
       } else if (equipped.category === 'axe') {
         tool.geometry = axe.geometry
-        if (equipped.material === 'glass') {
-          tool.material = new THREE.MeshPhongMaterial({
-            color: equipped.colour,
-            map: glassPickaxeTexture,
-            transparent: true,
-            opacity: 0,
-            visible: false,
-          })
-        } else {
-          tool.material = new THREE.MeshLambertMaterial({
-            color: equipped.colour,
-            map: pickaxeTexture,
-            transparent: true,
-            opacity: 0,
-            visible: false,
-          })
-        }
+        tool.material = new THREE.MeshLambertMaterial({
+          color: equipped.colour,
+          map: axeTexture,
+          transparent: true,
+          opacity: 0,
+          visible: false,
+        })
       } else if (equipped.category === 'shovel') {
         tool.geometry = shovel.geometry
         if (equipped.material === 'glass') {
@@ -407,8 +398,8 @@ function Canvas(props, ref) {
       light4.castShadow = true
       light4.visible = false
 
-      light5 = new THREE.DirectionalLight(0xffffff, 3.2)
-      light5.position.set(-120, 350, 150)
+      light5 = new THREE.DirectionalLight(0xffffff, 2.5)
+      light5.position.set(-120, 400, 150)
       light5.shadow.mapSize.set(shadowSize, shadowSize)
       light5.castShadow = true
 
@@ -535,10 +526,13 @@ function Canvas(props, ref) {
         require('../assets/models/chainsaw.glb')
       ).uri
       const pickTexUri = Asset.fromModule(
-        require('../assets/models/pickaxe.png')
+        require('../assets/models/pickaxetexture.png')
       ).uri
       const glassPickTex = Asset.fromModule(
-        require('../assets/models/glasspickaxe.png')
+        require('../assets/models/pickaxetexture.png')
+      ).uri
+      const axeTex = Asset.fromModule(
+        require('../assets/models/axetexture.png')
       ).uri
       const planeTexUri = Asset.fromModule(
         require('../assets/models/planebake.png')
@@ -810,6 +804,9 @@ function Canvas(props, ref) {
       let t23 = loadTexture(shovelTex).then((result) => {
         shovelTexture = result
       })
+      let t24 = loadTexture(axeTex).then((result) => {
+        axeTexture = result
+      })
 
       let msmoke = []
       let smokeParticlesLength = 50
@@ -896,6 +893,7 @@ function Canvas(props, ref) {
         t21,
         t22,
         t23,
+        t24,
         ms[area - 1],
       ]).then(() => {
         //tool
@@ -903,9 +901,8 @@ function Canvas(props, ref) {
         chainsawTexture.flipY = false
         pickaxeTexture.flipY = false
         glassPickaxeTexture.flipY = false
-        pickaxeTexture.magFilter = THREE.NearestFilter
-        pickaxeTexture.anisotropy = 16
         shovelTexture.flipY = false
+        axeTexture.flipY = false
 
         strength = props.equipped.strength
         tool = Object.create(pickaxe)
@@ -1120,7 +1117,7 @@ function Canvas(props, ref) {
 
         //sand
         sand.material = new THREE.MeshStandardMaterial({
-          color: '#ECD8B5',
+          color: '#F6D7B0',
           normalMap: blankNormalMap,
           normalScale: new Vector2(0, 0),
         })
@@ -1385,7 +1382,7 @@ function Canvas(props, ref) {
       //crosshair
       if (recentClicks > 0) {
         crosshairActive = true
-        recentClicks -= 0.05
+        recentClicks -= 0.03
       } else if (crosshairActive && crosshair.visible) {
         crosshairActive = false
         new TWEEN.Tween(crosshairGroup.scale)
@@ -2422,7 +2419,11 @@ function Canvas(props, ref) {
   }
 
   function animateCrosshair() {
-    if (recentClicks > 5) {
+    console.log(recentClicks)
+    if (
+      recentClicks > 5 &&
+      currentBlock.tools.includes(props.equipped.category)
+    ) {
       crosshairGroup.visible = true
     } else {
       crosshairGroup.visible = false
@@ -2590,7 +2591,7 @@ function Canvas(props, ref) {
       ores.visible = false
       cube.geometry = sand.geometry
       cube.material = new THREE.MeshStandardMaterial({
-        color: '#ECD8B5',
+        color: '#E7C496',
         normalMap: blankNormalMap,
         normalScale: new Vector2(0, 0),
       })
