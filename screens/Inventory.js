@@ -97,6 +97,11 @@ export default function Inventory({ navigation, route }, props) {
     }
   }
 
+  const handleFurnace = async () => {
+    setModalVisible(false)
+    navigation.navigate('Furnace')
+  }
+
   const handleDestroy = async (item) => {
     setModalVisible(false)
     await Firebase.database()
@@ -185,17 +190,6 @@ export default function Inventory({ navigation, route }, props) {
     return () => clearInterval(interval)
   }, [])
 
-  function getHealth(item) {
-    Firebase.database()
-      .ref(`users/${user.uid}/userData/durability/${item.name}`)
-      .get()
-      .then((snapshot) => {
-        if (snapshot.exists()) {
-          return snapshot.val()
-        } else return null
-      })
-  }
-
   const renderItem = ({ item }) => (
     <ItemButton
       name={item.name}
@@ -212,7 +206,7 @@ export default function Inventory({ navigation, route }, props) {
   return (
     <BlurView
       intensity={100}
-      tint="light"
+      tint='light'
       style={{
         flex: 1,
         flexDirection: 'column',
@@ -226,7 +220,7 @@ export default function Inventory({ navigation, route }, props) {
         }}
       >
         <Modal
-          animationType="fade"
+          animationType='fade'
           transparent={true}
           visible={unableEquipModal}
           onRequestClose={() => {
@@ -259,7 +253,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <Modal
-          animationType="fade"
+          animationType='fade'
           transparent={true}
           visible={destroyModalVisible}
           onRequestClose={() => {
@@ -284,9 +278,9 @@ export default function Inventory({ navigation, route }, props) {
                   style={{ width: 200, height: 40, alignSelf: 'center' }}
                   minimumValue={1}
                   maximumValue={getAmount()}
-                  minimumTrackTintColor="#eee"
-                  maximumTrackTintColor="#eee"
-                  thumbTintColor="#6DA34D"
+                  minimumTrackTintColor='#eee'
+                  maximumTrackTintColor='#eee'
+                  thumbTintColor='#6DA34D'
                   step={Math.ceil(getAmount() / 100)}
                   onValueChange={(value) => setDestroyAmount(value)}
                 />
@@ -313,7 +307,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <Modal
-          animationType="fade"
+          animationType='fade'
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -381,6 +375,16 @@ export default function Inventory({ navigation, route }, props) {
                     }}
                   ></Button>
                 ) : null}
+                {currentItem.name === 'Furnace' ? (
+                  <Button
+                    title={'Use'}
+                    backgroundColor={'#eee'}
+                    containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                    onPress={() => {
+                      handleFurnace()
+                    }}
+                  ></Button>
+                ) : null}
                 <Button
                   title={'Destroy'}
                   backgroundColor={'#eee'}
@@ -404,7 +408,7 @@ export default function Inventory({ navigation, route }, props) {
             </View>
           </View>
         </Modal>
-        <StatusBar style="light" />
+        <StatusBar style='light' />
         <View style={{ margin: 24, marginTop: 72 }}></View>
         <View style={[styles.halfHeight]}>
           <FlatList

@@ -27,40 +27,32 @@ const MenuBar = (
         }}
       >
         <IconButton
-          name="account-outline"
+          name='account-outline'
           size={32}
-          color="#212529"
+          color='#212529'
           onPress={onHandleProfile}
           visible={false}
           containerStyle={{ margin: 10 }}
         />
         <IconButton
-          name="trophy-variant-outline"
+          name='trophy-variant-outline'
           size={32}
-          color="#212529"
+          color='#212529'
           onPress={onHandleScores}
           visible={false}
           containerStyle={{ margin: 10 }}
         />
         <IconButton
-          name="fire"
+          name='toolbox-outline'
           size={32}
-          color="#212529"
-          onPress={onHandleFurnace}
-          notifications={furnaceNotifications}
-          containerStyle={{ margin: 10 }}
-        />
-        <IconButton
-          name="toolbox-outline"
-          size={32}
-          color="#212529"
+          color='#212529'
           onPress={onHandleCrafting}
           containerStyle={{ margin: 10 }}
         />
         <IconButton
-          name="view-grid-outline"
+          name='view-grid-outline'
           size={32}
-          color="#212529"
+          color='#212529'
           onPress={onHandleInventory}
           notifications={inventoryNotificaitons}
           containerStyle={{ margin: 10 }}

@@ -398,7 +398,7 @@ export default function HomeScreen({ navigation }, props) {
         .then(async (snapshot) => {
           if (snapshot.exists()) {
             setEquippedDurability(snapshot.val())
-            if (snapshot.val() === 0) {
+            if (snapshot.val() === 0 || snapshot.val() < 0) {
               await Firebase.database()
                 .ref(`users/${user.uid}/userData/durability/${equipped.name}`)
                 .set(null)
@@ -577,7 +577,7 @@ export default function HomeScreen({ navigation }, props) {
           backgroundColor: '#fff',
         }}
       >
-        <StatusBar style="dark" />
+        <StatusBar style='dark' />
       </View>
     )
   }
@@ -596,9 +596,9 @@ export default function HomeScreen({ navigation }, props) {
             alignItems: 'center',
             marginBottom: 50,
           }}
-          keyboardShouldPersistTaps="handled"
+          keyboardShouldPersistTaps='handled'
         >
-          <StatusBar style="dark" />
+          <StatusBar style='dark' />
           <View>
             <Text style={styles.title}>Pick a username</Text>
 
@@ -612,9 +612,9 @@ export default function HomeScreen({ navigation }, props) {
                 borderWidth: 1,
                 borderColor: '#000',
               }}
-              leftIcon="account"
-              placeholder="Enter username"
-              autoCapitalize="none"
+              leftIcon='account'
+              placeholder='Enter username'
+              autoCapitalize='none'
               autoFocus={false}
               value={name}
               onChangeText={(text) => setName(text)}
@@ -644,10 +644,10 @@ export default function HomeScreen({ navigation }, props) {
         alignItems: 'center',
       }}
     >
-      <StatusBar style="dark" />
+      <StatusBar style='dark' />
 
       <Modal
-        animationType="fade"
+        animationType='fade'
         transparent={true}
         visible={levelUpModal}
         onRequestClose={() => {

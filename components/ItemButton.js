@@ -1,9 +1,11 @@
-import React from 'react'
+import React, { useContext, useState, useEffect } from 'react'
 import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { AntDesign, Ionicons } from '@expo/vector-icons'
 import { Badge, ProgressBar } from 'react-native-paper'
 import { Amount, ItemIcon, Font } from '../components'
 import * as Haptics from 'expo-haptics'
+import { Firebase, Database } from '../config/firebase'
+import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvider'
 
 const ItemButton = (
   {
@@ -18,10 +20,12 @@ const ItemButton = (
     margin,
     equipped,
     newItem,
-    health,
   },
   props
 ) => {
+  const { user } = useContext(AuthenticatedUserContext)
+  const [equippedDurability, setEquippedDurability] = useState(null)
+
   if (notifications > 0) {
     visible = true
   } else {
@@ -32,6 +36,17 @@ const ItemButton = (
   if (equipped === name) {
     borderWidth = 1.15
   }
+
+  useEffect(async () => {
+    await Firebase.database()
+      .ref(`users/${user.uid}/userData/durability/${name}`)
+      .get()
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          setEquippedDurability(snapshot.val() / 10000)
+        }
+      })
+  }, [])
 
   return (
     <View>
@@ -89,7 +104,22 @@ const ItemButton = (
           New!
         </Badge>
         {name !== null ? <ItemIcon name={name} size={60} /> : null}
-
+        <ProgressBar
+          visible={equippedDurability}
+          progress={equippedDurability}
+          color={[
+            'hsl(',
+            (equippedDurability * 100).toString(10),
+            ',100%,50%)',
+          ].join('')}
+          style={{
+            width: 55,
+            borderRadius: 10,
+            top: 1,
+            right: -28,
+            position: 'absolute',
+          }}
+        />
         <Badge
           visible={
             isNaN(amount) || amount === 0 || amount === null ? false : true
@@ -100,8 +130,8 @@ const ItemButton = (
             color: c,
             backgroundColor: 'transparent',
             position: 'absolute',
-            top: 60,
-            right: 3,
+            bottom: 60,
+            right: 1,
             fontSize: 12,
           }}
         >

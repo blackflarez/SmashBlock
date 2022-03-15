@@ -45,9 +45,9 @@ export default function HomeStack() {
         headerStyle: { elevation: 0, shadowOpacity: 0, borderBottomWidth: 0 },
       }}
     >
-      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name='Home' component={HomeScreen} />
       <Stack.Screen
-        name="Scores"
+        name='Scores'
         component={Scores}
         options={{
           title: <Font>Skills</Font>,
@@ -62,7 +62,7 @@ export default function HomeStack() {
         }}
       />
       <Stack.Screen
-        name="Inventory"
+        name='Inventory'
         component={Inventory}
         options={{
           title: <Font>Inventory</Font>,
@@ -76,7 +76,7 @@ export default function HomeStack() {
         }}
       />
       <Stack.Screen
-        name="Profile"
+        name='Profile'
         component={Profile}
         options={{
           title: <Font>Profile</Font>,
@@ -91,7 +91,7 @@ export default function HomeStack() {
         }}
       />
       <Stack.Screen
-        name="Crafting"
+        name='Crafting'
         component={Crafting}
         options={{
           title: <Font>Crafting</Font>,
@@ -106,25 +106,27 @@ export default function HomeStack() {
         }}
       />
       <Stack.Screen
-        name="Furnace"
-        component={Furnace}
+        name='Settings'
+        component={Settings}
         options={{
-          title: <Font>Furnace</Font>,
+          title: <Font>Settings</Font>,
           headerShown: true,
           headerTitleStyle: {
             fontSize: 22,
             marginTop: 10,
           },
           headerShown: true,
+          presentation: 'transparentModal',
+
           ...TransitionPresets.ModalTransition,
           cardStyle: { backgroundColor: transparent },
         }}
       />
       <Stack.Screen
-        name="Settings"
-        component={Settings}
+        name='Furnace'
+        component={Furnace}
         options={{
-          title: <Font>Settings</Font>,
+          title: <Font>Furnace</Font>,
           headerShown: true,
           headerTitleStyle: {
             fontSize: 22,
