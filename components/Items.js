@@ -324,7 +324,6 @@ export default [
     strength: 3,
     efficiency: 5,
     durability: 5,
-    speed: 300,
     type: 'tool',
     colour: 'slategray',
     material: 'shiny',
@@ -349,6 +348,14 @@ export default [
     recipe: { 'Copper Ingot': 3, 'Iron Ingot': 2 },
     type: 'resource',
     xpAmount: 1,
+    craftLevel: 1,
+  },
+  {
+    name: 'Furnace',
+    description: 'Primitive tool for smelting.',
+    recipe: { Stone: 30 },
+    type: 'resource',
+    xpAmount: 5,
     craftLevel: 1,
   },
   {

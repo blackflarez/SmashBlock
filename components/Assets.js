@@ -44,5 +44,6 @@ export default {
     'Copper Ingot': Asset.fromModule(
       require(`../assets/icons/copperingot.png`)
     ),
+    Furnace: Asset.fromModule(require(`../assets/icons/furnace.png`)),
   },
 }

@@ -111,7 +111,7 @@ var deltaX = 0,
   smoke = [],
   clock = new THREE.Clock(),
   timer,
-  holdSpeed = 200,
+  holdSpeed = 300,
   strength = 1,
   lastClicked = new Date().getTime(),
   tbc = 0,
@@ -218,7 +218,7 @@ function Canvas(props, ref) {
             if (tool.speed) {
               holdSpeed = tool.speed
             } else {
-              holdSpeed = 200
+              holdSpeed = 300
             }
           } catch (error) {}
         } else {
