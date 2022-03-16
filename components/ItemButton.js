@@ -20,6 +20,8 @@ const ItemButton = (
     margin,
     equipped,
     newItem,
+    borderColor = '#BFCBD7',
+    borderWidth = 2,
   },
   props
 ) => {
@@ -32,9 +34,8 @@ const ItemButton = (
     visible = false
   }
   let c = 'grey'
-  let borderWidth = 0
   if (equipped === name) {
-    borderWidth = 1.15
+    borderColor = '#818181'
   }
 
   useEffect(async () => {
@@ -61,10 +62,10 @@ const ItemButton = (
                 opacity: 0.5,
                 backgroundColor: 'rgba(256, 256, 256, 0.5)',
                 borderRadius: 10,
-                borderColor: '#818181',
+                borderColor: borderColor,
                 borderWidth: borderWidth,
-                width: 80,
-                height: 80,
+                width: 82,
+                height: 82,
               },
             ]
           }
@@ -77,10 +78,10 @@ const ItemButton = (
               opacity: 1,
               backgroundColor: 'rgba(256, 256, 256, 0.5)',
               borderRadius: 10,
-              borderColor: '#818181',
+              borderColor: borderColor,
               borderWidth: borderWidth,
-              width: 80,
-              height: 80,
+              width: 82,
+              height: 82,
             },
           ]
         }}
@@ -98,7 +99,7 @@ const ItemButton = (
           style={{
             position: 'absolute',
             top: -4,
-            right: -4,
+            left: -4,
           }}
         >
           New!

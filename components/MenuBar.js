@@ -27,35 +27,39 @@ const MenuBar = (
         }}
       >
         <IconButton
-          name='account-outline'
+          name='book'
           size={32}
           color='#212529'
           onPress={onHandleProfile}
           visible={false}
           containerStyle={{ margin: 10 }}
+          image={true}
         />
         <IconButton
-          name='trophy-variant-outline'
+          name='trophy'
           size={32}
           color='#212529'
           onPress={onHandleScores}
           visible={false}
           containerStyle={{ margin: 10 }}
+          image={true}
         />
         <IconButton
-          name='toolbox-outline'
+          name='craft'
           size={32}
           color='#212529'
           onPress={onHandleCrafting}
           containerStyle={{ margin: 10 }}
+          image={true}
         />
         <IconButton
-          name='view-grid-outline'
+          name='bag'
           size={32}
           color='#212529'
           onPress={onHandleInventory}
           notifications={inventoryNotificaitons}
           containerStyle={{ margin: 10 }}
+          image={true}
         />
       </View>
     )

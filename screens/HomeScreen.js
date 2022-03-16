@@ -20,6 +20,7 @@ import {
   EquippedButton,
   Config,
   IconButton,
+  ImageButton,
   Font,
   Button,
   Levels,
@@ -718,6 +719,8 @@ export default function HomeScreen({ navigation }, props) {
           onPress={() => handleInventory('tool')}
           buttonVisible={menuVisible}
           health={equippedDurability / 10000}
+          borderRadius={10}
+          borderSize={75}
         />
       </Animated.View>
 
@@ -730,10 +733,10 @@ export default function HomeScreen({ navigation }, props) {
           right: 20,
         }}
       >
-        <IconButton
-          name={mapIcon}
+        <ImageButton
+          name={'map'}
           size={38}
-          borderSize={70}
+          borderSize={75}
           borderRadius={10}
           onPress={handleMap}
           buttonDisabled={!mapButtonVisible}

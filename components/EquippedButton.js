@@ -2,7 +2,7 @@ import React from 'react'
 import { Pressable, StyleSheet, View, Text, Platform } from 'react-native'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { Badge, ProgressBar } from 'react-native-paper'
-import { Amount, ItemIcon } from '../components'
+import { Amount, ItemIcon, ImageIcon } from '../components'
 import * as Haptics from 'expo-haptics'
 
 function haptics(style) {
@@ -23,6 +23,8 @@ const EquippedButton = (
     margin,
     health,
     buttonVisible,
+    borderRadius,
+    borderSize,
   },
   props
 ) => {
@@ -42,10 +44,12 @@ const EquippedButton = (
                     justifyContent: 'center',
                     margin: margin,
                     opacity: 0.5,
-                    backgroundColor: 'rgba(52, 52, 52, 0.4)',
-                    borderRadius: 10,
-                    width: 70,
-                    height: 70,
+                    backgroundColor: 'rgba(52, 52, 52, 0.5)',
+                    borderRadius: borderRadius,
+                    width: borderSize,
+                    height: borderSize,
+                    borderColor: '#BFCBD7',
+                    borderWidth: 2,
                   },
                 ]
               }
@@ -56,10 +60,12 @@ const EquippedButton = (
                   justifyContent: 'center',
                   margin: margin,
                   opacity: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                  borderRadius: 10,
-                  width: 70,
-                  height: 70,
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                  borderRadius: borderRadius,
+                  width: borderSize,
+                  height: borderSize,
+                  borderColor: '#BFCBD7',
+                  borderWidth: 2,
                 },
               ]
             }}
@@ -77,7 +83,7 @@ const EquippedButton = (
               )}
               style={{
                 width: 55,
-                borderRadius: 10,
+                borderRadius: borderRadius,
                 marginBottom: 2,
                 marginTop: 2,
               }}
@@ -112,10 +118,12 @@ const EquippedButton = (
                     justifyContent: 'center',
                     margin: margin,
                     opacity: 0.5,
-                    backgroundColor: 'rgba(52, 52, 52, 0.4)',
-                    borderRadius: 10,
-                    width: 70,
-                    height: 70,
+                    backgroundColor: 'rgba(52, 52, 52, 0.5)',
+                    borderRadius: borderRadius,
+                    width: borderSize,
+                    height: borderSize,
+                    borderColor: '#BFCBD7',
+                    borderWidth: 2,
                   },
                 ]
               }
@@ -126,10 +134,12 @@ const EquippedButton = (
                   justifyContent: 'center',
                   margin: margin,
                   opacity: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.4)',
-                  borderRadius: 10,
-                  width: 70,
-                  height: 70,
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                  borderRadius: borderRadius,
+                  width: borderSize,
+                  height: borderSize,
+                  borderColor: '#BFCBD7',
+                  borderWidth: 2,
                 },
               ]
             }}
@@ -137,15 +147,7 @@ const EquippedButton = (
               onPress()
             }}
           >
-            <MaterialCommunityIcons
-              name={'pickaxe'}
-              size={38}
-              color={'#000'}
-              style={{
-                alignSelf: 'center',
-                position: 'absolute',
-              }}
-            />
+            <ImageIcon name={'tool'} size={60} />
           </Pressable>
         </View>
       )

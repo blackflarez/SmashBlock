@@ -45,5 +45,14 @@ export default {
       require(`../assets/icons/copperingot.png`)
     ),
     Furnace: Asset.fromModule(require(`../assets/icons/furnace.png`)),
+    map: Asset.fromModule(require(`../assets/ui/map.png`)),
+  },
+  ui: {
+    map: Asset.fromModule(require(`../assets/ui/map.png`)),
+    tool: Asset.fromModule(require(`../assets/ui/tool.png`)),
+    bag: Asset.fromModule(require(`../assets/ui/bag.png`)),
+    craft: Asset.fromModule(require(`../assets/ui/craft.png`)),
+    trophy: Asset.fromModule(require(`../assets/ui/trophy.png`)),
+    book: Asset.fromModule(require(`../assets/ui/book.png`)),
   },
 }

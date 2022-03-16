@@ -378,7 +378,7 @@ function Canvas(props, ref) {
       light.shadow.camera.top = 10
       light.shadow.camera.bottom = -10
 
-      light2 = new THREE.DirectionalLight(0x9ba2ff, 1)
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 2)
       light2.position.set(-120, 350, 150)
       light2.shadow.mapSize.set(shadowSize, shadowSize)
       light2.castShadow = true
@@ -388,7 +388,7 @@ function Canvas(props, ref) {
       light2.shadow.camera.top = 10
       light2.shadow.camera.bottom = -10
 
-      light3 = new THREE.DirectionalLight(0xe25822, 2)
+      light3 = new THREE.DirectionalLight(0xe25822, 3)
       light3.position.set(2, 1, -2)
       light3.shadow.mapSize.set(shadowSize, shadowSize)
 
@@ -1076,8 +1076,9 @@ function Canvas(props, ref) {
             transparent: 1,
             side: THREE.DoubleSide,
             alphaTest: 0.5,
+            receiveShadow: false,
+            castShadow: false,
           })
-          grass.children[i].receiveShadow = true
           foggyForestGroup.add(grass.children[i])
         }
 
@@ -2419,7 +2420,6 @@ function Canvas(props, ref) {
   }
 
   function animateCrosshair() {
-    console.log(recentClicks)
     if (
       recentClicks > 5 &&
       currentBlock.tools.includes(props.equipped.category)

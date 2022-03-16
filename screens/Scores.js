@@ -10,8 +10,6 @@ const auth = Firebase.auth()
 
 export default function Scores({ navigation }, props) {
   const [leaderboard, setLeaderboard] = useState()
-  const [levels, setLevels] = useState()
-  const [totalLevel, setTotalLevel] = useState()
   const { user } = useContext(AuthenticatedUserContext)
   const fadeAnim = useRef(new Animated.Value(0)).current
 
@@ -41,61 +39,15 @@ export default function Scores({ navigation }, props) {
               a.score < b.score ? 1 : b.score < a.score ? -1 : 4
             )
             setLeaderboard(scores)
-          } else {
-            console.log('No data available')
-          }
-        })
-
-      try {
-        await Firebase.database()
-          .ref(`users/${user.uid}/userData/levels`)
-          .get()
-          .then(async (snapshot) => {
-            if (snapshot.exists()) {
-              var levels = []
-              var sum = []
-              snapshot.forEach(function (childNodes) {
-                if (
-                  !childNodes.key.includes('XP') &&
-                  childNodes.key != 'Level'
-                ) {
-                  levels.push({ name: childNodes.key, level: childNodes.val() })
-                  sum.push(childNodes.val())
-                } else if (childNodes.key == 'Level') {
-                  setTotalLevel(childNodes.val())
-                }
-              })
-              setLevels(levels)
-            } else {
-              setLevels([
-                { name: 'Crafting', level: 1 },
-                { name: 'Mining', level: 1 },
-                { name: 'Smelting', level: 1 },
-                { name: 'Woodcutting', level: 1 },
-              ])
-              setTotalLevel(4)
-
-              await Firebase.database()
-                .ref(`users/${user.uid}/userData/levels`)
-                .set({
-                  Level: 4,
-                  Woodcutting: 1,
-                  WoodcuttingXP: 0,
-                  Mining: 1,
-                  MiningXP: 0,
-                  Smelting: 1,
-                  SmeltingXP: 0,
-                  Crafting: 1,
-                  CraftingXP: 0,
-                })
-            }
             Animated.timing(fadeAnim, {
               toValue: 1,
               duration: 300,
               useNativeDriver: false,
             }).start()
-          })
-      } catch (error) {}
+          } else {
+            console.log('No data available')
+          }
+        })
     }
     init()
   }, [])
@@ -107,16 +59,10 @@ export default function Scores({ navigation }, props) {
       </Font>
     ) : null
 
-  const levelsButton = ({ item }) =>
-    leaderboard !== null ? (
-      <Font style={{ fontSize: 18 }}>
-        {item.name} - {item.level}
-      </Font>
-    ) : null
   return (
     <BlurView
       intensity={100}
-      tint="light"
+      tint='light'
       style={{
         flex: 1,
         flexDirection: 'column',
@@ -129,21 +75,8 @@ export default function Scores({ navigation }, props) {
           flex: 1,
         }}
       >
-        <StatusBar style="light" />
+        <StatusBar style='light' />
         <View style={[styles.halfHeight, { marginTop: 72 }]}>
-          <Font style={{ fontSize: 18 }}>Total Level - {totalLevel}</Font>
-          <FlatList
-            data={levels}
-            renderItem={levelsButton}
-            keyExtractor={(item) => item.name}
-            numColumns={1}
-            scrollEnabled={false}
-            contentContainerStyle={{
-              marginVertical: 20,
-            }}
-          />
-        </View>
-        <View style={styles.halfHeight}>
           <Font style={styles.title}>Leaderboard</Font>
           <FlatList
             data={leaderboard}
@@ -156,6 +89,7 @@ export default function Scores({ navigation }, props) {
             }}
           />
         </View>
+        <View style={styles.halfHeight}></View>
         <View style={styles.quarterHeight}></View>
       </Animated.View>
     </BlurView>

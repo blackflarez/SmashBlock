@@ -1,11 +1,11 @@
 import React from 'react'
 import { Image, StyleSheet } from 'react-native'
-import Assets from '../components/Assets'
+import Assets from './Assets'
 
-const ItemIcon = ({ name, size, shadowOffset = 1 }, props) => {
+const ImageIcon = ({ name, size, shadowOffset = 1 }, props) => {
   return (
     <Image
-      source={Assets.icons[name]}
+      source={Assets.ui[name]}
       style={{
         ...props.style,
         width: size,
@@ -16,4 +16,4 @@ const ItemIcon = ({ name, size, shadowOffset = 1 }, props) => {
   )
 }
 
-export default ItemIcon
+export default ImageIcon

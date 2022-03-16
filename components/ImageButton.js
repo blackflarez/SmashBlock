@@ -5,7 +5,7 @@ import { Badge } from 'react-native-paper'
 import * as Haptics from 'expo-haptics'
 import { ImageIcon } from '../components'
 
-const IconButton = ({
+const ImageButton = ({
   color,
   size,
   onPress,
@@ -13,10 +13,9 @@ const IconButton = ({
   visible,
   notifications,
   containerStyle,
-  borderRadius = 40,
-  borderSize = 65,
+  borderRadius = 50,
+  borderSize = 50,
   buttonDisabled,
-  image,
 }) => {
   if (buttonDisabled) {
     return null
@@ -64,11 +63,7 @@ const IconButton = ({
             onPress()
           }}
         >
-          {image ? (
-            <ImageIcon name={name} size={50} />
-          ) : (
-            <MaterialCommunityIcons name={name} size={size} color={color} />
-          )}
+          <ImageIcon name={name} size={60} />
           <Badge
             visible={visible}
             size={20}
@@ -93,4 +88,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default IconButton
+export default ImageButton
