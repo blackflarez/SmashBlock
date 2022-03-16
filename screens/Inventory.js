@@ -417,7 +417,7 @@ export default function Inventory({ navigation, route }, props) {
             keyExtractor={(item) => item.name}
             numColumns={3}
             scrollEnabled={true}
-            contentContainerStyle={{ marginLeft: 3 }}
+            contentContainerStyle={{ marginLeft: 0 }}
             refreshing={true}
           />
         </View>
