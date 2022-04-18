@@ -23,8 +23,9 @@ const EquippedButton = (
     margin,
     health,
     buttonVisible,
-    borderRadius,
+    borderRadius = 20,
     borderSize,
+    backgroundColor = 'rgba(0, 0, 0, 0.4)',
   },
   props
 ) => {
@@ -44,12 +45,12 @@ const EquippedButton = (
                     justifyContent: 'center',
                     margin: margin,
                     opacity: 0.5,
-                    backgroundColor: 'rgba(52, 52, 52, 0.5)',
                     borderRadius: borderRadius,
                     width: borderSize,
                     height: borderSize,
                     borderColor: '#BFCBD7',
-                    borderWidth: 2,
+                    borderWidth: 0,
+                    backgroundColor: backgroundColor,
                   },
                 ]
               }
@@ -60,12 +61,12 @@ const EquippedButton = (
                   justifyContent: 'center',
                   margin: margin,
                   opacity: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
                   borderRadius: borderRadius,
                   width: borderSize,
                   height: borderSize,
                   borderColor: '#BFCBD7',
-                  borderWidth: 2,
+                  borderWidth: 0,
+                  backgroundColor: backgroundColor,
                 },
               ]
             }}
@@ -118,12 +119,12 @@ const EquippedButton = (
                     justifyContent: 'center',
                     margin: margin,
                     opacity: 0.5,
-                    backgroundColor: 'rgba(52, 52, 52, 0.5)',
                     borderRadius: borderRadius,
                     width: borderSize,
                     height: borderSize,
                     borderColor: '#BFCBD7',
-                    borderWidth: 2,
+                    borderWidth: 0,
+                    backgroundColor: backgroundColor,
                   },
                 ]
               }
@@ -134,12 +135,12 @@ const EquippedButton = (
                   justifyContent: 'center',
                   margin: margin,
                   opacity: 1,
-                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
                   borderRadius: borderRadius,
                   width: borderSize,
                   height: borderSize,
                   borderColor: '#BFCBD7',
-                  borderWidth: 2,
+                  borderWidth: 0,
+                  backgroundColor: backgroundColor,
                 },
               ]
             }}

@@ -316,7 +316,6 @@ export default [
     craftLevel: 2,
     xpAmount: 50,
   },
-
   {
     name: 'Shovel',
     description: 'Good for digging.',
@@ -332,6 +331,22 @@ export default [
     equipLevel: 1,
     craftLevel: 1,
     xpAmount: 30,
+  },
+  {
+    name: 'Miner',
+    description: 'Automated mining tool.',
+    recipe: { 'Copper Wire': 10, 'Iron Ingot': 10, Drill: 1 },
+    strength: 3,
+    efficiency: 2,
+    durability: 1,
+    speed: 100,
+    type: 'auto',
+    colour: 'grey',
+    category: 'chainsaw',
+    skill: 'Woodcutting',
+    equipLevel: 1,
+    craftLevel: 2,
+    xpAmount: 50,
   },
   //Resources
   {
@@ -358,6 +373,7 @@ export default [
     xpAmount: 5,
     craftLevel: 1,
   },
+
   {
     name: 'Gold Ingot',
     description: 'Pure bar of gold.',

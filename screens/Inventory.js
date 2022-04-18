@@ -59,6 +59,12 @@ export default function Inventory({ navigation, route }, props) {
               (data) => data.type === 'resource' || data.type === 'block'
             )
           )
+        } else if (filterType === 'tool') {
+          setInventoryFiltered(
+            inventory.filter(
+              (data) => data.type === 'tool' || data.type === 'auto'
+            )
+          )
         } else {
           setInventoryFiltered(
             inventory.filter((data) => data.type === filterType)
@@ -76,6 +82,34 @@ export default function Inventory({ navigation, route }, props) {
       }
       return amount
     } catch (e) {}
+  }
+
+  const handlePlace = async (item) => {
+    setModalVisible(false)
+    if (item.equipLevel) {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/levels/${item.skill}`)
+        .get()
+        .then(async (snapshot) => {
+          if (snapshot.val() >= item.equipLevel) {
+            await Firebase.database()
+              .ref(`users/${user.uid}/userData/location`)
+              .get()
+              .then(async (snapshot) => {
+                if (snapshot.exists()) {
+                  await Firebase.database()
+                    .ref(
+                      `users/${user.uid}/userData/placed/${snapshot.val()}/type`
+                    )
+                    .set(item.name)
+                    .then(handleBack(), handleDestroy(item.name))
+                }
+              })
+          } else {
+            setUnableEquipModal(true)
+          }
+        })
+    }
   }
 
   const handleEquip = async (item) => {
@@ -329,7 +363,7 @@ export default function Inventory({ navigation, route }, props) {
               </Font>
 
               <View style={{ alignSelf: 'center', alignContent: 'flex-start' }}>
-                {currentItem.type === 'tool' ? (
+                {currentItem.type === 'tool' || currentItem.type === 'auto' ? (
                   <Font style={styles.textLight}>
                     Efficiency: {currentItem.efficiency}
                     {`\n`}
@@ -353,6 +387,17 @@ export default function Inventory({ navigation, route }, props) {
                   width: 120,
                 }}
               >
+                {currentItem.type === 'auto' ? (
+                  <Button
+                    title={'Place'}
+                    backgroundColor={'#eee'}
+                    containerStyle={{ marginTop: 10, alignSelf: 'center' }}
+                    onPress={() => {
+                      handlePlace(currentItem)
+                    }}
+                  ></Button>
+                ) : null}
+
                 {currentItem.type === 'tool' &&
                 currentItem.name !== equipped ? (
                   <Button

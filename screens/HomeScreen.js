@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import React, { useContext, useState, useEffect, useRef } from 'react'
+import React, { useContext, useState, useEffect, useRef, useMemo } from 'react'
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Modal,
+  FlatList,
 } from 'react-native'
 import {
   InputField,
@@ -19,11 +20,12 @@ import {
   Items,
   EquippedButton,
   Config,
-  IconButton,
+  ItemButton,
   ImageButton,
   Font,
   Button,
   Levels,
+  ItemIcon,
 } from '../components'
 import { Firebase } from '../config/firebase'
 import Canvas from '../components/Canvas'
@@ -31,6 +33,9 @@ import { AuthenticatedUserContext } from '../navigation/AuthenticatedUserProvide
 import { useFocusEffect } from '@react-navigation/native'
 import * as Haptics from 'expo-haptics'
 import { set } from 'lodash'
+import Slider from '@react-native-community/slider'
+
+var lastFuelAmount
 
 export default function HomeScreen({ navigation }, props) {
   const canvas = useRef()
@@ -38,6 +43,9 @@ export default function HomeScreen({ navigation }, props) {
   const auth = Firebase.auth()
   const [isLoading, setIsLoading] = useState(true)
   const [firstTimeDialog, setFirstTimeDialog] = useState(true)
+  const [placedModal, setPlacedModal] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [removeModalVisible, setRemoveModalVisible] = useState(false)
   const [levelUpModal, setLevelUpModal] = useState(false)
   const [levelUpSkill, setLevelUpSkill] = useState()
   const [levelUpAmount, setLevelUpAmount] = useState()
@@ -46,12 +54,13 @@ export default function HomeScreen({ navigation }, props) {
   const { user } = useContext(AuthenticatedUserContext)
   const [name, setName] = useState('')
   const [inventory, setInventory] = useState({})
+  const [inventoryFiltered, setInventoryFiltered] = useState(null)
   const [inventoryNotificaitons, setInventoryNotificaitons] = useState(0)
   const [newItems, setNewItems] = useState([])
   const [equipped, setEquipped] = useState(null)
   const [equippedDurability, setEquippedDurability] = useState(null)
   const [equippedPending, setEquippedPending] = useState(false)
-  const [location, setLocation] = useState('Foggy_Forest')
+  const [location, setLocation] = useState()
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
   const [mapIcon, setMapIcon] = useState('map-outline')
@@ -63,11 +72,54 @@ export default function HomeScreen({ navigation }, props) {
   const locationAnim = useRef(new Animated.Value(0)).current
   const locationRiseAnim = useRef(new Animated.Value(30)).current
   const fists = { name: 'Fists', strength: 1, efficiency: 1 }
+  const [currentFuel, setCurrentFuel] = useState({
+    name: null,
+    amount: null,
+  })
+  const [currentItem, setCurrentItem] = useState(Items[0])
+  const [setAmount, setSetAmount] = useState(1)
+  const [currentLevel, setCurrentLevel] = useState(1)
+  const [mining, setMining] = useState(false)
+  const [increment, setIncrement] = useState(0)
 
   function haptics(style) {
     if (Platform.OS === 'ios' && config.hapticsEnabled === true) {
       Haptics.impactAsync(style)
     }
+  }
+
+  async function setPlaced(newLocation) {
+    try {
+      if (newLocation) {
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${newLocation}/type`)
+          .get()
+          .then((snapshot) => {
+            if (snapshot.exists() && snapshot.val()) {
+              canvas.current.setPlaced(snapshot.val())
+            } else {
+              canvas.current.setPlaced(null)
+            }
+          })
+      } else {
+        canvas.current.setPlaced(null)
+        setPlacedModal(false)
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${location}/type`)
+          .get()
+          .then(async (snapshot) => {
+            if (snapshot.exists()) {
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/inventory`)
+                .child(snapshot.val())
+                .set(Firebase.firebase_.database.ServerValue.increment(1))
+              await Firebase.database()
+                .ref(`users/${user.uid}/userData/placed/${location}/type`)
+                .set(null)
+            }
+          })
+      }
+    } catch (error) {}
   }
 
   useFocusEffect(
@@ -77,6 +129,13 @@ export default function HomeScreen({ navigation }, props) {
         setNotifications()
         let item
         try {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/levels/Smelting`)
+            .get()
+            .then((snapshot) => {
+              setCurrentLevel(snapshot.val())
+            })
+
           await Firebase.database()
             .ref(`users/${user.uid}/userData/equipped`)
             .get()
@@ -115,6 +174,7 @@ export default function HomeScreen({ navigation }, props) {
             })
         } catch (error) {}
       }
+      setPlaced(location)
 
       onFocus()
       return () => {
@@ -218,6 +278,7 @@ export default function HomeScreen({ navigation }, props) {
       console.log(error)
     }
   }
+
   const onHandleUsername = async () => {
     if (name === '' || name === null) {
       setUserTakenError('Please enter a valid username.')
@@ -298,13 +359,35 @@ export default function HomeScreen({ navigation }, props) {
 
   useEffect(() => {
     async function init() {
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/inventory`)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists()) {
+            var items = []
+            snapshot.forEach(function (childNodes) {
+              if (childNodes.val() > 0) {
+                let name = childNodes.key
+                let amount = childNodes.val()
+                let stats = Items.find((o) => name === o.name)
+                items.push({ ...stats, amount: amount })
+              }
+            })
+            setInventory(snapshot.val())
+            setInventoryFiltered(
+              items.filter((data) => data.category === 'fuel')
+            )
+          } else {
+            console.log('No data available')
+          }
+        })
       //AudioManager.setupAsync()
       await Firebase.database()
         .ref(`users/${user.uid}`)
         .get()
         .then(async (snapshot) => {
           if (snapshot.exists()) {
-            setInventory(snapshot.val().userData.inventory)
+            // setInventory(snapshot.val().userData.inventory)
             setName(snapshot.val().userData.name)
             setFirstTimeDialog(false)
             try {
@@ -536,6 +619,172 @@ export default function HomeScreen({ navigation }, props) {
     })
   }
 
+  useEffect(() => {
+    async function init() {
+      try {
+        setIncrement((prevCount) => prevCount + 1)
+
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${location}`)
+          .get()
+          .then(async (snapshot) => {
+            if (snapshot.exists()) {
+              console.log(snapshot.val())
+              try {
+                setCurrentFuel({
+                  name: snapshot.val().name,
+                  amount: snapshot.val().amount,
+                })
+              } catch (err) {
+                setCurrentFuel({ name: null, amount: null })
+              }
+
+              try {
+                if (snapshot.val().amount < 1) {
+                  setRemoveModalVisible(false)
+                  setCurrentFuel({ name: null, amount: null })
+                  await Firebase.database()
+                    .ref(`users/${user.uid}/userData/placed/${location}/name`)
+                    .set(null)
+                  await Firebase.database()
+                    .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+                    .set(0)
+                } else {
+                }
+              } catch (error) {
+                console.log(error)
+              }
+            }
+          })
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    init()
+
+    const interval = setInterval(() => init(), 200)
+    return () => clearInterval(interval)
+  }, [])
+
+  useMemo(async () => {
+    try {
+      if (currentFuel.name !== null && currentFuel.name) {
+        lastFuelAmount = currentFuel.amount
+        setMining(true)
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+          .set(Firebase.firebase_.database.ServerValue.increment(-1))
+        canvas.current.hitBlockFromOutside()
+      } else {
+        setMining(false)
+        lastFuelAmount = null
+      }
+    } catch (error) {}
+  }, [increment])
+
+  const handleOpen = async (item) => {
+    if (currentLevel >= item.smeltLevel) {
+      setSetAmount(1)
+      setPlacedModal(false)
+      setModalVisible(true)
+      setCurrentItem(item)
+    } else {
+      setCurrentItem(item)
+      setUnableSmeltModal(true)
+    }
+  }
+
+  const handleOpenFuel = async () => {
+    setPlacedModal(false)
+    setCurrentItem({
+      name: currentFuel.name,
+      category: 'fuel',
+      amount: currentFuel.amount,
+    })
+    setSetAmount(1)
+    setRemoveModalVisible(true)
+  }
+
+  const handleAddFuel = async () => {
+    if (currentFuel) {
+      if (currentFuel.name === currentItem.name) {
+        try {
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/inventory`)
+            .child(currentItem.name)
+            .set(Firebase.firebase_.database.ServerValue.increment(-setAmount))
+
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+            .set(Firebase.firebase_.database.ServerValue.increment(setAmount))
+
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/placed/${location}/name`)
+            .set(currentItem.name)
+            .then(setModalVisible(false))
+        } catch (error) {
+          console.log(error)
+        }
+      } else {
+        try {
+          setCurrentFuel({ name: currentItem.name, amount: setAmount })
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/placed/${location}/name`)
+            .set(currentItem.name)
+            .then(setModalVisible(false))
+
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+            .set(setAmount)
+
+          await Firebase.database()
+            .ref(`users/${user.uid}/userData/inventory`)
+            .child(currentItem.name)
+            .set(Firebase.firebase_.database.ServerValue.increment(-setAmount))
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    } else {
+      try {
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/inventory`)
+          .child(currentItem.name)
+          .set(Firebase.firebase_.database.ServerValue.increment(-setAmount))
+
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+          .set(Firebase.firebase_.database.ServerValue.increment(setAmount))
+
+        await Firebase.database()
+          .ref(`users/${user.uid}/userData/placed/${location}/name`)
+          .set(currentItem.name)
+          .then(setModalVisible(false))
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
+  const handleRemove = async (item) => {
+    setModalVisible(false)
+
+    if (currentItem.category === 'fuel') {
+      setCurrentFuel({ name: null, amount: null })
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/placed/${location}/amount`)
+        .set(null)
+
+      await Firebase.database()
+        .ref(`users/${user.uid}/userData/inventory`)
+        .child(item)
+        .set(
+          Firebase.firebase_.database.ServerValue.increment(currentFuel.amount)
+        )
+        .then(setRemoveModalVisible(false))
+    }
+  }
+
   async function setSceneMode(currentLocation) {
     let unlocked = false
     let location = Items.find((o) => o.name === currentLocation)
@@ -549,6 +798,7 @@ export default function HomeScreen({ navigation }, props) {
             .ref(`users/${user.uid}/userData/location`)
             .set(currentLocation)
           setLocation(currentLocation)
+          setPlaced(currentLocation)
           unlocked = true
 
           Animated.timing(introFadeAnim, {
@@ -567,6 +817,31 @@ export default function HomeScreen({ navigation }, props) {
 
     return unlocked
   }
+
+  function getAmount() {
+    try {
+      let amount = inventoryFiltered.find(
+        (o) => o.name === currentItem.name
+      ).amount
+      if (setAmount > amount && amount > 0) {
+        setSetAmount(amount)
+      }
+      return amount
+    } catch (e) {
+      return 0
+    }
+  }
+  const renderItem = ({ item }) => (
+    <ItemButton
+      name={item.name}
+      amount={item.amount}
+      onPress={() => handleOpen(item)}
+      colour={item.name}
+      margin={20}
+      equipped={false}
+      newItem={false}
+    />
+  )
 
   if (isLoading) {
     return (
@@ -650,6 +925,169 @@ export default function HomeScreen({ navigation }, props) {
       <Modal
         animationType='fade'
         transparent={true}
+        visible={removeModalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.')
+          setRemoveModalVisible(false), setSetAmount(1)
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={[styles.modalView, { height: 400 }]}>
+            <ItemIcon name={currentItem.name} size={120} />
+            <Font style={styles.text}>Collect {currentItem.name}</Font>
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                width: 120,
+              }}
+            >
+              <Button
+                title={'Collect'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  handleRemove(currentItem.name), setRemoveModalVisible(false)
+                }}
+              ></Button>
+              <Button
+                title={'Close'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  setRemoveModalVisible(false)
+                }}
+              ></Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal
+        animationType='fade'
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          Alert.alert('Modal has been closed.')
+          setModalVisible(false)
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={[styles.modalView, { height: 500, width: 350 }]}>
+            <ItemIcon name={currentItem.name} size={120} />
+            <Font style={styles.text}>{currentItem.name}</Font>
+            <Font
+              style={[styles.textLight, { marginBottom: 20, color: '#757575' }]}
+            >
+              {currentItem.description}
+            </Font>
+
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                width: 120,
+              }}
+            >
+              <Font style={{ alignSelf: 'center' }}>{setAmount}</Font>
+
+              <Slider
+                style={{ width: 200, height: 40, alignSelf: 'center' }}
+                minimumValue={1}
+                maximumValue={getAmount()}
+                minimumTrackTintColor='#eee'
+                maximumTrackTintColor='#eee'
+                thumbTintColor='#6DA34D'
+                step={Math.ceil(getAmount() / 100)}
+                onValueChange={(value) => setSetAmount(value)}
+              />
+
+              {currentItem.category === 'fuel' ? (
+                <Button
+                  title={'Add Fuel'}
+                  backgroundColor={'#eee'}
+                  containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                  onPress={() => {
+                    handleAddFuel()
+                  }}
+                ></Button>
+              ) : null}
+
+              <Button
+                title={'Close'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  setModalVisible(false)
+                }}
+              ></Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType='fade'
+        transparent={true}
+        visible={placedModal}
+        onRequestClose={() => {
+          setPlacedModal(false)
+        }}
+      >
+        <View style={styles.centeredView}>
+          <View style={[styles.modalView, { height: 500, width: 350 }]}>
+            <Font style={styles.text}>Miner</Font>
+
+            <ItemButton
+              onPress={() => handleOpenFuel()}
+              margin={20}
+              equipped={false}
+              newItem={false}
+              name={currentFuel ? currentFuel.name : null}
+              amount={currentFuel ? currentFuel.amount : null}
+            />
+            <FlatList
+              data={inventoryFiltered}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.name}
+              numColumns={2}
+              scrollEnabled={true}
+              contentContainerStyle={{ marginLeft: 3 }}
+              refreshing={true}
+            />
+
+            <Font style={styles.textLight}>{levelUpDescription}</Font>
+
+            <View
+              style={{
+                position: 'absolute',
+                bottom: 20,
+                width: 120,
+              }}
+            >
+              <Button
+                title={'Remove'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  setPlaced(null)
+                }}
+              ></Button>
+              <Button
+                title={'Close'}
+                backgroundColor={'#eee'}
+                containerStyle={{ marginTop: 20, alignSelf: 'center' }}
+                onPress={() => {
+                  setPlacedModal(false)
+                }}
+              ></Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType='fade'
+        transparent={true}
         visible={levelUpModal}
         onRequestClose={() => {
           setLevelUpModal(false)
@@ -719,7 +1157,6 @@ export default function HomeScreen({ navigation }, props) {
           onPress={() => handleInventory('tool')}
           buttonVisible={menuVisible}
           health={equippedDurability / 10000}
-          borderRadius={10}
           borderSize={75}
         />
       </Animated.View>
@@ -737,7 +1174,6 @@ export default function HomeScreen({ navigation }, props) {
           name={'map'}
           size={38}
           borderSize={75}
-          borderRadius={10}
           onPress={handleMap}
           buttonDisabled={!mapButtonVisible}
         />
@@ -774,6 +1210,7 @@ export default function HomeScreen({ navigation }, props) {
           setMapMode={setMapMode}
           setSceneMode={setSceneMode}
           isUnlocked={isUnlocked}
+          openPlacedModal={() => setPlacedModal(true)}
           ref={canvas}
         />
       </View>

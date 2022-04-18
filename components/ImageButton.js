@@ -1,8 +1,6 @@
 import React from 'react'
-import { Pressable, StyleSheet, View, Platform } from 'react-native'
-import { MaterialCommunityIcons } from '@expo/vector-icons'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { Badge } from 'react-native-paper'
-import * as Haptics from 'expo-haptics'
 import { ImageIcon } from '../components'
 
 const ImageButton = ({
@@ -13,9 +11,10 @@ const ImageButton = ({
   visible,
   notifications,
   containerStyle,
-  borderRadius = 50,
+  borderRadius = 20,
   borderSize = 50,
   buttonDisabled,
+  backgroundColor = 'rgba(0, 0, 0, 0.4)',
 }) => {
   if (buttonDisabled) {
     return null
@@ -34,12 +33,12 @@ const ImageButton = ({
                 styles.base,
                 {
                   opacity: 0.5,
-                  backgroundColor: 'rgba(52, 52, 52, 0.5)',
                   borderRadius: borderRadius,
                   width: borderSize,
                   height: borderSize,
                   borderColor: '#BFCBD7',
-                  borderWidth: 2,
+                  borderWidth: 0,
+                  backgroundColor: backgroundColor,
                 },
                 containerStyle,
               ]
@@ -49,12 +48,12 @@ const ImageButton = ({
               styles.base,
               {
                 opacity: 1,
-                backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 borderRadius: borderRadius,
                 width: borderSize,
                 height: borderSize,
                 borderColor: '#BFCBD7',
-                borderWidth: 2,
+                borderWidth: 0,
+                backgroundColor: backgroundColor,
               },
               containerStyle,
             ]

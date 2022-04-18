@@ -67,6 +67,7 @@ var deltaX = 0,
   drillTexture,
   chainsaw,
   chainsawTexture,
+  miner,
   pickaxeTexture,
   glassPickaxeTexture,
   oresTexture,
@@ -227,6 +228,17 @@ function Canvas(props, ref) {
 
         strength = tool.strength
       },
+      setPlaced(placed) {
+        if (placed) {
+          miner.visible = true
+        } else {
+          miner.visible = false
+        }
+      },
+      hitBlockFromOutside() {
+        autoHitBlock()
+        console.log('hit')
+      },
     }),
     []
   )
@@ -378,7 +390,7 @@ function Canvas(props, ref) {
       light.shadow.camera.top = 10
       light.shadow.camera.bottom = -10
 
-      light2 = new THREE.DirectionalLight(0x9ba2ff, 2)
+      light2 = new THREE.DirectionalLight(0x9ba2ff, 5)
       light2.position.set(-120, 350, 150)
       light2.shadow.mapSize.set(shadowSize, shadowSize)
       light2.castShadow = true
@@ -388,7 +400,7 @@ function Canvas(props, ref) {
       light2.shadow.camera.top = 10
       light2.shadow.camera.bottom = -10
 
-      light3 = new THREE.DirectionalLight(0xe25822, 3)
+      light3 = new THREE.DirectionalLight(0xe25822, 2)
       light3.position.set(2, 1, -2)
       light3.shadow.mapSize.set(shadowSize, shadowSize)
 
@@ -522,9 +534,13 @@ function Canvas(props, ref) {
       const drillUri = Asset.fromModule(
         require('../assets/models/drill.glb')
       ).uri
+      const minerUri = Asset.fromModule(
+        require('../assets/models/auto.glb')
+      ).uri
       const chainsawUri = Asset.fromModule(
         require('../assets/models/chainsaw.glb')
       ).uri
+
       const pickTexUri = Asset.fromModule(
         require('../assets/models/pickaxetexture.png')
       ).uri
@@ -734,6 +750,9 @@ function Canvas(props, ref) {
         cubeDestruction[8] = result.scene
         cubeDestruction[8].animations = result.animations
       })
+      let m40 = loadModel(minerUri).then((result) => {
+        miner = result.scene
+      })
 
       let t1 = loadTexture(pickTexUri).then((result) => {
         pickaxeTexture = result
@@ -869,6 +888,7 @@ function Canvas(props, ref) {
         m37,
         m38,
         m39,
+        m40,
         msmoke[smokeParticlesLength - 1],
         t1,
         t2,
@@ -916,6 +936,29 @@ function Canvas(props, ref) {
           renderer.clearDepth()
         }
         tool.visible = false
+
+        //auto
+        miner.scale.x = 0.32499998807907104
+        miner.scale.y = 0.32499998807907104
+        miner.scale.z = 0.32499998807907104
+        //console.log(miner.children[0].rotation.y)
+        miner.children[0].rotation.y = -1.5
+        for (let i of miner.children) {
+          if (i.name === 'Auto_Drill') {
+            i.material = new THREE.MeshPhongMaterial({
+              color: 'grey',
+              map: drillTexture,
+            })
+            i.castShadow = true
+          } else if (i.name === 'Auto') {
+            i.material = new THREE.MeshPhongMaterial({
+              color: '#595959',
+            })
+            i.receiveShadow = true
+          }
+        }
+        world.add(miner)
+        miner.visible = false
 
         //crosshair
         crosshairTexture.flipY = false
@@ -2636,6 +2679,45 @@ function Canvas(props, ref) {
     return tbc
   }
 
+  async function autoHitBlock() {
+    let coordinates = {
+      x: 0,
+      y: 0,
+    }
+    let damage = 1
+    let bonus = 1
+
+    if (currentBlock.health <= 0 || damage > currentBlock.health) {
+      animateSmoke(cube, false)
+      props.updateBalance(currentBlock, true, coordinates, damage)
+      if (destructionEnabled) {
+        destruction()
+      }
+      props.generateBlock()
+      animation('destroy', cube, cube)
+      updateMaterial(cube)
+    } else {
+      cube.material.normalMap = cubeNormalMap
+      cube.material.normalScale = new Vector2(
+        5 / currentBlock.health,
+        5 / currentBlock.health
+      )
+
+      props.updateBalance(currentBlock, false, coordinates, damage)
+
+      animation('click', cube.object, cube.object)
+
+      if (
+        currentBlock.tools.includes(props.equipped.category) ||
+        props.equipped.name === 'Fists'
+      ) {
+        currentBlock.health -= strength * bonus
+      } else {
+        currentBlock.health -= (strength / 5) * bonus
+      }
+    }
+  }
+
   async function hitBlock(block, coordinates, crosshair) {
     if (
       props.equipped.category === 'pickaxe' ||
@@ -2727,6 +2809,8 @@ function Canvas(props, ref) {
               },
               true
             )
+          } else if (block.object.name === 'Auto' && miner.visible) {
+            props.openPlacedModal()
           }
         }
       } catch (error) {}
