@@ -12,11 +12,11 @@ const IconButton = ({
   visible,
   notifications,
   containerStyle,
-  borderRadius = 20,
-  borderSize = 60,
+  borderRadius = 30,
+  borderSize = 65,
   buttonDisabled,
   image,
-  backgroundColor = 'rgba(0, 0, 0, 0.4)',
+  backgroundColor = 'rgba(256, 256, 256, 0.9)',
 }) => {
   if (buttonDisabled) {
     return null
@@ -56,6 +56,9 @@ const IconButton = ({
                 borderColor: '#BFCBD7',
                 borderWidth: 0,
                 backgroundColor: backgroundColor,
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 10,
               },
               containerStyle,
             ]

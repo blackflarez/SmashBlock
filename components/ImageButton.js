@@ -11,10 +11,10 @@ const ImageButton = ({
   visible,
   notifications,
   containerStyle,
-  borderRadius = 20,
+  borderRadius = 25,
   borderSize = 50,
   buttonDisabled,
-  backgroundColor = 'rgba(0, 0, 0, 0.4)',
+  backgroundColor = 'rgba(256, 256, 256, 0.9)',
 }) => {
   if (buttonDisabled) {
     return null
@@ -54,6 +54,9 @@ const ImageButton = ({
                 borderColor: '#BFCBD7',
                 borderWidth: 0,
                 backgroundColor: backgroundColor,
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 10,
               },
               containerStyle,
             ]

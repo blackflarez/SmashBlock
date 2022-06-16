@@ -6,6 +6,7 @@ import ErrorMessage from './ErrorMessage'
 import InputField from './InputField'
 import CraftingButton from './CraftingButton'
 import Plus from './Plus'
+import Counters from './Counters'
 import MenuBar from './MenuBar'
 import Amount from './Amount'
 import ItemIcon from './ItemIcon'
@@ -25,6 +26,7 @@ export {
   InputField,
   CraftingButton,
   Plus,
+  Counters,
   MenuBar,
   Amount,
   ItemIcon,

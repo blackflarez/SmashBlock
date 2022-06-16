@@ -15,6 +15,7 @@ import {
   InputField,
   ErrorMessage,
   Plus,
+  Counters,
   MenuBar,
   Items,
   EquippedButton,
@@ -54,6 +55,7 @@ export default function HomeScreen({ navigation }, props) {
   const [location, setLocation] = useState('Foggy_Forest')
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
+  const [countersList, setCountersList] = useState([])
   const [mapIcon, setMapIcon] = useState('map-outline')
   const introFadeAnim = useRef(new Animated.Value(0)).current
   const introFadeAnimMap = useRef(new Animated.Value(0)).current
@@ -478,6 +480,29 @@ export default function HomeScreen({ navigation }, props) {
               .set(Firebase.firebase_.database.ServerValue.increment(1))
             setNotifications()
           }
+
+          var index = countersList.findIndex(
+            (item) => item.props.currentBlock == block.name
+          )
+
+          setCountersList((countersList) => [
+            ...(countersList.length > 0
+              ? countersList.splice(countersList.length)
+              : countersList),
+            <Counters
+              currentBlockColour={block.colour}
+              amount={snapshot.val()}
+              bonus={destroy}
+              currentBlock={block.name}
+              key={Math.random(1000)}
+              coordinates={coordinates}
+              animate={
+                countersList.length > 0
+                  ? countersList[0].props.currentBlock != block.name
+                  : true
+              }
+            />,
+          ])
         })
 
       Firebase.database()
@@ -578,7 +603,7 @@ export default function HomeScreen({ navigation }, props) {
           backgroundColor: '#fff',
         }}
       >
-        <StatusBar style='dark' />
+        <StatusBar style="dark" />
       </View>
     )
   }
@@ -597,9 +622,9 @@ export default function HomeScreen({ navigation }, props) {
             alignItems: 'center',
             marginBottom: 50,
           }}
-          keyboardShouldPersistTaps='handled'
+          keyboardShouldPersistTaps="handled"
         >
-          <StatusBar style='dark' />
+          <StatusBar style="dark" />
           <View>
             <Text style={styles.title}>Pick a username</Text>
 
@@ -613,9 +638,9 @@ export default function HomeScreen({ navigation }, props) {
                 borderWidth: 1,
                 borderColor: '#000',
               }}
-              leftIcon='account'
-              placeholder='Enter username'
-              autoCapitalize='none'
+              leftIcon="account"
+              placeholder="Enter username"
+              autoCapitalize="none"
               autoFocus={false}
               value={name}
               onChangeText={(text) => setName(text)}
@@ -645,10 +670,10 @@ export default function HomeScreen({ navigation }, props) {
         alignItems: 'center',
       }}
     >
-      <StatusBar style='dark' />
+      <StatusBar style="dark" />
 
       <Modal
-        animationType='fade'
+        animationType="fade"
         transparent={true}
         visible={levelUpModal}
         onRequestClose={() => {
@@ -719,9 +744,9 @@ export default function HomeScreen({ navigation }, props) {
           onPress={() => handleInventory('tool')}
           buttonVisible={menuVisible}
           health={equippedDurability / 10000}
-          borderRadius={10}
           borderSize={75}
         />
+        <View>{countersList}</View>
       </Animated.View>
 
       <Animated.View
@@ -737,7 +762,6 @@ export default function HomeScreen({ navigation }, props) {
           name={'map'}
           size={38}
           borderSize={75}
-          borderRadius={10}
           onPress={handleMap}
           buttonDisabled={!mapButtonVisible}
         />

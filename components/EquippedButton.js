@@ -23,9 +23,9 @@ const EquippedButton = (
     margin,
     health,
     buttonVisible,
-    borderRadius = 20,
+    borderRadius = 25,
     borderSize,
-    backgroundColor = 'rgba(0, 0, 0, 0.4)',
+    backgroundColor = 'rgba(256, 256, 256, 0.9)',
   },
   props
 ) => {
@@ -67,6 +67,9 @@ const EquippedButton = (
                   borderColor: '#BFCBD7',
                   borderWidth: 0,
                   backgroundColor: backgroundColor,
+                  shadowColor: '#000',
+                  shadowOpacity: 0.25,
+                  shadowRadius: 10,
                 },
               ]
             }}
@@ -141,6 +144,8 @@ const EquippedButton = (
                   borderColor: '#BFCBD7',
                   borderWidth: 0,
                   backgroundColor: backgroundColor,
+                  shadowOpacity: 0.25,
+                  shadowRadius: 10,
                 },
               ]
             }}
