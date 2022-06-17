@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Pressable, StyleSheet, View, Platform, Animated } from 'react-native'
 import { Font, ItemIcon, Amount } from '../components'
 
-const Counters = (
+const GoldCounter = (
   { currentBlockColour, amount, currentBlock, bonus, coordinates, animate },
   props
 ) => {
@@ -100,4 +100,4 @@ const Counters = (
 
 const styles = StyleSheet.create({})
 
-export default Counters
+export default GoldCounter

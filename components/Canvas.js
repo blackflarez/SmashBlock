@@ -143,7 +143,8 @@ var deltaX = 0,
   island,
   spookyCaveGroup,
   sandyBeachGroup,
-  mapGroups = []
+  mapGroups = [],
+  bonusTracker = 0
 
 //Graphics Settings
 var shadowSize = 512,
@@ -1385,6 +1386,7 @@ function Canvas(props, ref) {
         crosshairActive = true
         recentClicks -= 0.03
       } else if (crosshairActive && crosshair.visible) {
+        props.endMultiplier()
         crosshairActive = false
         new TWEEN.Tween(crosshairGroup.scale)
           .to(
@@ -2621,12 +2623,13 @@ function Canvas(props, ref) {
     ores.material = material
   }
 
-  function calculateBonus(currentBlock, tbc) {
-    var bonus = 1
-    if (tbc < 100) {
-      bonus = 1.5
+  function calculateBonus(tbc) {
+    if (tbc < 400) {
+      bonusTracker += 1
+    } else {
+      bonusTracker = 0
     }
-    return bonus
+    return Math.ceil(Math.sqrt(bonusTracker) / 5)
   }
 
   function calculateTBC() {
@@ -2651,13 +2654,15 @@ function Canvas(props, ref) {
     }
 
     let damage = strength
-    let bonus = 1
+    let bonus = calculateBonus(calculateTBC())
+    let strike = false
 
     if (crosshair) {
       if (crosshairActive) {
-        bonus += 2
+        strike = true
       }
     }
+
     if (currentBlock.health <= 0 || damage > currentBlock.health) {
       animateCrosshair()
 
@@ -2667,7 +2672,14 @@ function Canvas(props, ref) {
       }
 
       animateSmoke(block, false)
-      props.updateBalance(currentBlock, true, coordinates, damage)
+      props.updateBalance(
+        currentBlock,
+        true,
+        coordinates,
+        damage,
+        bonus,
+        strike
+      )
       if (destructionEnabled) {
         destruction()
       }
@@ -2694,9 +2706,11 @@ function Canvas(props, ref) {
         currentBlock.tools.includes(props.equipped.category) ||
         props.equipped.name === 'Fists'
       ) {
-        currentBlock.health -= strength * bonus
+        currentBlock.health -= strength
+      } else if (strike) {
+        currentBlock.health -= strength / 2
       } else {
-        currentBlock.health -= (strength / 5) * bonus
+        currentBlock.health -= strength / 5
       }
     }
   }

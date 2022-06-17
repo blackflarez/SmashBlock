@@ -54,5 +54,6 @@ export default {
     craft: Asset.fromModule(require(`../assets/ui/craft.png`)),
     trophy: Asset.fromModule(require(`../assets/ui/trophy.png`)),
     book: Asset.fromModule(require(`../assets/ui/book.png`)),
+    multiplier: Asset.fromModule(require(`../assets/ui/multiplier.png`)),
   },
 }

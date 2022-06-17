@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Modal,
+  Dimensions,
 } from 'react-native'
 import {
   InputField,
@@ -20,7 +21,7 @@ import {
   Items,
   EquippedButton,
   Config,
-  IconButton,
+  Multiplier,
   ImageButton,
   Font,
   Button,
@@ -55,6 +56,7 @@ export default function HomeScreen({ navigation }, props) {
   const [location, setLocation] = useState('Foggy_Forest')
   const [blocks, setBlocks] = useState(Items.filter((o) => o.type === 'block'))
   const [plusses, setPlusses] = useState([])
+  const [multiplier, setMultiplier] = useState(null)
   const [countersList, setCountersList] = useState([])
   const [mapIcon, setMapIcon] = useState('map-outline')
   const introFadeAnim = useRef(new Animated.Value(0)).current
@@ -447,12 +449,28 @@ export default function HomeScreen({ navigation }, props) {
     }
   }
 
-  async function updateBalance(block, destroy, coordinates, damage) {
+  async function endMultiplier() {
+    setMultiplier(<Multiplier amount={0} />)
+  }
+
+  async function updateBalance(
+    block,
+    destroy,
+    coordinates,
+    damage,
+    bonus,
+    strike
+  ) {
     if (destroy) {
       haptics(Haptics.ImpactFeedbackStyle.Heavy)
       var amount = Math.floor(
-        1 + equipped.efficiency * (Math.random() * (1.5 - 0.75) + 0.75)
+        1 + equipped.efficiency * (Math.random() * (1.5 - 0.75) + 0.75) * bonus
       )
+      if (strike) {
+        amount *= 2
+      }
+
+      setMultiplier(bonus > 1 ? <Multiplier amount={bonus} /> : null)
 
       setPlusses((plusses) => [
         ...(plusses.length > 15
@@ -670,7 +688,7 @@ export default function HomeScreen({ navigation }, props) {
         alignItems: 'center',
       }}
     >
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       <Modal
         animationType="fade"
@@ -787,12 +805,27 @@ export default function HomeScreen({ navigation }, props) {
           style={{ flex: 1, alignSelf: 'center' }}
         />
       </Animated.View>
+
       <View style={{ flex: 1 }}>{plusses}</View>
+
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          alignContent: 'center',
+          alignSelf: 'center',
+          width: Dimensions.get('screen').width,
+          height: Dimensions.get('screen').height,
+        }}
+      >
+        {multiplier}
+      </View>
 
       <View style={styles.canvas}>
         <Canvas
           equipped={equipped}
           updateBalance={updateBalance}
+          endMultiplier={endMultiplier}
           generateBlock={generateBlock}
           setLoading={() => setCanvasLoading(false)}
           setMapMode={setMapMode}

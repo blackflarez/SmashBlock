@@ -16,6 +16,9 @@ import EquippedButton from './EquippedButton'
 import Font from './Font'
 import Config from './Config'
 import Levels from './Levels'
+import GoldCounter from './GoldCounter'
+import Multiplier from './Multiplier'
+import Assets from './Assets'
 
 export {
   IconButton,
@@ -27,6 +30,7 @@ export {
   CraftingButton,
   Plus,
   Counters,
+  GoldCounter,
   MenuBar,
   Amount,
   ItemIcon,
@@ -36,4 +40,6 @@ export {
   Font,
   Config,
   Levels,
+  Multiplier,
+  Assets,
 }

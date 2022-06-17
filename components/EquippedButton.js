@@ -90,6 +90,9 @@ const EquippedButton = (
                 borderRadius: borderRadius,
                 marginBottom: 2,
                 marginTop: 2,
+                shadowColor: '#000',
+                shadowOpacity: 0.25,
+                shadowRadius: 3,
               }}
             />
             <Badge
