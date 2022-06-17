@@ -806,7 +806,9 @@ export default function HomeScreen({ navigation }, props) {
         />
       </Animated.View>
 
-      <View style={{ flex: 1 }}>{plusses}</View>
+      <View pointerEvents="none" style={{ flex: 1 }}>
+        {plusses}
+      </View>
 
       <View
         pointerEvents="none"
