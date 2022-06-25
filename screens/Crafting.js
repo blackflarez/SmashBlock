@@ -399,12 +399,6 @@ export default function Crafting({ navigation }, props) {
             data={craftingItems}
             renderItem={craftingButton}
             keyExtractor={(item) => item.name}
-            numColumns={1}
-            scrollEnabled={true}
-            contentContainerStyle={{
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
           />
         </View>
         <View style={styles.row}>
@@ -455,7 +449,6 @@ export default function Crafting({ navigation }, props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 250,
     paddingHorizontal: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -463,11 +456,11 @@ const styles = StyleSheet.create({
   halfHeight: {
     flex: 6,
     backgroundColor: 'rgba(52, 52, 52, 0.1)',
-    margin: 20,
     borderRadius: 10,
     justifyContent: 'center',
-    alignContent: 'center',
     alignSelf: 'center',
+    margin: 20,
+    width: 363,
   },
   quarterHeight: {
     flex: 1,

@@ -20,6 +20,8 @@ let Database
 if (firebase.apps.length === 0) {
   Firebase = firebase.initializeApp(firebaseConfig)
   Database = firebase.database()
+
+  console.log(Database)
 }
 
 export { Database, Firebase }
