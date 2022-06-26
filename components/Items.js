@@ -354,7 +354,7 @@ export default [
     name: 'Furnace',
     description: 'Primitive tool for smelting.',
     recipe: { Stone: 30 },
-    type: 'resource',
+    type: 'usable',
     xpAmount: 5,
     craftLevel: 1,
   },

@@ -1072,7 +1072,7 @@ function Canvas(props, ref) {
         //grass
         grassTexture.flipY = false
         for (let i = 0; i < grass.children.length; i++) {
-          grass.children[i].material = new THREE.MeshLambertMaterial({
+          grass.children[i].material = new THREE.MeshBasicMaterial({
             map: grassTexture,
             transparent: 1,
             side: THREE.DoubleSide,

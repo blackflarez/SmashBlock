@@ -15,7 +15,13 @@ export default {
     updates: {
       fallbackToCacheTimeout: 0,
     },
-    assetBundlePatterns: ['assets/*'],
+    assetBundlePatterns: [
+      'assets/*',
+      'assets/icons/*',
+      'assets/models/*',
+      'assets/sounds/*',
+      'assets/ui/*',
+    ],
     ios: {
       supportsTablet: true,
     },

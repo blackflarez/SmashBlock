@@ -52,18 +52,22 @@ export default function Inventory({ navigation, route }, props) {
       }).start()
       if (filterType === 'all') {
         setInventoryFiltered(inventory)
+      } else if (filterType === 'resource') {
+        setInventoryFiltered(
+          inventory.filter(
+            (data) => data.type === 'resource' || data.type === 'block'
+          )
+        )
+      } else if (filterType === 'tool') {
+        setInventoryFiltered(
+          inventory.filter(
+            (data) => data.type === 'tool' || data.type === 'usable'
+          )
+        )
       } else {
-        if (filterType === 'resource') {
-          setInventoryFiltered(
-            inventory.filter(
-              (data) => data.type === 'resource' || data.type === 'block'
-            )
-          )
-        } else {
-          setInventoryFiltered(
-            inventory.filter((data) => data.type === filterType)
-          )
-        }
+        setInventoryFiltered(
+          inventory.filter((data) => data.type === filterType)
+        )
       }
     }
   }, [inventory, filterType])
@@ -206,7 +210,7 @@ export default function Inventory({ navigation, route }, props) {
   return (
     <BlurView
       intensity={100}
-      tint='light'
+      tint="light"
       style={{
         flex: 1,
         flexDirection: 'column',
@@ -220,7 +224,7 @@ export default function Inventory({ navigation, route }, props) {
         }}
       >
         <Modal
-          animationType='fade'
+          animationType="fade"
           transparent={true}
           visible={unableEquipModal}
           onRequestClose={() => {
@@ -253,7 +257,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <Modal
-          animationType='fade'
+          animationType="fade"
           transparent={true}
           visible={destroyModalVisible}
           onRequestClose={() => {
@@ -278,9 +282,9 @@ export default function Inventory({ navigation, route }, props) {
                   style={{ width: 200, height: 40, alignSelf: 'center' }}
                   minimumValue={1}
                   maximumValue={getAmount()}
-                  minimumTrackTintColor='#eee'
-                  maximumTrackTintColor='#eee'
-                  thumbTintColor='#6DA34D'
+                  minimumTrackTintColor="#eee"
+                  maximumTrackTintColor="#eee"
+                  thumbTintColor="#6DA34D"
                   step={Math.ceil(getAmount() / 100)}
                   onValueChange={(value) => setDestroyAmount(value)}
                 />
@@ -307,7 +311,7 @@ export default function Inventory({ navigation, route }, props) {
           </View>
         </Modal>
         <Modal
-          animationType='fade'
+          animationType="fade"
           transparent={true}
           visible={modalVisible}
           onRequestClose={() => {
@@ -408,7 +412,7 @@ export default function Inventory({ navigation, route }, props) {
             </View>
           </View>
         </Modal>
-        <StatusBar style='light' />
+        <StatusBar style="light" />
         <View style={{ margin: 24, marginTop: 72 }}></View>
         <View style={[styles.halfHeight]}>
           <FlatList
